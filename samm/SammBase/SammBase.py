@@ -18,15 +18,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-import logging
-import os
-
-import vtk
-
-import slicer
+import vtk, qt, ctk, slicer
 from slicer.ScriptedLoadableModule import *
 from slicer.util import VTKObservationMixin
-
+from SammBaseLib.WidgetSamm import SammBaseWidget
 
 #
 # SammBase
@@ -51,7 +46,8 @@ This is an extension to use Meta SAM in 3D Slicer
         self.parent.acknowledgementText = """
 """
 
-#
-# SammBaseWidget
-#
+        # Additional initialization step after application startup is complete
+        slicer.app.connect("startupCompleted()", appStartUpPostAction)
 
+def appStartUpPostAction():
+    return

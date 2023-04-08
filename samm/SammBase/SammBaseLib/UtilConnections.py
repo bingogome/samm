@@ -28,13 +28,15 @@ class UtilConnections():
 
     def __init__(self):
         self.context = zmq.Context()
+        self.socket = None
         
     def setup(self):
         self.socket = self.context.socket(zmq.PUB)
         self.socket.connect("tcp://localhost:5555")
 
     def clear(self):
-        self.socket.close()
+        if self.socket:
+            self.socket.close()
         self.context.destroy()
 
     def sendCmd(self, msg_json):

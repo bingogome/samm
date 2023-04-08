@@ -109,10 +109,17 @@ class SammWidgetBase(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.setParameterNode(self.logic.getParameterNode())
 
         # Select default input nodes if nothing is selected yet to save a few clicks for the user
-        # if not self._parameterNode.GetNodeReference("InputVolume"):
-        #     firstVolumeNode = slicer.mrmlScene.GetFirstNodeByClass("vtkMRMLScalarVolumeNode")
-        #     if firstVolumeNode:
-        #         self._parameterNode.SetNodeReferenceID("InputVolume", firstVolumeNode.GetID())
+        if not self._parameterNode.GetNodeReference("sammPromptAdd"):
+            markupsNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsFiducialNode", "add")
+            self._parameterNode.SetNodeReferenceID("sammPromptAdd", markupsNode.GetID())
+            markupsNode.GetDisplayNode().SetSelectedColor(0,1,0) 
+            markupsNode.GetDisplayNode().SetTextScale(0)
+
+        if not self._parameterNode.GetNodeReference("sammPromptRemove"):
+            markupsNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsFiducialNode", "rmv")
+            self._parameterNode.SetNodeReferenceID("sammPromptRemove", markupsNode.GetID())
+            markupsNode.GetDisplayNode().SetSelectedColor(1,0,0) 
+            markupsNode.GetDisplayNode().SetTextScale(0)
 
     def setParameterNode(self, inputParameterNode):
         """

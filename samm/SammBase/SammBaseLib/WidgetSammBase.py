@@ -41,6 +41,10 @@ class SammBaseWidget(SammWidgetBase):
         # UI
         self.ui.pushComputePredictor.connect('clicked(bool)', self.onPushComputePredictor)
         self.ui.comboVolumeNode.connect("currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
+        self.ui.markupsAdd.connect("markupsNodeChanged()", self.updateParameterNodeFromGUI)
+        self.ui.markupsRemove.connect("markupsNodeChanged()", self.updateParameterNodeFromGUI)
+        self.ui.markupsAdd.markupsPlaceWidget().setPlaceModePersistency(True)
+        self.ui.markupsRemove.markupsPlaceWidget().setPlaceModePersistency(True)
 
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
@@ -59,6 +63,8 @@ class SammBaseWidget(SammWidgetBase):
 
         # Update node selectors and sliders
         self.ui.comboVolumeNode.setCurrentNode(self._parameterNode.GetNodeReference("sammInputVolume"))
+        self.ui.markupsAdd.setCurrentNode(self._parameterNode.GetNodeReference("sammPromptAdd"))
+        self.ui.markupsRemove.setCurrentNode(self._parameterNode.GetNodeReference("sammPromptRemove"))
         
         # All the GUI updates are done
         self._updatingGUIFromParameterNode = False
@@ -75,6 +81,8 @@ class SammBaseWidget(SammWidgetBase):
         wasModified = self._parameterNode.StartModify()  # Modify all properties in a single batch
 
         self._parameterNode.SetNodeReferenceID("sammInputVolume", self.ui.comboVolumeNode.currentNodeID)
+        self._parameterNode.SetNodeReferenceID("sammPromptAdd", self.ui.markupsAdd.currentNode().GetID())
+        self._parameterNode.SetNodeReferenceID("sammPromptRemove", self.ui.markupsRemove.currentNode().GetID())
 
         self._parameterNode.EndModify(wasModified)
 

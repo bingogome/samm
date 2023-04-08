@@ -7,47 +7,173 @@
     <x>0</x>
     <y>0</y>
     <width>308</width>
-    <height>295</height>
+    <height>842</height>
    </rect>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QLabel" name="label">
-     <property name="text">
-      <string>Work Space</string>
+    <widget class="QTabWidget" name="tabWidget">
+     <property name="currentIndex">
+      <number>0</number>
      </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="ctkPathLineEdit" name="pathWorkSpace"/>
-   </item>
-   <item>
-    <widget class="QLabel" name="label_2">
-     <property name="text">
-      <string>Volume Data</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="qMRMLNodeComboBox" name="comboVolumeNode">
-     <property name="nodeTypes">
-      <stringlist notr="true">
-       <string>vtkMRMLVolumeNode</string>
-      </stringlist>
-     </property>
-     <property name="hideChildNodeTypes">
-      <stringlist notr="true"/>
-     </property>
-     <property name="interactionNodeSingletonTag">
-      <string notr="true"/>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QPushButton" name="pushComputePredictor">
-     <property name="text">
-      <string>Compute Predictor</string>
-     </property>
+     <widget class="QWidget" name="tab">
+      <attribute name="title">
+       <string>Initialization</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <widget class="QLabel" name="label">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Work Space</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="ctkPathLineEdit" name="pathWorkSpace"/>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_2">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Volume Data</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="qMRMLNodeComboBox" name="comboVolumeNode">
+         <property name="nodeTypes">
+          <stringlist notr="true">
+           <string>vtkMRMLVolumeNode</string>
+          </stringlist>
+         </property>
+         <property name="hideChildNodeTypes">
+          <stringlist notr="true"/>
+         </property>
+         <property name="interactionNodeSingletonTag">
+          <string notr="true"/>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_5">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Embedding</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushComputePredictor">
+         <property name="text">
+          <string>Compute Embedding</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_2">
+      <attribute name="title">
+       <string>Prompts</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <widget class="QLabel" name="label_3">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Prompt - Add</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="qSlicerSimpleMarkupsWidget" name="markupsAdd">
+         <property name="nodeColor">
+          <color>
+           <red>0</red>
+           <green>255</green>
+           <blue>0</blue>
+          </color>
+         </property>
+         <property name="defaultNodeColor">
+          <color>
+           <red>0</red>
+           <green>255</green>
+           <blue>0</blue>
+          </color>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_4">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Prompt - Remove</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="qSlicerSimpleMarkupsWidget" name="markupsRemove">
+         <property name="defaultNodeColor">
+          <color>
+           <red>255</red>
+           <green>0</green>
+           <blue>0</blue>
+          </color>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
    <item>
@@ -82,6 +208,17 @@
    <header>qMRMLWidget.h</header>
    <container>1</container>
   </customwidget>
+  <customwidget>
+   <class>qSlicerWidget</class>
+   <extends>QWidget</extends>
+   <header>qSlicerWidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>qSlicerSimpleMarkupsWidget</class>
+   <extends>qSlicerWidget</extends>
+   <header>qSlicerSimpleMarkupsWidget.h</header>
+  </customwidget>
  </customwidgets>
  <resources/>
  <connections>
@@ -98,6 +235,38 @@
     <hint type="destinationlabel">
      <x>153</x>
      <y>99</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>SammBase</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>markupsAdd</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>153</x>
+     <y>420</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>153</x>
+     <y>176</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>SammBase</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>markupsRemove</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>153</x>
+     <y>420</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>153</x>
+     <y>425</y>
     </hint>
    </hints>
   </connection>

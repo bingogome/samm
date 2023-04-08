@@ -131,8 +131,6 @@ class SammBaseWidget(SammWidgetBase):
             vtk_array = vtk_image.GetPointData().GetScalars()
             components = vtk_array.GetNumberOfComponents()
             img = vtk_to_numpy(vtk_array).reshape(height, width, components)
-            
-            print(img.shape)
 
             input_bytes = img.tobytes()
 
@@ -143,4 +141,6 @@ class SammBaseWidget(SammWidgetBase):
             map = mmap.mmap(fd, SHARED_MEMORY_SIZE)
             map.write(input_bytes)
 
-
+        f = open(self.ui.pathWorkSpace.currentPath.strip(), "w")
+        f.write("IMAGE_WIDTH: " + str(img.shape[0]) + "\n" + "IMAGE_HEIGHT: " + str(img.shape[1]) + "\n" )
+        f.close()

@@ -18,7 +18,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-import slicer, mmap, qt, vtk
+import slicer, mmap, qt, vtk, os
 from SammBaseLib.WidgetSamm import SammWidgetBase
 from slicer.util import VTKObservationMixin
 from vtk.util.numpy_support import vtk_to_numpy
@@ -101,11 +101,13 @@ class SammBaseWidget(SammWidgetBase):
         input_bytes = img.tobytes()
 
         SHARED_MEMORY_SIZE = len(input_bytes)
-        TAG_NAME = "xr_MEM_MAP_SYNC_VIEW"
+        fd = os.open('/home/yl/software/mmaptest/testtemp', os.O_CREAT | os.O_TRUNC | os.O_RDWR)
+        #os.write(fd, b'\x00' * n)  # resize file
+        os.truncate(fd, SHARED_MEMORY_SIZE)  # resize file
 
         print(type(mmap.ACCESS_WRITE))
 
-        map = mmap.mmap(0, SHARED_MEMORY_SIZE, TAG_NAME, mmap.ACCESS_WRITE)
+        map = mmap.mmap(fd, SHARED_MEMORY_SIZE)
         map.write(input_bytes)
 
 

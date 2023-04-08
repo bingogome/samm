@@ -18,7 +18,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-import slicer, mmap, qt, vtk, os, numpy, zmq, json
+import slicer, qt, zmq
 from SammBaseLib.WidgetSamm import SammWidgetBase
 from slicer.util import VTKObservationMixin
 from vtk.util.numpy_support import vtk_to_numpy
@@ -40,6 +40,7 @@ class SammBaseWidget(SammWidgetBase):
 
         # UI
         self.ui.pushComputePredictor.connect('clicked(bool)', self.onPushComputePredictor)
+        self.ui.pushStartMaskSync.connect('clicked(bool)', self.onPushStartMaskSync)
         self.ui.comboVolumeNode.connect("currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
         self.ui.markupsAdd.connect("markupsNodeChanged()", self.updateParameterNodeFromGUI)
         self.ui.markupsRemove.connect("markupsNodeChanged()", self.updateParameterNodeFromGUI)
@@ -48,6 +49,9 @@ class SammBaseWidget(SammWidgetBase):
 
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
+
+        # Attach to logic
+        self.logic.ui = self.ui
 
     def updateGUIFromParameterNode(self, caller=None, event=None):
         """
@@ -87,63 +91,10 @@ class SammBaseWidget(SammWidgetBase):
         self._parameterNode.EndModify(wasModified)
 
     def onPushComputePredictor(self):
-        """
-        Sync the images to Meta SAM
-        """
+        self.logic.processComputePredictor()
 
-        # checkers
-        if not self.ui.pathWorkSpace.currentPath:
-            slicer.util.errorDisplay("Please select workspace path first!")
-            return
-
-        if not self._parameterNode.GetNodeReference("sammInputVolume"):
-            slicer.util.errorDisplay("Please select a volume first!")
-            return
-        
-        # get workspaces (optimize this!)
-        workspacepath_arr = self.ui.pathWorkSpace.currentPath.strip().split("/")
-        workspacepath_arr.pop()
-        workspacepath = ""
-        for i in workspacepath_arr:
-            workspacepath = workspacepath + i + "/"
-
-        # load in volume meta data (need to optimize here)
-        inModel = self._parameterNode.GetNodeReference("sammInputVolume")
-        imageData = slicer.util.arrayFromVolume(inModel)
-        imageSliceNum = imageData.shape
-
-        sliceController = slicer.app.layoutManager().sliceWidget("Red").sliceController()
-        minSliceVal = sliceController.sliceOffsetSlider().minimum
-        maxSliceVal = sliceController.sliceOffsetSlider().maximum
-        spacingSlice = (maxSliceVal - minSliceVal) / imageSliceNum[2]
-
-        for slc in range(imageSliceNum[2]):
-
-            # set current slice offset
-            lm = slicer.app.layoutManager()
-            redWidget = lm.sliceWidget('Red')
-            redWidget.sliceController().sliceOffsetSlider().value = minSliceVal + slc * spacingSlice
-            slicer.app.processEvents()
-
-            img = imageData[:,slc,:]
-            input_bytes = img.tobytes()
-
-            SHARED_MEMORY_SIZE = len(input_bytes)
-            fd = os.open(workspacepath + "slices/slc" + str(slc), os.O_CREAT | os.O_TRUNC | os.O_RDWR)
-            os.truncate(fd, SHARED_MEMORY_SIZE)  # resize file
-
-            map = mmap.mmap(fd, SHARED_MEMORY_SIZE)
-            map.write(input_bytes)
-
-        f = open(self.ui.pathWorkSpace.currentPath.strip(), "w")
-        f.write("IMAGE_WIDTH: " + str(img.shape[0]) + "\n" + "IMAGE_HEIGHT: " + str(img.shape[1]) + "\n" )
-        f.close()
-
-        msg = {
-            "command": "COMPUTE_EMBEDDING",
-            "parameters": []
-        }
-        msg = json.dumps(msg)
-
-        self.logic._connections.sendCmd(msg)
-
+    def onPushStartMaskSync(self):
+        self.logic.processStartPromptSync()
+        self.logic._flag_prompt_sync = True
+        self.logic.processStartMaskSync()
+        self.logic._flag_mask_sync = True

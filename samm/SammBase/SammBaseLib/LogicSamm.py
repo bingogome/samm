@@ -20,7 +20,7 @@ SOFTWARE.
 
 from slicer.ScriptedLoadableModule import *
 from slicer.util import VTKObservationMixin
-import slicer, mmap, qt
+import slicer, mmap, qt, json, os
 
 #
 # SammBaseLogic
@@ -43,6 +43,8 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         ScriptedLoadableModuleLogic.__init__(self)
         self._parameterNode = self.getParameterNode()
         self._connections = None
+        self._flag_mask_sync = False
+        self._flag_prompt_sync = False
 
     def setDefaultParameters(self, parameterNode):
         """
@@ -53,18 +55,72 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         # if not parameterNode.GetParameter("Invert"):
         #     parameterNode.SetParameter("Invert", "false")
 
-    def processImgSync(self):
+    def processComputePredictor(self):
+        # checkers
+        if not self.ui.pathWorkSpace.currentPath:
+            slicer.util.errorDisplay("Please select workspace path first!")
+            return
 
-        if self._flag_img_sync:
+        if not self._parameterNode.GetNodeReference("sammInputVolume"):
+            slicer.util.errorDisplay("Please select a volume first!")
+            return
+        
+        # get workspaces (optimize this!)
+        workspacepath_arr = self.ui.pathWorkSpace.currentPath.strip().split("/")
+        workspacepath_arr.pop()
+        workspacepath = ""
+        for i in workspacepath_arr:
+            workspacepath = workspacepath + i + "/"
 
-            # img = qt.QPixmap.grabWidget(slicer.util.mainWindow()).toImage()
-            # img = QImageToCvMat(img)
-            # input_bytes = img.tobytes()
+        # load in volume meta data (need to optimize here)
+        inModel = self._parameterNode.GetNodeReference("sammInputVolume")
+        imageData = slicer.util.arrayFromVolume(inModel)
+        imageSliceNum = imageData.shape
 
-            # SHARED_MEMORY_SIZE = len(input_bytes)
-            # TAG_NAME = "xr_MEM_MAP_SYNC_VIEW"
+        sliceController = slicer.app.layoutManager().sliceWidget("Red").sliceController()
+        minSliceVal = sliceController.sliceOffsetSlider().minimum
+        maxSliceVal = sliceController.sliceOffsetSlider().maximum
+        spacingSlice = (maxSliceVal - minSliceVal) / imageSliceNum[2]
 
-            # map = mmap.mmap(0, SHARED_MEMORY_SIZE, TAG_NAME, mmap.ACCESS_WRITE)
-            # map.write(input_bytes)
+        for slc in range(imageSliceNum[2]):
 
-            qt.QTimer.singleShot(60, self.processViewSync)
+            # set current slice offset
+            lm = slicer.app.layoutManager()
+            redWidget = lm.sliceWidget('Red')
+            redWidget.sliceController().sliceOffsetSlider().value = minSliceVal + slc * spacingSlice
+            slicer.app.processEvents()
+
+            img = imageData[:,slc,:]
+            input_bytes = img.tobytes()
+
+            SHARED_MEMORY_SIZE = len(input_bytes)
+            fd = os.open(workspacepath + "slices/slc" + str(slc), os.O_CREAT | os.O_TRUNC | os.O_RDWR)
+            os.truncate(fd, SHARED_MEMORY_SIZE)  # resize file
+
+            map = mmap.mmap(fd, SHARED_MEMORY_SIZE)
+            map.write(input_bytes)
+
+        f = open(self.ui.pathWorkSpace.currentPath.strip(), "w")
+        f.write("IMAGE_WIDTH: " + str(img.shape[0]) + "\n" + "IMAGE_HEIGHT: " + str(img.shape[1]) + "\n" )
+        f.close()
+
+        msg = {
+            "command": "COMPUTE_EMBEDDING",
+            "parameters": []
+        }
+        msg = json.dumps(msg)
+        self._connections.sendCmd(msg)
+
+    def processStartMaskSync(self):
+        """
+        Receives updated masks TODO
+        """
+        if self._flag_mask_sync:
+            qt.QTimer.singleShot(250, self.processStartMaskSync)
+
+    def processStartPromptSync(self):
+        """
+        Sends updated prompts TODO
+        """
+        if self._flag_prompt_sync:
+            qt.QTimer.singleShot(250, self.processStartPromptSync)

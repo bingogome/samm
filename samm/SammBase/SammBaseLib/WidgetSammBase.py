@@ -18,9 +18,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-import slicer, mmap, qt
+import slicer, mmap, qt, vtk
 from SammBaseLib.WidgetSamm import SammWidgetBase
 from slicer.util import VTKObservationMixin
+from vtk.util.numpy_support import vtk_to_numpy
 
 class SammBaseWidget(SammWidgetBase):
 
@@ -81,3 +82,30 @@ class SammBaseWidget(SammWidgetBase):
         Sync the image to Meta SAM
         """
         
+        lm = slicer.app.layoutManager()
+        redWidget = lm.sliceWidget('Red')
+        redView = redWidget.sliceView()
+        wti = vtk.vtkWindowToImageFilter()
+        wti.SetInput(redView.renderWindow())
+        wti.Update()
+
+        vtk_image = wti.GetOutput()
+
+        width, height, _ = vtk_image.GetDimensions()
+        vtk_array = vtk_image.GetPointData().GetScalars()
+        components = vtk_array.GetNumberOfComponents()
+        img = vtk_to_numpy(vtk_array).reshape(height, width, components)
+        
+        print(img.shape)
+
+        input_bytes = img.tobytes()
+
+        SHARED_MEMORY_SIZE = len(input_bytes)
+        TAG_NAME = "xr_MEM_MAP_SYNC_VIEW"
+
+        print(type(mmap.ACCESS_WRITE))
+
+        map = mmap.mmap(0, SHARED_MEMORY_SIZE, TAG_NAME, mmap.ACCESS_WRITE)
+        map.write(input_bytes)
+
+

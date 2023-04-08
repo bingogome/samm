@@ -39,9 +39,8 @@ class SammBaseWidget(SammWidgetBase):
         self.addObserver(slicer.mrmlScene, slicer.mrmlScene.EndCloseEvent, self.onSceneEndClose)
 
         # UI
-        self.ui.pushSyncImage.connect('clicked(bool)', self.onPushSyncImage)
-        self.ui.comboVolumeNode.connect(
-            "currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
+        self.ui.pushComputePredictor.connect('clicked(bool)', self.onPushComputePredictor)
+        self.ui.comboVolumeNode.connect("currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
 
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
@@ -59,7 +58,7 @@ class SammBaseWidget(SammWidgetBase):
         self._updatingGUIFromParameterNode = True
 
         # Update node selectors and sliders
-        # self.ui.inputSelector.setCurrentNode(self._parameterNode.GetNodeReference("InputVolume"))
+        self.ui.comboVolumeNode.setCurrentNode(self._parameterNode.GetNodeReference("sammInputVolume"))
         
         # All the GUI updates are done
         self._updatingGUIFromParameterNode = False
@@ -75,45 +74,73 @@ class SammBaseWidget(SammWidgetBase):
 
         wasModified = self._parameterNode.StartModify()  # Modify all properties in a single batch
 
-        # self._parameterNode.SetNodeReferenceID("InputVolume", self.ui.inputSelector.currentNodeID)
+        self._parameterNode.SetNodeReferenceID("sammInputVolume", self.ui.comboVolumeNode.currentNodeID)
 
         self._parameterNode.EndModify(wasModified)
 
-    def onPushSyncImage(self):
+    def onPushComputePredictor(self):
         """
-        Sync the image to Meta SAM
+        Sync the images to Meta SAM
         """
 
+        # checkers
         if not self.ui.pathWorkSpace.currentPath:
             slicer.util.errorDisplay("Please select workspace path first!")
             return
         
-        lm = slicer.app.layoutManager()
-        redWidget = lm.sliceWidget('Red')
-        redView = redWidget.sliceView()
-        wti = vtk.vtkWindowToImageFilter()
-        wti.SetInput(redView.renderWindow())
-        wti.Update()
+        # get workspaces (optimize this!)
+        workspacepath_arr = self.ui.pathWorkSpace.currentPath.strip().split("/")
+        workspacepath_arr.pop()
+        workspacepath = ""
+        for i in workspacepath_arr:
+            workspacepath = workspacepath + i + "/"
 
-        vtk_image = wti.GetOutput()
+        if not self._parameterNode.GetNodeReference("sammInputVolume"):
+            slicer.util.errorDisplay("Please select a volume first!")
+            return
 
-        width, height, _ = vtk_image.GetDimensions()
-        vtk_array = vtk_image.GetPointData().GetScalars()
-        components = vtk_array.GetNumberOfComponents()
-        img = vtk_to_numpy(vtk_array).reshape(height, width, components)
-        
-        print(img.shape)
+        # load in volume meta data (need to optimize here)
+        inModel = self._parameterNode.GetNodeReference("sammInputVolume")
+        imageData = slicer.util.arrayFromVolume(inModel)
+        imageSliceNum = imageData.shape
+        del imageData
 
-        input_bytes = img.tobytes()
+        sliceController = slicer.app.layoutManager().sliceWidget("Red").sliceController()
+        minSliceVal = sliceController.sliceOffsetSlider().minimum
+        maxSliceVal = sliceController.sliceOffsetSlider().maximum
+        print(minSliceVal, maxSliceVal)
 
-        SHARED_MEMORY_SIZE = len(input_bytes)
-        fd = os.open('/home/yl/software/mmaptest/testtemp', os.O_CREAT | os.O_TRUNC | os.O_RDWR)
-        #os.write(fd, b'\x00' * n)  # resize file
-        os.truncate(fd, SHARED_MEMORY_SIZE)  # resize file
+        spacingSlice = (maxSliceVal - minSliceVal) / imageSliceNum[2]
 
-        print(type(mmap.ACCESS_WRITE))
+        # iterate through the slice (RED view)
+        for slc in range(imageSliceNum[2]):
 
-        map = mmap.mmap(fd, SHARED_MEMORY_SIZE)
-        map.write(input_bytes)
+            # set current slice offset
+            sliceController.sliceOffsetSlider().value = minSliceVal + slc * spacingSlice
+
+            lm = slicer.app.layoutManager()
+            redWidget = lm.sliceWidget('Red')
+            redView = redWidget.sliceView()
+            wti = vtk.vtkWindowToImageFilter()
+            wti.SetInput(redView.renderWindow())
+            wti.Update()
+
+            vtk_image = wti.GetOutput()
+
+            width, height, _ = vtk_image.GetDimensions()
+            vtk_array = vtk_image.GetPointData().GetScalars()
+            components = vtk_array.GetNumberOfComponents()
+            img = vtk_to_numpy(vtk_array).reshape(height, width, components)
+            
+            print(img.shape)
+
+            input_bytes = img.tobytes()
+
+            SHARED_MEMORY_SIZE = len(input_bytes)
+            fd = os.open(workspacepath + "slices/slc" + str(slc), os.O_CREAT | os.O_TRUNC | os.O_RDWR)
+            os.truncate(fd, SHARED_MEMORY_SIZE)  # resize file
+
+            map = mmap.mmap(fd, SHARED_MEMORY_SIZE)
+            map.write(input_bytes)
 
 

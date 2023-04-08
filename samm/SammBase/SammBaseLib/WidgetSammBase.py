@@ -108,18 +108,18 @@ class SammBaseWidget(SammWidgetBase):
         sliceController = slicer.app.layoutManager().sliceWidget("Red").sliceController()
         minSliceVal = sliceController.sliceOffsetSlider().minimum
         maxSliceVal = sliceController.sliceOffsetSlider().maximum
-        print(minSliceVal, maxSliceVal)
-
         spacingSlice = (maxSliceVal - minSliceVal) / imageSliceNum[2]
 
         # iterate through the slice (RED view)
-        for slc in range(imageSliceNum[2]):
+        for slc in [0]:
+        # for slc in range(imageSliceNum[2]):
 
             # set current slice offset
-            sliceController.sliceOffsetSlider().value = minSliceVal + slc * spacingSlice
 
             lm = slicer.app.layoutManager()
             redWidget = lm.sliceWidget('Red')
+            redWidget.sliceController().sliceOffsetSlider().value = minSliceVal + slc * spacingSlice
+            slicer.app.processEvents()
             redView = redWidget.sliceView()
             wti = vtk.vtkWindowToImageFilter()
             wti.SetInput(redView.renderWindow())

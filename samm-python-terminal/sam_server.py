@@ -12,7 +12,7 @@ class sam_server():
         self.workspace = "/home/yl/software/mmaptest"
         self.config_path = self.workspace + "/config.yaml"
         self.folder_path = self.workspace + "/slices"
-        self.sam_checkpoint = "/home/yl/software/segment-anything/notebooks/sam_vit_h_4b8939.pth" #
+        self.sam_checkpoint = "sam_vit_h_4b8939.pth" #
         self.model_type = "vit_h"
         self.device = "cuda"
 
@@ -110,7 +110,6 @@ class sam_server():
             color = np.concatenate([np.random.random(3), np.array([0.6])], axis=0)
         else:
             color = np.array([30/255, 144/255, 255/255, 0.6])
-        print(type(mask))
         h, w = mask.shape[-2:]
         mask_image = mask.reshape(h, w, 1) * color.reshape(1, 1, -1)
         ax.imshow(mask_image)
@@ -127,13 +126,13 @@ class sam_server():
         ax.add_patch(plt.Rectangle((x0, y0), w, h, edgecolor='green', facecolor=(0,0,0,0), lw=2))  
 
 def main():
-    
+
     srv = sam_server()
     # srv.computeEmbedding()
     
-    srv.load_feature("/home/yl/software/mmaptest/segmented_images/segmented_slc50.pkl")
     input_point = np.array([[200, 100]])
     input_label = np.array([1])
+    srv.load_feature("/home/yl/software/mmaptest/segmented_images/segmented_slc50.pkl")
     srv.predict(input_point,input_label)
     srv.imageshow("/home/yl/software/mmaptest/slices/slc50")
 

@@ -40,6 +40,8 @@ class SammBaseWidget(SammWidgetBase):
 
         # UI
         self.ui.pushSyncImage.connect('clicked(bool)', self.onPushSyncImage)
+        self.ui.comboVolumeNode.connect(
+            "currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
 
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
@@ -81,6 +83,10 @@ class SammBaseWidget(SammWidgetBase):
         """
         Sync the image to Meta SAM
         """
+
+        if not self.ui.pathWorkSpace.currentPath:
+            slicer.util.errorDisplay("Please select workspace path first!")
+            return
         
         lm = slicer.app.layoutManager()
         redWidget = lm.sliceWidget('Red')

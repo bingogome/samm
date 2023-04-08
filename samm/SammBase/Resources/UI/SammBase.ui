@@ -12,9 +12,32 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Work Space</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="ctkPathLineEdit" name="pathWorkSpace"/>
+   </item>
+   <item>
     <widget class="QPushButton" name="pushSyncImage">
      <property name="text">
       <string>Sync Image</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="qMRMLNodeComboBox" name="comboVolumeNode">
+     <property name="nodeTypes">
+      <stringlist notr="true"/>
+     </property>
+     <property name="hideChildNodeTypes">
+      <stringlist notr="true"/>
+     </property>
+     <property name="interactionNodeSingletonTag">
+      <string notr="true"/>
      </property>
     </widget>
    </item>
@@ -35,6 +58,16 @@
  </widget>
  <customwidgets>
   <customwidget>
+   <class>ctkPathLineEdit</class>
+   <extends>QWidget</extends>
+   <header>ctkPathLineEdit.h</header>
+  </customwidget>
+  <customwidget>
+   <class>qMRMLNodeComboBox</class>
+   <extends>QWidget</extends>
+   <header>qMRMLNodeComboBox.h</header>
+  </customwidget>
+  <customwidget>
    <class>qMRMLWidget</class>
    <extends>QWidget</extends>
    <header>qMRMLWidget.h</header>
@@ -42,5 +75,22 @@
   </customwidget>
  </customwidgets>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>SammBase</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>comboVolumeNode</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>153</x>
+     <y>147</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>153</x>
+     <y>99</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

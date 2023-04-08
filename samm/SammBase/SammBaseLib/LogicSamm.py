@@ -55,6 +55,19 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         # if not parameterNode.GetParameter("Invert"):
         #     parameterNode.SetParameter("Invert", "false")
 
+    def processGetVolumeMetaData(self, imageDataShape):
+        """
+        Get the spacing, min, max of the view slider
+        """
+        def getViewData(strview, numview):
+            sliceController = slicer.app.layoutManager().sliceWidget(strview).sliceController()
+            minSliceVal = sliceController.sliceOffsetSlider().minimum
+            maxSliceVal = sliceController.sliceOffsetSlider().maximum
+            spacingSlice = (maxSliceVal - minSliceVal) / imageDataShape[numview]
+            return [minSliceVal, maxSliceVal, spacingSlice]
+        
+        return [getViewData("Red", 2), getViewData("Green", 1), getViewData("Yellow", 0)]
+
     def processComputePredictor(self):
         # checkers
         if not self.ui.pathWorkSpace.currentPath:
@@ -77,10 +90,11 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         imageData = slicer.util.arrayFromVolume(inModel)
         imageSliceNum = imageData.shape
 
-        sliceController = slicer.app.layoutManager().sliceWidget("Red").sliceController()
-        minSliceVal = sliceController.sliceOffsetSlider().minimum
-        maxSliceVal = sliceController.sliceOffsetSlider().maximum
-        spacingSlice = (maxSliceVal - minSliceVal) / imageSliceNum[2]
+        metadata = self.processGetVolumeMetaData(imageSliceNum)
+
+        minSliceVal, maxSliceVal, spacingSlice = metadata[0][0], metadata[0][1], metadata[0][2]
+
+        self._parameterNode._volMetaData = metadata
 
         for slc in range(imageSliceNum[2]):
 
@@ -97,6 +111,7 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
             fd = os.open(workspacepath + "slices/slc" + str(slc), os.O_CREAT | os.O_TRUNC | os.O_RDWR)
             os.truncate(fd, SHARED_MEMORY_SIZE)  # resize file
 
+            # Use numpy memmap instead TODO
             map = mmap.mmap(fd, SHARED_MEMORY_SIZE)
             map.write(input_bytes)
 
@@ -118,9 +133,29 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         if self._flag_mask_sync:
             qt.QTimer.singleShot(250, self.processStartMaskSync)
 
+    def LPS2SliceCoor(self, lps):
+        def getSlice(minval, spacing, input):
+            return round((input-minval)/spacing)
+        metadata = self._parameterNode._volMetaData
+        return [ \
+            getSlice(metadata[0][0],metadata[0][2],lps[2]), \
+            getSlice(metadata[1][0],metadata[1][2],lps[1]), \
+            getSlice(metadata[2][0],metadata[2][2],lps[0])  ]
+
     def processStartPromptSync(self):
         """
         Sends updated prompts TODO
         """
         if self._flag_prompt_sync:
+            
+            pointListNode = slicer.util.getNode("F")
+            numControlPoints = pointListNode.GetNumberOfControlPoints()
+            for i in range(numControlPoints):
+            ras = vtk.vtkVector3d(0,0,0)
+            pointListNode.GetNthControlPointPosition(i,ras)
+            # the world position is the RAS position with any transform matrices applied
+            world = [0.0, 0.0, 0.0]
+            pointListNode.GetNthControlPointPositionWorld(i,world)
+            print(i,": RAS =",ras,", world =",world)
+
             qt.QTimer.singleShot(250, self.processStartPromptSync)

@@ -163,5 +163,5 @@ class SammBaseWidget(SammWidgetBase):
         f.write("IMAGE_WIDTH: " + str(img.shape[0]) + "\n" + "IMAGE_HEIGHT: " + str(img.shape[1]) + "\n" )
         f.close()
 
-        
+        self.logic._connections.sendCmd("COMPUTE_EMBEDDING")
 

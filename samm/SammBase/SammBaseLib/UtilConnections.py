@@ -30,14 +30,12 @@ class UtilConnections():
         self.context = zmq.Context()
         
     def setup(self):
-        self.socket = self.context.socket(zmq.REQ)
+        self.socket = self.context.socket(zmq.PUB)
         self.socket.connect("tcp://localhost:5555")
 
     def clear(self):
         self.socket.close()
         self.context.destroy()
 
-    def sendCmd(self, msg):
-        self.socket.send(msg.encode('UTF-8'))
-        #  Get the reply.
-        message = self.socket.recv()
+    def sendCmd(self, msg_json):
+        self.socket.send(msg_json)

@@ -137,7 +137,7 @@ def main():
     srv = sam_server()
     context = zmq.Context()
     zmqsocket = context.socket(zmq.SUB)
-    zmqsocket.connect("tcp://10.203.59.41:30950")
+    zmqsocket.connect("tcp://localhost:5555")
     # zmqsocket.setsockopt_unicode(zmq.SUBSCRIBE, "hl2")
     zmqsocket.setsockopt(zmq.RCVTIMEO, -1)
     srv.sock_rcv = zmqsocket

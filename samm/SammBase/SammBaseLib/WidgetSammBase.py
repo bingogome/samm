@@ -18,7 +18,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from SammBaseLib.UtilSlicerFuncs import QImageToCvMat
 import slicer, mmap, qt
 from SammBaseLib.WidgetSamm import SammWidgetBase
 from slicer.util import VTKObservationMixin

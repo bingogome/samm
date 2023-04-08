@@ -18,7 +18,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from XRSlicerBaseLib.UtilSlicerFuncs import QImageToCvMat
 from slicer.ScriptedLoadableModule import *
 from slicer.util import VTKObservationMixin
 import slicer, mmap, qt
@@ -68,4 +67,4 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
             # map = mmap.mmap(0, SHARED_MEMORY_SIZE, TAG_NAME, mmap.ACCESS_WRITE)
             # map.write(input_bytes)
 
-            # qt.QTimer.singleShot(60, self.processViewSync)
+            qt.QTimer.singleShot(60, self.processViewSync)

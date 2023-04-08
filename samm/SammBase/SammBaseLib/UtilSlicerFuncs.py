@@ -22,37 +22,6 @@ import vtk, math, slicer, json, qt
 import ctypes
 
 import numpy as np
-import clr 
-import System
-from System import Array, Int32
-from System.Runtime.InteropServices import GCHandle, GCHandleType
-
-_MAP_NP_NET = {
-    np.dtype(np.float32): System.Single,
-    np.dtype(np.float64): System.Double,
-    np.dtype(np.int8)   : System.SByte,
-    np.dtype(np.int16)  : System.Int16,
-    np.dtype(np.int32)  : System.Int32,
-    np.dtype(np.int64)  : System.Int64,
-    np.dtype(np.uint8)  : System.Byte,
-    np.dtype(np.uint16) : System.UInt16,
-    np.dtype(np.uint32) : System.UInt32,
-    np.dtype(np.uint64) : System.UInt64,
-    np.dtype(np.bool)   : System.Boolean,
-}
-_MAP_NET_NP = {
-    'Single' : np.dtype(np.float32),
-    'Double' : np.dtype(np.float64),
-    'SByte'  : np.dtype(np.int8),
-    'Int16'  : np.dtype(np.int16), 
-    'Int32'  : np.dtype(np.int32),
-    'Int64'  : np.dtype(np.int64),
-    'Byte'   : np.dtype(np.uint8),
-    'UInt16' : np.dtype(np.uint16),
-    'UInt32' : np.dtype(np.uint32),
-    'UInt64' : np.dtype(np.uint64),
-    'Boolean': np.dtype(np.bool),
-}
 
 def setTranslation(p, T):
     T.SetElement(0,3,p[0])
@@ -85,8 +54,6 @@ def QImageToCvMat(incomingImage):
     ptr = incomingImage.constBits()
     arr = np.array(ptr).reshape(height, width, 3)  #  Copies the data
     return arr
-
-def asNetArray(npArray):
     """
     https://gist.github.com/robbmcleod/73ca42da5984e6d0e5b6ad28bc4a504e
     Converts a NumPy array to a .NET array. See `_MAP_NP_NET` for 

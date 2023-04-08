@@ -1,8 +1,8 @@
+from segment_anything import sam_model_registry, SamPredictor
 from PIL import Image
 import numpy as np
-from segment_anything import sam_model_registry, SamPredictor
-import json, yaml, cv2, os, pickle
 import matplotlib.pyplot as plt
+import yaml, cv2, os, pickle
 
 class sam_server():
 
@@ -11,7 +11,7 @@ class sam_server():
         # Load parameters
         self.workspace = "/home/yl/software/mmaptest"
         self.config_path = self.workspace + "/config.yaml"
-        self.folder_path = self.workspace + "/slices"
+        self.slices_folder_path = self.workspace + "/slices"
         self.sam_checkpoint = "sam_vit_h_4b8939.pth" #
         self.model_type = "vit_h"
         self.device = "cuda"
@@ -46,9 +46,9 @@ class sam_server():
         image_height = int(yaml_file["IMAGE_HEIGHT"])
 
         # Loop through all files in the folder
-        for filename in os.listdir(self.folder_path):
+        for filename in os.listdir(self.slices_folder_path):
 
-            data = np.fromfile(os.path.join(self.folder_path, filename),dtype=np.float64)
+            data = np.fromfile(os.path.join(self.slices_folder_path, filename),dtype=np.float64)
             data = data.reshape((image_width,image_height,1))# reshape
             data = 255 * data / data.max()
             data = cv2.cvtColor(data.astype(np.uint8), cv2.COLOR_GRAY2BGR)
@@ -125,10 +125,18 @@ class sam_server():
         w, h = box[2] - box[0], box[3] - box[1]
         ax.add_patch(plt.Rectangle((x0, y0), w, h, edgecolor='green', facecolor=(0,0,0,0), lw=2))  
 
+def process_check_compute_embedding(sock_rcv, srv):
+    try:
+        msg = sock_rcv.recv_multipart()[1]
+        if msg == "COMPUTE_EMBEDDING":
+            srv.computeEmbedding()
+        return
+    except:
+        return
+
 def main():
 
     srv = sam_server()
-    # srv.computeEmbedding()
     
     input_point = np.array([[200, 100]])
     input_label = np.array([1])

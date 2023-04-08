@@ -2,13 +2,13 @@ from segment_anything import sam_model_registry, SamPredictor
 from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
-import yaml, cv2, os, pickle
+import yaml, cv2, os, pickle, zmq
 
 class sam_server():
 
     def __init__(self):
 
-        # Load parameters
+        # Load parameters (use config!!!)
         self.workspace = "/home/yl/software/mmaptest"
         self.config_path = self.workspace + "/config.yaml"
         self.slices_folder_path = self.workspace + "/slices"
@@ -21,7 +21,7 @@ class sam_server():
         sam.to(device=self.device)
         self.predictor = SamPredictor(sam)
 
-        # initialize some parameters for testing
+        # initialize some parameters for testing (assumes the embeddings are saved)
         self.predictor.is_image_set = True
         with open(self.workspace+"/config_input_size.yaml", 'r') as file:
             yaml_file = yaml.safe_load(file)
@@ -86,6 +86,13 @@ class sam_server():
                 point_coords=input_point, \
                 point_labels=input_label, \
                 multimask_output=True )
+
+    def infere_image(self, input_point, input_label, image_name):
+        # input_point = np.array([[200, 100]])
+        # input_label = np.array([1])
+        self.load_feature(self.workspace + "/segmented_images/segmented_" + image_name + ".pkl")
+        self.predict(input_point,input_label)
+        # self.imageshow("/home/yl/software/mmaptest/slices/slc50")
         
     def imageshow(self, image_path):
         with open(self.config_path, 'r') as file:
@@ -125,27 +132,28 @@ class sam_server():
         w, h = box[2] - box[0], box[3] - box[1]
         ax.add_patch(plt.Rectangle((x0, y0), w, h, edgecolor='green', facecolor=(0,0,0,0), lw=2))  
 
-def process_check_compute_embedding(sock_rcv, srv):
-    try:
-        msg = sock_rcv.recv_multipart()[1]
-        if msg == "COMPUTE_EMBEDDING":
-            srv.computeEmbedding()
-        return
-    except:
-        return
-
 def main():
 
     srv = sam_server()
-    
-    input_point = np.array([[200, 100]])
-    input_label = np.array([1])
-    srv.load_feature("/home/yl/software/mmaptest/segmented_images/segmented_slc50.pkl")
-    srv.predict(input_point,input_label)
-    srv.imageshow("/home/yl/software/mmaptest/slices/slc50")
+    context = zmq.Context()
+    zmqsocket = context.socket(zmq.SUB)
+    zmqsocket.connect("tcp://10.203.59.41:30950")
+    # zmqsocket.setsockopt_unicode(zmq.SUBSCRIBE, "hl2")
+    zmqsocket.setsockopt(zmq.RCVTIMEO, -1)
+    srv.sock_rcv = zmqsocket
 
-    # while True:
-    #     return
+    while True:
+        try:
+            msg = srv.sock_rcv.recv_json()
+            if msg["command"] == "COMPUTE_EMBEDDING":
+                srv.computeEmbedding()
+            if msg["command"] == "INFER_IMAGE":
+                srv.infere_image( \
+                    np.array(msg["parameters"]["point"]), \
+                    np.array(msg["parameters"]["label"]), \
+                    np.array(msg["parameters"]["name"]))
+        except:
+            continue
         
 if __name__=="__main__":
     main()

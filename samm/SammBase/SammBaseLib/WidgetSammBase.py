@@ -18,7 +18,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-import slicer, mmap, qt, vtk, os
+import slicer, mmap, qt, vtk, os, numpy, zmq
 from SammBaseLib.WidgetSamm import SammWidgetBase
 from slicer.util import VTKObservationMixin
 from vtk.util.numpy_support import vtk_to_numpy
@@ -87,6 +87,10 @@ class SammBaseWidget(SammWidgetBase):
         if not self.ui.pathWorkSpace.currentPath:
             slicer.util.errorDisplay("Please select workspace path first!")
             return
+
+        if not self._parameterNode.GetNodeReference("sammInputVolume"):
+            slicer.util.errorDisplay("Please select a volume first!")
+            return
         
         # get workspaces (optimize this!)
         workspacepath_arr = self.ui.pathWorkSpace.currentPath.strip().split("/")
@@ -95,15 +99,10 @@ class SammBaseWidget(SammWidgetBase):
         for i in workspacepath_arr:
             workspacepath = workspacepath + i + "/"
 
-        if not self._parameterNode.GetNodeReference("sammInputVolume"):
-            slicer.util.errorDisplay("Please select a volume first!")
-            return
-
         # load in volume meta data (need to optimize here)
         inModel = self._parameterNode.GetNodeReference("sammInputVolume")
         imageData = slicer.util.arrayFromVolume(inModel)
         imageSliceNum = imageData.shape
-        del imageData
 
         sliceController = slicer.app.layoutManager().sliceWidget("Red").sliceController()
         minSliceVal = sliceController.sliceOffsetSlider().minimum
@@ -111,27 +110,46 @@ class SammBaseWidget(SammWidgetBase):
         spacingSlice = (maxSliceVal - minSliceVal) / imageSliceNum[2]
 
         # iterate through the slice (RED view)
-        for slc in [0]:
+        # Not working here:
         # for slc in range(imageSliceNum[2]):
 
-            # set current slice offset
+        #     # set current slice offset
+        #     lm = slicer.app.layoutManager()
+        #     redWidget = lm.sliceWidget('Red')
+        #     redWidget.sliceController().sliceOffsetSlider().value = minSliceVal + slc * spacingSlice
+        #     slicer.app.processEvents()
+        #     redView = redWidget.sliceView()
+        #     wti = vtk.vtkWindowToImageFilter()
+        #     wti.SetInput(redView.renderWindow())
+        #     wti.Update()
 
+        #     vtk_image = wti.GetOutput()
+
+        #     width, height, _ = vtk_image.GetDimensions()
+        #     vtk_array = vtk_image.GetPointData().GetScalars()
+        #     components = vtk_array.GetNumberOfComponents()
+        #     img = vtk_to_numpy(vtk_array).reshape(height, width, components)
+
+        #     input_bytes = img.tobytes()
+
+        #     SHARED_MEMORY_SIZE = len(input_bytes)
+        #     fd = os.open(workspacepath + "slices/slc" + str(slc), os.O_CREAT | os.O_TRUNC | os.O_RDWR)
+        #     os.truncate(fd, SHARED_MEMORY_SIZE)  # resize file
+
+        #     map = mmap.mmap(fd, SHARED_MEMORY_SIZE)
+        #     map.write(input_bytes)
+
+        print(imageData.shape)
+
+        for slc in range(imageSliceNum[2]):
+
+            # set current slice offset
             lm = slicer.app.layoutManager()
             redWidget = lm.sliceWidget('Red')
             redWidget.sliceController().sliceOffsetSlider().value = minSliceVal + slc * spacingSlice
             slicer.app.processEvents()
-            redView = redWidget.sliceView()
-            wti = vtk.vtkWindowToImageFilter()
-            wti.SetInput(redView.renderWindow())
-            wti.Update()
 
-            vtk_image = wti.GetOutput()
-
-            width, height, _ = vtk_image.GetDimensions()
-            vtk_array = vtk_image.GetPointData().GetScalars()
-            components = vtk_array.GetNumberOfComponents()
-            img = vtk_to_numpy(vtk_array).reshape(height, width, components)
-
+            img = imageData[:,slc,:]
             input_bytes = img.tobytes()
 
             SHARED_MEMORY_SIZE = len(input_bytes)
@@ -144,3 +162,6 @@ class SammBaseWidget(SammWidgetBase):
         f = open(self.ui.pathWorkSpace.currentPath.strip(), "w")
         f.write("IMAGE_WIDTH: " + str(img.shape[0]) + "\n" + "IMAGE_HEIGHT: " + str(img.shape[1]) + "\n" )
         f.close()
+
+        
+

@@ -20,6 +20,7 @@ SOFTWARE.
 
 from SammBaseLib.LogicSamm import SammBaseLogic
 import vtk, qt, ctk, slicer
+from SammBaseLib.UtilConnections import UtilConnections
 from slicer.ScriptedLoadableModule import *
 from slicer.util import VTKObservationMixin
 
@@ -59,6 +60,7 @@ class SammWidgetBase(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # Create logic class. Logic implements all computations that should be possible to run
         # in batch mode, without a graphical user interface.
         self.logic = SammBaseLogic()
+        self.logic._connections = UtilConnections()
 
     def cleanup(self):
         """

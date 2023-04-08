@@ -17,3 +17,27 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+
+import zmq
+
+class UtilConnections():
+    """
+    Connection class.
+    Blocking send and receive
+    """
+
+    def __init__(self):
+        self.context = zmq.Context()
+        
+    def setup(self):
+        self.socket = self.context.socket(zmq.REQ)
+        self.socket.connect("tcp://localhost:5555")
+
+    def clear(self):
+        self.socket.close()
+        self.context.destroy()
+
+    def sendCmd(self, msg):
+        self.socket.send(msg.encode('UTF-8'))
+        #  Get the reply.
+        message = self.socket.recv()

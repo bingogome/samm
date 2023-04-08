@@ -10,7 +10,7 @@ model_type = "vit_h"
 device = "cuda"
 
 # create a folder to store segmented data
-output_folder = os.path.join(folder_path, 'segmented_images')
+output_folder = os.path.join(folder_path + "/..", 'segmented_images')
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)
 
@@ -27,12 +27,11 @@ predictor = SamPredictor(sam)
 
 # Loop through all files in the folder
 for filename in os.listdir(folder_path):
-
-    data = np.fromfile(os.path.join(folder_path, filename),dtype=np.uint8)
-    data = data.reshape((image_width,image_height,3))# reshape
-    data = np.flip(data, axis = 0)
-    image = cv2.cvtColor(data, cv2.COLOR_BGR2RGB)
-
+    
+    data = np.fromfile(os.path.join(folder_path, filename),dtype=np.float64)
+    data = data.reshape((image_width,image_height,1))# reshape
+    image = 255 * data / data.max()
+    image = cv2.cvtColor(image.astype(np.uint8), cv2.COLOR_GRAY2BGR)
     predictor.set_image(image)
     print(predictor.input_size)
     print(predictor.original_size)

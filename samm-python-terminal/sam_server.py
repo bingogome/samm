@@ -87,7 +87,7 @@ class sam_server():
                 point_labels=input_label, \
                 multimask_output=True )
 
-    def infere_image(self, input_point, input_label, image_name):
+    def infer_image(self, input_point, input_label, image_name):
         # input_point = np.array([[200, 100]])
         # input_label = np.array([1])
         self.load_feature(self.workspace + "/segmented_images/segmented_" + image_name + ".pkl")

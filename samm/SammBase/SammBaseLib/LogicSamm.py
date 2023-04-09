@@ -141,11 +141,11 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
 
             self.processInitMaskSync()
 
-            memmap = numpy.memmap(self._workspace + '/mask.memmap', dtype='bool', mode='r+', shape=self._imageSliceNum)
-            image = sitk.GetImageFromArray(memmap.astype(int))
-            mask = sitk.BinaryThreshold(image, lowerThreshold=0, upperThreshold=1)
-            slicer.modules.segmentations.logic().ImportLabelmapToSegmentationNode( \
-                mask, self._parameterNode.GetNodeReferenceID("sammMask"))
+            # memmap = numpy.memmap(self._workspace + '/mask.memmap', dtype='bool', mode='r+', shape=self._imageSliceNum)
+            # image = sitk.GetImageFromArray(memmap.astype(int))
+            # mask = sitk.BinaryThreshold(image, lowerThreshold=0, upperThreshold=1)
+            # slicer.modules.segmentations.logic().ImportLabelmapToSegmentationNode( \
+            #     mask, self._parameterNode.GetNodeReferenceID("sammMask"))
 
             # qt.QTimer.singleShot(250, self.processStartMaskSync)
 

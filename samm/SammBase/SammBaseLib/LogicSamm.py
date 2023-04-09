@@ -20,7 +20,8 @@ SOFTWARE.
 
 from slicer.ScriptedLoadableModule import *
 from slicer.util import VTKObservationMixin
-import slicer, mmap, qt, json, os, vtk
+import slicer, mmap, qt, json, os, vtk, numpy
+import SimpleITK as sitk
 
 #
 # SammBaseLogic
@@ -124,12 +125,29 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         self._connections.sendCmd(msg)
         print("Sent Embedding Computing Command.")
 
+    def processInitMaskSync(self):
+        # load in volume meta data (need to optimize here)
+        inModel = self._parameterNode.GetNodeReference("sammInputVolume")
+        imageData = slicer.util.arrayFromVolume(inModel)
+        imageSliceNum = imageData.shape
+        self._imageSliceNum = imageSliceNum
+        self._workspace = "/home/yl/software/mmaptest"
+
     def processStartMaskSync(self):
         """
-        Receives updated masks TODO
+        Receives updated masks 
         """
         if self._flag_mask_sync:
-            qt.QTimer.singleShot(250, self.processStartMaskSync)
+
+            self.processInitMaskSync()
+
+            memmap = numpy.memmap(self._workspace + '/mask.memmap', dtype='bool', mode='r+', shape=self._imageSliceNum)
+            image = sitk.GetImageFromArray(memmap.astype(int))
+            mask = sitk.BinaryThreshold(image, lowerThreshold=0, upperThreshold=1)
+            slicer.modules.segmentations.logic().ImportLabelmapToSegmentationNode( \
+                mask, self._parameterNode.GetNodeReferenceID("sammMask"))
+
+            # qt.QTimer.singleShot(250, self.processStartMaskSync)
 
     def processInitPromptSync(self):
         # Init
@@ -179,9 +197,7 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
                 }
             }
 
-            print(msg)
             msg = json.dumps(msg)
             self._connections.sendCmd(msg)
-            print("Sent Image Predicting Command.")
 
-            # qt.QTimer.singleShot(250, self.processStartPromptSync)
+            qt.QTimer.singleShot(250, self.processStartPromptSync)

@@ -93,44 +93,47 @@ class sam_server():
         self.load_feature(self.workspace + "/segmented_images/segmented_" + image_name + ".pkl")
         self.predict(input_point,input_label)
         # self.imageshow("/home/yl/software/mmaptest/slices/" + image_name)
-        
-    def imageshow(self, image_path):
-        with open(self.config_path, 'r') as file:
-            yaml_file = yaml.safe_load(file)
-        image_width = int(yaml_file["IMAGE_WIDTH"])
-        image_height = int(yaml_file["IMAGE_HEIGHT"])
-        data = np.fromfile(image_path,dtype=np.float64)
-        data = data.reshape((image_width,image_height,1))# reshape
-        image = 255 * data / data.max()
-        image = cv2.cvtColor(image.astype(np.uint8), cv2.COLOR_GRAY2BGR)
-        for i, (mask, score) in enumerate(zip(self.masks, self.scores)):
-            plt.figure(figsize=(10,10))
-            plt.imshow(image)
-            self.show_mask(mask, plt.gca())
-            self.show_points(self.input_point,self.input_label, plt.gca())
-            plt.title(f"Mask {i+1}, Score: {score:.3f}", fontsize=18)
-            plt.axis('off')
-            plt.show() 
+        memmap = np.memmap(self.workspace + '/mask.memmap', dtype='bool', mode='w+', shape=self.masks[0].shape)
+        memmap[:] = self.masks[0][:]
+        memmap.flush()
 
-    def show_mask(self, mask, ax, random_color=False):
-        if random_color:
-            color = np.concatenate([np.random.random(3), np.array([0.6])], axis=0)
-        else:
-            color = np.array([30/255, 144/255, 255/255, 0.6])
-        h, w = mask.shape[-2:]
-        mask_image = mask.reshape(h, w, 1) * color.reshape(1, 1, -1)
-        ax.imshow(mask_image)
+    # def imageshow(self, image_path):
+    #     with open(self.config_path, 'r') as file:
+    #         yaml_file = yaml.safe_load(file)
+    #     image_width = int(yaml_file["IMAGE_WIDTH"])
+    #     image_height = int(yaml_file["IMAGE_HEIGHT"])
+    #     data = np.fromfile(image_path,dtype=np.float64)
+    #     data = data.reshape((image_width,image_height,1))# reshape
+    #     image = 255 * data / data.max()
+    #     image = cv2.cvtColor(image.astype(np.uint8), cv2.COLOR_GRAY2BGR)
+    #     for i, (mask, score) in enumerate(zip(self.masks, self.scores)):
+    #         plt.figure(figsize=(10,10))
+    #         plt.imshow(image)
+    #         self.show_mask(mask, plt.gca())
+    #         self.show_points(self.input_point,self.input_label, plt.gca())
+    #         plt.title(f"Mask {i+1}, Score: {score:.3f}", fontsize=18)
+    #         plt.axis('off')
+    #         plt.show() 
+
+    # def show_mask(self, mask, ax, random_color=False):
+    #     if random_color:
+    #         color = np.concatenate([np.random.random(3), np.array([0.6])], axis=0)
+    #     else:
+    #         color = np.array([30/255, 144/255, 255/255, 0.6])
+    #     h, w = mask.shape[-2:]
+    #     mask_image = mask.reshape(h, w, 1) * color.reshape(1, 1, -1)
+    #     ax.imshow(mask_image)
     
-    def show_points(self, coords, labels, ax, marker_size=375):
-        pos_points = coords[labels==1]
-        neg_points = coords[labels==0]
-        ax.scatter(pos_points[:, 0], pos_points[:, 1], color='green', marker='*', s=marker_size, edgecolor='white', linewidth=1.25)
-        ax.scatter(neg_points[:, 0], neg_points[:, 1], color='red', marker='*', s=marker_size, edgecolor='white', linewidth=1.25)   
+    # def show_points(self, coords, labels, ax, marker_size=375):
+    #     pos_points = coords[labels==1]
+    #     neg_points = coords[labels==0]
+    #     ax.scatter(pos_points[:, 0], pos_points[:, 1], color='green', marker='*', s=marker_size, edgecolor='white', linewidth=1.25)
+    #     ax.scatter(neg_points[:, 0], neg_points[:, 1], color='red', marker='*', s=marker_size, edgecolor='white', linewidth=1.25)   
         
-    def show_box(self, box, ax):
-        x0, y0 = box[0], box[1]
-        w, h = box[2] - box[0], box[3] - box[1]
-        ax.add_patch(plt.Rectangle((x0, y0), w, h, edgecolor='green', facecolor=(0,0,0,0), lw=2))  
+    # def show_box(self, box, ax):
+    #     x0, y0 = box[0], box[1]
+    #     w, h = box[2] - box[0], box[3] - box[1]
+    #     ax.add_patch(plt.Rectangle((x0, y0), w, h, edgecolor='green', facecolor=(0,0,0,0), lw=2))  
 
 def main():
 
@@ -151,7 +154,7 @@ def main():
             if msg["command"] == "COMPUTE_EMBEDDING":
                 srv.computeEmbedding()
             if msg["command"] == "INFER_IMAGE":
-                srv.infere_image( \
+                srv.infer_image( \
                     np.array(msg["parameters"]["point"]), \
                     np.array(msg["parameters"]["label"]), \
                     msg["parameters"]["name"])

@@ -41,6 +41,7 @@ class SammBaseWidget(SammWidgetBase):
         # UI
         self.ui.pushComputePredictor.connect('clicked(bool)', self.onPushComputePredictor)
         self.ui.pushStartMaskSync.connect('clicked(bool)', self.onPushStartMaskSync)
+        self.ui.pushStopMaskSync.connect('clicked(bool)', self.onPushStopMaskSync)
         self.ui.comboVolumeNode.connect("currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
         self.ui.markupsAdd.connect("markupsNodeChanged()", self.updateParameterNodeFromGUI)
         self.ui.markupsRemove.connect("markupsNodeChanged()", self.updateParameterNodeFromGUI)
@@ -69,6 +70,9 @@ class SammBaseWidget(SammWidgetBase):
         self.ui.comboVolumeNode.setCurrentNode(self._parameterNode.GetNodeReference("sammInputVolume"))
         self.ui.markupsAdd.setCurrentNode(self._parameterNode.GetNodeReference("sammPromptAdd"))
         self.ui.markupsRemove.setCurrentNode(self._parameterNode.GetNodeReference("sammPromptRemove"))
+        if self._parameterNode.GetNodeReferenceID("sammMask"):
+            self._parameterNode.GetNodeReference("sammMask").SetReferenceImageGeometryParameterFromVolumeNode(
+                self._parameterNode.GetNodeReference("sammInputVolume"))
         
         # All the GUI updates are done
         self._updatingGUIFromParameterNode = False
@@ -87,6 +91,8 @@ class SammBaseWidget(SammWidgetBase):
         self._parameterNode.SetNodeReferenceID("sammInputVolume", self.ui.comboVolumeNode.currentNodeID)
         self._parameterNode.SetNodeReferenceID("sammPromptAdd", self.ui.markupsAdd.currentNode().GetID())
         self._parameterNode.SetNodeReferenceID("sammPromptRemove", self.ui.markupsRemove.currentNode().GetID())
+        self._parameterNode.GetNodeReference("sammMask").SetReferenceImageGeometryParameterFromVolumeNode(
+            self._parameterNode.GetNodeReference("sammInputVolume"))
 
         self._parameterNode.EndModify(wasModified)
 
@@ -95,7 +101,12 @@ class SammBaseWidget(SammWidgetBase):
 
     def onPushStartMaskSync(self):
         self.logic._flag_prompt_sync = True
+        self.logic.processInitPromptSync()
         self.logic.processStartPromptSync()
         self.logic._flag_mask_sync = True
+        self.logic.processInitMaskSync()
         self.logic.processStartMaskSync()
         
+    def onPushStopMaskSync(self):
+        self.logic._flag_prompt_sync = False
+        self.logic._flag_mask_sync = False

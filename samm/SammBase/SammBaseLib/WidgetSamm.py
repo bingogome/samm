@@ -110,22 +110,24 @@ class SammWidgetBase(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.setParameterNode(self.logic.getParameterNode())
 
         # Select default input nodes if nothing is selected yet to save a few clicks for the user
-        if not self._parameterNode.GetNodeReference("sammPromptAdd"):
+        if not self._parameterNode.GetNodeReferenceID("sammPromptAdd"):
             markupsNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsFiducialNode", "add")
             self._parameterNode.SetNodeReferenceID("sammPromptAdd", markupsNode.GetID())
             markupsNode.GetDisplayNode().SetSelectedColor(0,1,0) 
             markupsNode.GetDisplayNode().SetTextScale(0)
 
-        if not self._parameterNode.GetNodeReference("sammPromptRemove"):
+        if not self._parameterNode.GetNodeReferenceID("sammPromptRemove"):
             markupsNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsFiducialNode", "rmv")
             self._parameterNode.SetNodeReferenceID("sammPromptRemove", markupsNode.GetID())
             markupsNode.GetDisplayNode().SetSelectedColor(1,0,0) 
             markupsNode.GetDisplayNode().SetTextScale(0)
         
-        if not self._parameterNode.GetNodeReference("sammMask"):
-            segmentation_node = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLSegmentationNode', 'msk')
-            self._parameterNode.SetNodeReferenceID("sammMask", segmentation_node.GetID())
-
+        if not self._parameterNode.GetNodeReferenceID("sammMask"):
+            segmentationNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLSegmentationNode', 'msk')
+            self._parameterNode.SetNodeReferenceID("sammMask", segmentationNode.GetID())
+            segmentationNode.CreateDefaultDisplayNodes() 
+            addedSegmentID = segmentationNode.GetSegmentation().AddEmptySegment("current")
+            
     def setParameterNode(self, inputParameterNode):
         """
         Set and observe parameter node.

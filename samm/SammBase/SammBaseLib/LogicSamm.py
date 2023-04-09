@@ -20,8 +20,7 @@ SOFTWARE.
 
 from slicer.ScriptedLoadableModule import *
 from slicer.util import VTKObservationMixin
-import slicer, mmap, qt, json, os, vtk, numpy
-import SimpleITK as sitk
+import slicer, mmap, qt, json, os, vtk, numpy, copy
 
 #
 # SammBaseLogic
@@ -51,10 +50,6 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         """
         Initialize parameter node with default settings.
         """
-        # if not parameterNode.GetParameter("Threshold"):
-        #     parameterNode.SetParameter("Threshold", "100.0")
-        # if not parameterNode.GetParameter("Invert"):
-        #     parameterNode.SetParameter("Invert", "false")
 
     def processGetVolumeMetaData(self, imageDataShape):
         """
@@ -75,7 +70,7 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
             slicer.util.errorDisplay("Please select workspace path first!")
             return
 
-        if not self._parameterNode.GetNodeReference("sammInputVolume"):
+        if not self._parameterNode.GetNodeReferenceID("sammInputVolume"):
             slicer.util.errorDisplay("Please select a volume first!")
             return
         
@@ -94,7 +89,7 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         minSliceVal, maxSliceVal, spacingSlice = metadata[0][0], metadata[0][1], metadata[0][2]
         self._parameterNode._volMetaData = metadata
 
-        for slc in range(imageSliceNum[2]):
+        for slc in range(imageSliceNum[1]):
 
             # set current slice offset
             lm = slicer.app.layoutManager()
@@ -132,22 +127,25 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         imageSliceNum = imageData.shape
         self._imageSliceNum = imageSliceNum
         self._workspace = "/home/yl/software/mmaptest"
+        self._segNumpy = numpy.zeros(imageSliceNum)
 
     def processStartMaskSync(self):
         """
         Receives updated masks 
         """
         if self._flag_mask_sync:
+            curslc = round((self._parameterNode._volMetaData[0][1]-self._slider.value)/self._parameterNode._volMetaData[0][2])
+            memmap = numpy.memmap(self._workspace + '/mask.memmap', \
+                dtype='bool', mode='r+', shape=(self._imageSliceNum[0], self._imageSliceNum[2])) 
+            self._segNumpy[:,curslc,:] = memmap.astype(int)
+            del memmap
+            slicer.util.updateSegmentBinaryLabelmapFromArray( \
+                self._segNumpy, \
+                self._parameterNode.GetNodeReference("sammMask"), \
+                "current", \
+                self._parameterNode.GetNodeReference("sammInputVolume") )
 
-            self.processInitMaskSync()
-
-            # memmap = numpy.memmap(self._workspace + '/mask.memmap', dtype='bool', mode='r+', shape=self._imageSliceNum)
-            # image = sitk.GetImageFromArray(memmap.astype(int))
-            # mask = sitk.BinaryThreshold(image, lowerThreshold=0, upperThreshold=1)
-            # slicer.modules.segmentations.logic().ImportLabelmapToSegmentationNode( \
-            #     mask, self._parameterNode.GetNodeReferenceID("sammMask"))
-
-            # qt.QTimer.singleShot(250, self.processStartMaskSync)
+            qt.QTimer.singleShot(250, self.processStartMaskSync)
 
     def processInitPromptSync(self):
         # Init
@@ -163,9 +161,9 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
 
     def processStartPromptSync(self):
         """
-        Sends updated prompts TODO
+        Sends updated prompts
         """
-        self.processInitPromptSync()
+
         volumeRasToIjk = vtk.vtkMatrix4x4()
         self._parameterNode.GetNodeReference("sammInputVolume").GetRASToIJKMatrix(volumeRasToIjk)
         prompt_add_point, prompt_remove_point = [], []
@@ -200,4 +198,4 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
             msg = json.dumps(msg)
             self._connections.sendCmd(msg)
 
-            qt.QTimer.singleShot(250, self.processStartPromptSync)
+            qt.QTimer.singleShot(500, self.processStartPromptSync)

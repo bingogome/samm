@@ -105,6 +105,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="pushStopMaskSync">
+         <property name="text">
+          <string>Stop Mask Sync</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <spacer name="verticalSpacer_2">
          <property name="orientation">
           <enum>Qt::Vertical</enum>

@@ -70,7 +70,7 @@ class SammWidgetBase(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.removeObservers()
         self.logic._flag_mask_sync = False
         self.logic._flag_prompt_sync = False
-        self.logic._flag_promptpoints_sync = False
+        self.logic._flag_promptpts_sync = False
         if self.logic._connections:
             self.logic._connections.clear()
             

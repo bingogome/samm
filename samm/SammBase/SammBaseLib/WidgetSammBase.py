@@ -109,11 +109,11 @@ class SammBaseWidget(SammWidgetBase):
         self.logic._flag_mask_sync = True
         self.logic.processInitMaskSync()
         self.logic.processStartMaskSync()
-        self.logic._flag_promptpoints_sync = True
+        self.logic._flag_promptpts_sync = True
         self.logic.processPromptPointsSync()
         
     def onPushStopMaskSync(self):
-        self.logic._flag_promptpoints_sync = False
+        self.logic._flag_promptpts_sync = False
         self.logic._flag_prompt_sync = False
         self.logic._flag_mask_sync = False
 

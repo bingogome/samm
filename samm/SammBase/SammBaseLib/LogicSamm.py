@@ -41,12 +41,12 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         Called when the logic class is instantiated. Can be used for initializing member variables.
         """
         ScriptedLoadableModuleLogic.__init__(self)
-        self._parameterNode = self.getParameterNode()
-        self._connections = None
-        self._flag_mask_sync = False
-        self._flag_prompt_sync = False
-        self._flag_promptpoints_sync = False
-        self._frozenSlice = []
+        self._parameterNode         = self.getParameterNode()
+        self._connections           = None
+        self._flag_mask_sync        = False
+        self._flag_prompt_sync      = False
+        self._flag_promptpts_sync   = False
+        self._frozenSlice           = []
 
     def setDefaultParameters(self, parameterNode):
         """
@@ -59,9 +59,9 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         """
         def getViewData(strview, numview):
             sliceController = slicer.app.layoutManager().sliceWidget(strview).sliceController()
-            minSliceVal = sliceController.sliceOffsetSlider().minimum
-            maxSliceVal = sliceController.sliceOffsetSlider().maximum
-            spacingSlice = (maxSliceVal - minSliceVal) / imageDataShape[numview]
+            minSliceVal     = sliceController.sliceOffsetSlider().minimum
+            maxSliceVal     = sliceController.sliceOffsetSlider().maximum
+            spacingSlice    = (maxSliceVal - minSliceVal) / imageDataShape[numview]
             return [minSliceVal, maxSliceVal, spacingSlice]
         
         return [getViewData("Red", 2), getViewData("Green", 1), getViewData("Yellow", 0)]
@@ -84,10 +84,10 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
             workspacepath = workspacepath + i + "/"
 
         # load in volume meta data (need to optimize here)
-        inModel = self._parameterNode.GetNodeReference("sammInputVolume")
-        imageData = slicer.util.arrayFromVolume(inModel)
-        imageSliceNum = imageData.shape
-        metadata = self.processGetVolumeMetaData(imageSliceNum)
+        inModel         = self._parameterNode.GetNodeReference("sammInputVolume")
+        imageData       = slicer.util.arrayFromVolume(inModel)
+        imageSliceNum   = imageData.shape
+        metadata        = self.processGetVolumeMetaData(imageSliceNum)
         minSliceVal, maxSliceVal, spacingSlice = metadata[0][0], metadata[0][1], metadata[0][2]
         self._parameterNode._volMetaData = metadata
 
@@ -124,12 +124,12 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
 
     def processInitMaskSync(self):
         # load in volume meta data (need to optimize here)
-        inModel = self._parameterNode.GetNodeReference("sammInputVolume")
-        imageData = slicer.util.arrayFromVolume(inModel)
-        imageSliceNum = imageData.shape
+        inModel         = self._parameterNode.GetNodeReference("sammInputVolume")
+        imageData       = slicer.util.arrayFromVolume(inModel)
+        imageSliceNum   = imageData.shape
         self._imageSliceNum = imageSliceNum
         self._workspace = "/home/yl/software/mmaptest"
-        self._segNumpy = numpy.zeros(imageSliceNum)
+        self._segNumpy  = numpy.zeros(imageSliceNum)
 
     def processStartMaskSync(self):
         """
@@ -155,19 +155,19 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
 
     def processInitPromptSync(self):
         # Init
-        self._prompt_add = self._parameterNode.GetNodeReference("sammPromptAdd")
+        self._prompt_add    = self._parameterNode.GetNodeReference("sammPromptAdd")
         self._prompt_remove = self._parameterNode.GetNodeReference("sammPromptRemove")
         # load in volume meta data (need to optimize here)
-        inModel = self._parameterNode.GetNodeReference("sammInputVolume")
-        imageData = slicer.util.arrayFromVolume(inModel)
-        imageSliceNum = imageData.shape
-        metadata = self.processGetVolumeMetaData(imageSliceNum)
+        inModel         = self._parameterNode.GetNodeReference("sammInputVolume")
+        imageData       = slicer.util.arrayFromVolume(inModel)
+        imageSliceNum   = imageData.shape
+        metadata        = self.processGetVolumeMetaData(imageSliceNum)
         self._parameterNode._volMetaData = metadata
-        self._slider = slicer.app.layoutManager().sliceWidget('Red').sliceController().sliceOffsetSlider()
-        volumeRasToIjk = vtk.vtkMatrix4x4()
+        self._slider    = slicer.app.layoutManager().sliceWidget('Red').sliceController().sliceOffsetSlider()
+        volumeRasToIjk  = vtk.vtkMatrix4x4()
         self._parameterNode.GetNodeReference("sammInputVolume").GetRASToIJKMatrix(volumeRasToIjk)
         self._volumeRasToIjk = volumeRasToIjk
-        volumeIjkToRas = vtk.vtkMatrix4x4()
+        volumeIjkToRas  = vtk.vtkMatrix4x4()
         self._parameterNode.GetNodeReference("sammInputVolume").GetIJKToRASMatrix(volumeIjkToRas)
         self._volumeIjkToRas = volumeIjkToRas
 
@@ -211,7 +211,7 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
             qt.QTimer.singleShot(400, self.processStartPromptSync)
 
     def processPromptPointsSync(self):
-        if self._flag_promptpoints_sync:
+        if self._flag_promptpts_sync:
 
             mode = slicer.mrmlScene.GetNodeByID("vtkMRMLInteractionNodeSingleton").GetInteractionModeAsString()
             curslc = (self._parameterNode._volMetaData[0][1]-self._slider.value)/self._parameterNode._volMetaData[0][2]

@@ -31,7 +31,7 @@ class UtilConnections():
         self.socket = None
         
     def setup(self):
-        self.socket = self.context.socket(zmq.PUB)
+        self.socket = self.context.socket(zmq.PUSH)
         self.socket.connect("tcp://localhost:5555")
 
     def clear(self):
@@ -40,4 +40,4 @@ class UtilConnections():
         self.context.destroy()
 
     def sendCmd(self, msg_json):
-        self.socket.send(msg_json)
+        self.socket.send_json(msg_json)

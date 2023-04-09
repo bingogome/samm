@@ -2,7 +2,7 @@ from segment_anything import sam_model_registry, SamPredictor
 from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
-import yaml, cv2, os, pickle, zmq
+import yaml, cv2, os, pickle, zmq, json
 
 class sam_server():
 
@@ -12,7 +12,7 @@ class sam_server():
         self.workspace = "/home/yl/software/mmaptest"
         self.config_path = self.workspace + "/config.yaml"
         self.slices_folder_path = self.workspace + "/slices"
-        self.sam_checkpoint = "sam_vit_h_4b8939.pth" #
+        self.sam_checkpoint = self.workspace + "/sam_vit_h_4b8939.pth" #
         self.model_type = "vit_h"
         self.device = "cuda"
 
@@ -134,20 +134,25 @@ class sam_server():
 
 def main():
 
+    print("Initializing SAM server  ... ")
     srv = sam_server()
+    print("SAM server initialized ... ")
     context = zmq.Context()
-    zmqsocket = context.socket(zmq.SUB)
-    zmqsocket.connect("tcp://localhost:5555")
-    # zmqsocket.setsockopt_unicode(zmq.SUBSCRIBE, "hl2")
-    zmqsocket.setsockopt(zmq.RCVTIMEO, -1)
+    zmqsocket = context.socket(zmq.PULL)
+    zmqsocket.bind("tcp://*:5555")
+    zmqsocket.setsockopt(zmq.RCVTIMEO, 30)
     srv.sock_rcv = zmqsocket
+
+    print("Starting To Wait for Messages ... ")
 
     while True:
         try:
-            msg = srv.sock_rcv.recv_json()
+            msg = json.loads(srv.sock_rcv.recv_json())
             if msg["command"] == "COMPUTE_EMBEDDING":
+                print("Compute Embedding ... ")
                 srv.computeEmbedding()
             if msg["command"] == "INFER_IMAGE":
+                print("Infer Image ... ")
                 srv.infere_image( \
                     np.array(msg["parameters"]["point"]), \
                     np.array(msg["parameters"]["label"]), \

@@ -20,7 +20,7 @@ SOFTWARE.
 
 from slicer.ScriptedLoadableModule import *
 from slicer.util import VTKObservationMixin
-import slicer, mmap, qt, json, os
+import slicer, mmap, qt, json, os, vtk
 
 #
 # SammBaseLogic
@@ -69,55 +69,55 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         return [getViewData("Red", 2), getViewData("Green", 1), getViewData("Yellow", 0)]
 
     def processComputePredictor(self):
-        # checkers
-        if not self.ui.pathWorkSpace.currentPath:
-            slicer.util.errorDisplay("Please select workspace path first!")
-            return
+        # # checkers
+        # if not self.ui.pathWorkSpace.currentPath:
+        #     slicer.util.errorDisplay("Please select workspace path first!")
+        #     return
 
-        if not self._parameterNode.GetNodeReference("sammInputVolume"):
-            slicer.util.errorDisplay("Please select a volume first!")
-            return
+        # if not self._parameterNode.GetNodeReference("sammInputVolume"):
+        #     slicer.util.errorDisplay("Please select a volume first!")
+        #     return
         
-        # get workspaces (optimize this!)
-        workspacepath_arr = self.ui.pathWorkSpace.currentPath.strip().split("/")
-        workspacepath_arr.pop()
-        workspacepath = ""
-        for i in workspacepath_arr:
-            workspacepath = workspacepath + i + "/"
+        # # get workspaces (optimize this!)
+        # workspacepath_arr = self.ui.pathWorkSpace.currentPath.strip().split("/")
+        # workspacepath_arr.pop()
+        # workspacepath = ""
+        # for i in workspacepath_arr:
+        #     workspacepath = workspacepath + i + "/"
 
-        # load in volume meta data (need to optimize here)
-        inModel = self._parameterNode.GetNodeReference("sammInputVolume")
-        imageData = slicer.util.arrayFromVolume(inModel)
-        imageSliceNum = imageData.shape
+        # # load in volume meta data (need to optimize here)
+        # inModel = self._parameterNode.GetNodeReference("sammInputVolume")
+        # imageData = slicer.util.arrayFromVolume(inModel)
+        # imageSliceNum = imageData.shape
 
-        metadata = self.processGetVolumeMetaData(imageSliceNum)
+        # metadata = self.processGetVolumeMetaData(imageSliceNum)
 
-        minSliceVal, maxSliceVal, spacingSlice = metadata[0][0], metadata[0][1], metadata[0][2]
+        # minSliceVal, maxSliceVal, spacingSlice = metadata[0][0], metadata[0][1], metadata[0][2]
 
-        self._parameterNode._volMetaData = metadata
+        # self._parameterNode._volMetaData = metadata
 
-        for slc in range(imageSliceNum[2]):
+        # for slc in range(imageSliceNum[2]):
 
-            # set current slice offset
-            lm = slicer.app.layoutManager()
-            redWidget = lm.sliceWidget('Red')
-            redWidget.sliceController().sliceOffsetSlider().value = minSliceVal + slc * spacingSlice
-            slicer.app.processEvents()
+        #     # set current slice offset
+        #     lm = slicer.app.layoutManager()
+        #     redWidget = lm.sliceWidget('Red')
+        #     redWidget.sliceController().sliceOffsetSlider().value = minSliceVal + slc * spacingSlice
+        #     slicer.app.processEvents()
 
-            img = imageData[:,slc,:]
-            input_bytes = img.tobytes()
+        #     img = imageData[:,slc,:]
+        #     input_bytes = img.tobytes()
 
-            SHARED_MEMORY_SIZE = len(input_bytes)
-            fd = os.open(workspacepath + "slices/slc" + str(slc), os.O_CREAT | os.O_TRUNC | os.O_RDWR)
-            os.truncate(fd, SHARED_MEMORY_SIZE)  # resize file
+        #     SHARED_MEMORY_SIZE = len(input_bytes)
+        #     fd = os.open(workspacepath + "slices/slc" + str(slc), os.O_CREAT | os.O_TRUNC | os.O_RDWR)
+        #     os.truncate(fd, SHARED_MEMORY_SIZE)  # resize file
 
-            # Use numpy memmap instead TODO
-            map = mmap.mmap(fd, SHARED_MEMORY_SIZE)
-            map.write(input_bytes)
+        #     # Use numpy memmap instead TODO
+        #     map = mmap.mmap(fd, SHARED_MEMORY_SIZE)
+        #     map.write(input_bytes)
 
-        f = open(self.ui.pathWorkSpace.currentPath.strip(), "w")
-        f.write("IMAGE_WIDTH: " + str(img.shape[0]) + "\n" + "IMAGE_HEIGHT: " + str(img.shape[1]) + "\n" )
-        f.close()
+        # f = open(self.ui.pathWorkSpace.currentPath.strip(), "w")
+        # f.write("IMAGE_WIDTH: " + str(img.shape[0]) + "\n" + "IMAGE_HEIGHT: " + str(img.shape[1]) + "\n" )
+        # f.close()
 
         msg = {
             "command": "COMPUTE_EMBEDDING",
@@ -125,6 +125,9 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         }
         msg = json.dumps(msg)
         self._connections.sendCmd(msg)
+        print("Sent Embedding Computing Command.")
+        self._prompt_add = self._parameterNode.GetNodeReference("sammPromptAdd")
+        self._prompt_remove = self._parameterNode.GetNodeReference("sammPromptRemove")
 
     def processStartMaskSync(self):
         """
@@ -148,14 +151,9 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         """
         if self._flag_prompt_sync:
             
-            pointListNode = slicer.util.getNode("F")
-            numControlPoints = pointListNode.GetNumberOfControlPoints()
+            numControlPoints = self._prompt_add.GetNumberOfControlPoints()
             for i in range(numControlPoints):
-            ras = vtk.vtkVector3d(0,0,0)
-            pointListNode.GetNthControlPointPosition(i,ras)
-            # the world position is the RAS position with any transform matrices applied
-            world = [0.0, 0.0, 0.0]
-            pointListNode.GetNthControlPointPositionWorld(i,world)
-            print(i,": RAS =",ras,", world =",world)
-
+                ras = vtk.vtkVector3d(0,0,0)
+                self._prompt_add.GetNthControlPointPosition(i,ras)
+                
             qt.QTimer.singleShot(250, self.processStartPromptSync)

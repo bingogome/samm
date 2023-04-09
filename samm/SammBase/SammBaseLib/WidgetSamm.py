@@ -61,6 +61,7 @@ class SammWidgetBase(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # in batch mode, without a graphical user interface.
         self.logic = SammBaseLogic()
         self.logic._connections = UtilConnections()
+        self.logic._connections.setup()
 
     def cleanup(self):
         """

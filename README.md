@@ -18,7 +18,22 @@ Our project, **Segment Any Medical-Model** aims to develop an integration for [S
 
 ### Installation
 
-It's essential to have a clean virtual environment to avoid any potential conflicts. Therefore, you'd better to create a new environment for the other 
+#### Create Virtual Environment
+
+It's essential to have a clean virtual environment to avoid any potential conflicts. Therefore, you'd better to create a new environment for running the rest part of the code.
+
+Install any version of anaconda to manage the virtual environment. Anaconda installation guide can be found [here](https://docs.anaconda.com/anaconda/install/).
+
+Create virtual environment and activate it:
+
+```bash
+conda create --name samm
+conda activate samm
+```
+
+Note: The given python script in this [folder](/samm-python-terminal) has to be executed in samm venv.
+
+
 
 #### Install SAM
 
@@ -26,7 +41,7 @@ The code requires `python>=3.8`, as well as `pytorch>=1.7` and `torchvision>=0.8
 
 Install Segment Anything:
 
-```
+```bash
 pip install git+https://github.com/facebookresearch/segment-anything.git
 ```
 
@@ -50,18 +65,21 @@ pip install opencv-python pycocotools matplotlib onnxruntime onnx
 Follow this [page](https://slicer.readthedocs.io/en/latest/user_guide/getting_started.html) to download a compatible version of 3D Slicer and install it in your local environment.
 
 
-#### Install the Extension to 3D Slicer
+
+#### Install the SAMM Extension to 3D Slicer
 
 The source code of the extension is contained in [samm](/samm).
 
+In the GUI of 3D Slicer, expand the extension drop-down menu, and choose `Developer Tools` &rarr; `Extension Wizard`.
+
+Then on the left side of the GUI, click the toggle bar named `Extension Tools` and click `Select Extension' button. It will prompt a navigation window where you can find, select and import the samm folder. 
+
+To launch the extension, go back to the extension drop-down menu, and choose `Segmentation`  &rarr;`Samm Base`. 
 
 
-### Demo
 
-#### Notebook
+## Demo
 
-
-
-#### Youtube
+### Youtube
 
 https://www.youtube.com/watch?v=vZK45noZVIA

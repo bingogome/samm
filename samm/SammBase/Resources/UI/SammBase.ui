@@ -98,20 +98,6 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pushStartMaskSync">
-         <property name="text">
-          <string>Start Mask Sync</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="pushStopMaskSync">
-         <property name="text">
-          <string>Stop Mask Sync</string>
-         </property>
-        </widget>
-       </item>
-       <item>
         <spacer name="verticalSpacer_2">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -132,6 +118,34 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_3">
        <item>
+        <widget class="QPushButton" name="pushStartMaskSync">
+         <property name="text">
+          <string>Start Mask Sync</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushStopMaskSync">
+         <property name="text">
+          <string>Stop Mask Sync</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushFreezeSlice">
+         <property name="text">
+          <string>Freeze Current Slice</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushUnfreezeSlice">
+         <property name="text">
+          <string>Un-feeze Current Slice</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QLabel" name="label_3">
          <property name="minimumSize">
           <size>
@@ -146,6 +160,9 @@
        </item>
        <item>
         <widget class="qSlicerSimpleMarkupsWidget" name="markupsAdd">
+         <property name="enterPlaceModeOnNodeChange">
+          <bool>false</bool>
+         </property>
          <property name="nodeColor">
           <color>
            <red>0</red>
@@ -177,6 +194,9 @@
        </item>
        <item>
         <widget class="qSlicerSimpleMarkupsWidget" name="markupsRemove">
+         <property name="enterPlaceModeOnNodeChange">
+          <bool>false</bool>
+         </property>
          <property name="defaultNodeColor">
           <color>
            <red>255</red>

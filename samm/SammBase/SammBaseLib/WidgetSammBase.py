@@ -42,9 +42,12 @@ class SammBaseWidget(SammWidgetBase):
         self.ui.pushComputePredictor.connect('clicked(bool)', self.onPushComputePredictor)
         self.ui.pushStartMaskSync.connect('clicked(bool)', self.onPushStartMaskSync)
         self.ui.pushStopMaskSync.connect('clicked(bool)', self.onPushStopMaskSync)
+        self.ui.pushFreezeSlice.connect('clicked(bool)', self.onPushFreezeSlice)
+        self.ui.pushUnfreezeSlice.connect('clicked(bool)', self.onPushUnfreezeSlice)
         self.ui.comboVolumeNode.connect("currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
         self.ui.markupsAdd.connect("markupsNodeChanged()", self.updateParameterNodeFromGUI)
         self.ui.markupsRemove.connect("markupsNodeChanged()", self.updateParameterNodeFromGUI)
+
         self.ui.markupsAdd.markupsPlaceWidget().setPlaceModePersistency(True)
         self.ui.markupsRemove.markupsPlaceWidget().setPlaceModePersistency(True)
 
@@ -106,7 +109,20 @@ class SammBaseWidget(SammWidgetBase):
         self.logic._flag_mask_sync = True
         self.logic.processInitMaskSync()
         self.logic.processStartMaskSync()
+        self.logic._flag_promptpoints_sync = True
+        self.logic.processPromptPointsSync()
         
     def onPushStopMaskSync(self):
+        self.logic._flag_promptpoints_sync = False
         self.logic._flag_prompt_sync = False
         self.logic._flag_mask_sync = False
+
+    def onPushFreezeSlice(self):
+        curslc = round((self._parameterNode._volMetaData[0][1]-self.logic._slider.value)/self._parameterNode._volMetaData[0][2])
+        if curslc not in self.logic._frozenSlice:
+            self.logic._frozenSlice.append(curslc)
+
+    def onPushUnfreezeSlice(self):
+        curslc = round((self._parameterNode._volMetaData[0][1]-self.logic._slider.value)/self._parameterNode._volMetaData[0][2])
+        if curslc in self.logic._frozenSlice:
+            self.logic._frozenSlice.remove(curslc)

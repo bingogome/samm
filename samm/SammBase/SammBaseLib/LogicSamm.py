@@ -45,6 +45,8 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         self._connections = None
         self._flag_mask_sync = False
         self._flag_prompt_sync = False
+        self._flag_promptpoints_sync = False
+        self._frozenSlice = []
 
     def setDefaultParameters(self, parameterNode):
         """
@@ -133,18 +135,22 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         """
         Receives updated masks 
         """
+        
         if self._flag_mask_sync:
-            curslc = round((self._parameterNode._volMetaData[0][1]-self._slider.value)/self._parameterNode._volMetaData[0][2])
-            memmap = numpy.memmap(self._workspace + '/mask.memmap', \
-                dtype='bool', mode='r+', shape=(self._imageSliceNum[0], self._imageSliceNum[2])) 
-            self._segNumpy[:,curslc,:] = memmap.astype(int)
-            del memmap
-            slicer.util.updateSegmentBinaryLabelmapFromArray( \
-                self._segNumpy, \
-                self._parameterNode.GetNodeReference("sammMask"), \
-                "current", \
-                self._parameterNode.GetNodeReference("sammInputVolume") )
 
+            curslc = round((self._parameterNode._volMetaData[0][1]-self._slider.value)/self._parameterNode._volMetaData[0][2])
+            
+            if curslc not in self._frozenSlice:
+                memmap = numpy.memmap(self._workspace + '/mask.memmap', \
+                    dtype='bool', mode='r+', shape=(self._imageSliceNum[0], self._imageSliceNum[2])) 
+                self._segNumpy[:,curslc,:] = memmap.astype(int)
+                del memmap
+                slicer.util.updateSegmentBinaryLabelmapFromArray( \
+                    self._segNumpy, \
+                    self._parameterNode.GetNodeReference("sammMask"), \
+                    "current", \
+                    self._parameterNode.GetNodeReference("sammInputVolume") )
+                
             qt.QTimer.singleShot(250, self.processStartMaskSync)
 
     def processInitPromptSync(self):
@@ -158,44 +164,73 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         metadata = self.processGetVolumeMetaData(imageSliceNum)
         self._parameterNode._volMetaData = metadata
         self._slider = slicer.app.layoutManager().sliceWidget('Red').sliceController().sliceOffsetSlider()
+        volumeRasToIjk = vtk.vtkMatrix4x4()
+        self._parameterNode.GetNodeReference("sammInputVolume").GetRASToIJKMatrix(volumeRasToIjk)
+        self._volumeRasToIjk = volumeRasToIjk
+        volumeIjkToRas = vtk.vtkMatrix4x4()
+        self._parameterNode.GetNodeReference("sammInputVolume").GetIJKToRASMatrix(volumeIjkToRas)
+        self._volumeIjkToRas = volumeIjkToRas
 
     def processStartPromptSync(self):
         """
         Sends updated prompts
         """
 
-        volumeRasToIjk = vtk.vtkMatrix4x4()
-        self._parameterNode.GetNodeReference("sammInputVolume").GetRASToIJKMatrix(volumeRasToIjk)
         prompt_add_point, prompt_remove_point = [], []
 
         if self._flag_prompt_sync:
 
             curslc = round((self._parameterNode._volMetaData[0][1]-self._slider.value)/self._parameterNode._volMetaData[0][2])
 
+            if curslc not in self._frozenSlice:
+
+                numControlPoints = self._prompt_add.GetNumberOfControlPoints()
+                for i in range(numControlPoints):
+                    ras = vtk.vtkVector3d(0,0,0)
+                    self._prompt_add.GetNthControlPointPosition(i,ras)
+                    temp = self._volumeRasToIjk.MultiplyPoint([ras[0],ras[1],ras[2],1])
+                    prompt_add_point.append([temp[0], temp[2]])
+
+                numControlPoints = self._prompt_remove.GetNumberOfControlPoints()
+                for i in range(numControlPoints):
+                    ras = vtk.vtkVector3d(0,0,0)
+                    self._prompt_remove.GetNthControlPointPosition(i,ras)
+                    temp = self._volumeRasToIjk.MultiplyPoint([ras[0],ras[1],ras[2],1])
+                    prompt_remove_point.append([temp[0], temp[2]])
+
+                msg = {
+                    "command": "INFER_IMAGE",
+                    "parameters": {
+                        "point": prompt_add_point + prompt_remove_point,
+                        "label": [1] * len(prompt_add_point) + [0] * len(prompt_remove_point),
+                        "name": "slc"+str(curslc)
+                    }
+                }
+                msg = json.dumps(msg)
+                self._connections.sendCmd(msg)
+            qt.QTimer.singleShot(400, self.processStartPromptSync)
+
+    def processPromptPointsSync(self):
+        if self._flag_promptpoints_sync:
+
+            mode = slicer.mrmlScene.GetNodeByID("vtkMRMLInteractionNodeSingleton").GetInteractionModeAsString()
+            curslc = (self._parameterNode._volMetaData[0][1]-self._slider.value)/self._parameterNode._volMetaData[0][2]
             numControlPoints = self._prompt_add.GetNumberOfControlPoints()
+            if mode == "Place":
+                numControlPoints = numControlPoints - 1
             for i in range(numControlPoints):
                 ras = vtk.vtkVector3d(0,0,0)
                 self._prompt_add.GetNthControlPointPosition(i,ras)
-                temp = volumeRasToIjk.MultiplyPoint([ras[0],ras[1],ras[2],1])
-                prompt_add_point.append([temp[0], temp[2]])
+                temp = self._volumeRasToIjk.MultiplyPoint([ras[0],ras[1],ras[2],1])
+                ras = self._volumeIjkToRas.MultiplyPoint([temp[0],curslc,temp[2],1])
+                self._prompt_add.SetNthControlPointPosition(i,ras[0],ras[1],ras[2])
 
             numControlPoints = self._prompt_remove.GetNumberOfControlPoints()
             for i in range(numControlPoints):
                 ras = vtk.vtkVector3d(0,0,0)
                 self._prompt_remove.GetNthControlPointPosition(i,ras)
-                temp = volumeRasToIjk.MultiplyPoint([ras[0],ras[1],ras[2],1])
-                prompt_remove_point.append([temp[0], temp[2]])
-
-            msg = {
-                "command": "INFER_IMAGE",
-                "parameters": {
-                    "point": prompt_add_point + prompt_remove_point,
-                    "label": [1] * len(prompt_add_point) + [0] * len(prompt_remove_point),
-                    "name": "slc"+str(curslc)
-                }
-            }
-
-            msg = json.dumps(msg)
-            self._connections.sendCmd(msg)
-
-            qt.QTimer.singleShot(500, self.processStartPromptSync)
+                temp = self._volumeRasToIjk.MultiplyPoint([ras[0],ras[1],ras[2],1])
+                ras = self._volumeIjkToRas.MultiplyPoint([temp[0],curslc,temp[2],1])
+                self._prompt_remove.SetNthControlPointPosition(i,ras[0],ras[1],ras[2])
+                
+            qt.QTimer.singleShot(60, self.processPromptPointsSync)

@@ -90,8 +90,11 @@ class sam_server():
     def infer_image(self, input_point, input_label, image_name):
         # input_point = np.array([[200, 100]])
         # input_label = np.array([1])
-        self.load_feature(self.workspace + "/segmented_images/segmented_" + image_name + ".pkl")
-        self.predict(input_point,input_label)
+        if len(input_label) != 0:
+            self.load_feature(self.workspace + "/segmented_images/segmented_" + image_name + ".pkl")
+            self.predict(input_point,input_label)
+        else:
+            self.masks = np.full(self.predictor.original_size, False)
         # self.imageshow("/home/yl/software/mmaptest/slices/" + image_name)
         memmap = np.memmap(self.workspace + '/mask.memmap', dtype='bool', mode='w+', shape=self.masks[0].shape)
         memmap[:] = self.masks[0][:]

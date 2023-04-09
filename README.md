@@ -1,4 +1,4 @@
-# Segment Any Medical-Model (SAMM)
+# Segment Any Medical-Model (SAMM): A 3D Slicer integration to the Meta SAM.
 
 [The Laboratory for Computational Sensing and Robotics (LCSR)](https://lcsr.jhu.edu/), [Johns Hopkins University](https://www.jhu.edu/)
 

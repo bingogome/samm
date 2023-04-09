@@ -4,7 +4,9 @@
 
 [Yihao Liu](https://yihao.one/), [Jeremy Zhang](https://jeremyzz830.github.io/), Zhangcong She
 
+## Demo
 
+https://www.youtube.com/watch?v=vZK45noZVIA
 
 ## Motivation
 
@@ -90,8 +92,4 @@ To launch the extension, go back to the extension drop-down menu, and choose `Se
 
 
 
-## Demo
 
-#### Youtube
-
-https://www.youtube.com/watch?v=vZK45noZVIA

@@ -92,7 +92,7 @@ class sam_server():
         # input_label = np.array([1])
         self.load_feature(self.workspace + "/segmented_images/segmented_" + image_name + ".pkl")
         self.predict(input_point,input_label)
-        # self.imageshow("/home/yl/software/mmaptest/slices/slc50")
+        # self.imageshow("/home/yl/software/mmaptest/slices/" + image_name)
         
     def imageshow(self, image_path):
         with open(self.config_path, 'r') as file:
@@ -149,14 +149,12 @@ def main():
         try:
             msg = json.loads(srv.sock_rcv.recv_json())
             if msg["command"] == "COMPUTE_EMBEDDING":
-                print("Compute Embedding ... ")
                 srv.computeEmbedding()
             if msg["command"] == "INFER_IMAGE":
-                print("Infer Image ... ")
                 srv.infere_image( \
                     np.array(msg["parameters"]["point"]), \
                     np.array(msg["parameters"]["label"]), \
-                    np.array(msg["parameters"]["name"]))
+                    msg["parameters"]["name"])
         except:
             continue
         

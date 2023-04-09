@@ -94,7 +94,8 @@ class SammBaseWidget(SammWidgetBase):
         self.logic.processComputePredictor()
 
     def onPushStartMaskSync(self):
-        self.logic.processStartPromptSync()
         self.logic._flag_prompt_sync = True
-        self.logic.processStartMaskSync()
+        self.logic.processStartPromptSync()
         self.logic._flag_mask_sync = True
+        self.logic.processStartMaskSync()
+        

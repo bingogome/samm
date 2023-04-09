@@ -226,6 +226,8 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
                 self._prompt_add.SetNthControlPointPosition(i,ras[0],ras[1],ras[2])
 
             numControlPoints = self._prompt_remove.GetNumberOfControlPoints()
+            if mode == "Place":
+                numControlPoints = numControlPoints - 1
             for i in range(numControlPoints):
                 ras = vtk.vtkVector3d(0,0,0)
                 self._prompt_remove.GetNthControlPointPosition(i,ras)

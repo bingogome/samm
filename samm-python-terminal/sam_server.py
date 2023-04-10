@@ -48,7 +48,8 @@ class sam_server():
         # Loop through all files in the folder
         for filename in os.listdir(self.slices_folder_path):
 
-            data = np.fromfile(os.path.join(self.slices_folder_path, filename),dtype=np.float64)
+            data = np.memmap(os.path.join(self.slices_folder_path, filename), \
+                dtype='float64', mode='r+') 
             data = data.reshape((image_width,image_height,1))# reshape
             data = 255 * data / data.max()
             data = cv2.cvtColor(data.astype(np.uint8), cv2.COLOR_GRAY2BGR)

@@ -20,7 +20,7 @@ SOFTWARE.
 
 from slicer.ScriptedLoadableModule import *
 from slicer.util import VTKObservationMixin
-import slicer, mmap, qt, json, os, vtk, numpy, copy
+import slicer, qt, json, os, vtk, numpy, copy
 
 #
 # SammBaseLogic
@@ -47,6 +47,8 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         self._flag_prompt_sync      = False
         self._flag_promptpts_sync   = False
         self._frozenSlice           = []
+        self._workspace = "/home/yl/software/mmaptest"
+
 
     def setDefaultParameters(self, parameterNode):
         """
@@ -99,16 +101,11 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
             redWidget.sliceController().sliceOffsetSlider().value = maxSliceVal - slc * spacingSlice
             slicer.app.processEvents()
 
+            # send to server temp files
             img = imageData[:,slc,:]
-            input_bytes = img.tobytes()
-
-            SHARED_MEMORY_SIZE = len(input_bytes)
-            fd = os.open(workspacepath + "slices/slc" + str(slc), os.O_CREAT | os.O_TRUNC | os.O_RDWR)
-            os.truncate(fd, SHARED_MEMORY_SIZE)  # resize file
-
-            # Use numpy memmap instead TODO
-            map = mmap.mmap(fd, SHARED_MEMORY_SIZE)
-            map.write(input_bytes)
+            memmap = numpy.memmap(workspacepath + "slices/slc" + str(slc), dtype='float64', mode='w+', shape=img.shape)
+            memmap[:] = img[:]
+            memmap.flush()
 
         f = open(self.ui.pathWorkSpace.currentPath.strip(), "w")
         f.write("IMAGE_WIDTH: " + str(img.shape[0]) + "\n" + "IMAGE_HEIGHT: " + str(img.shape[1]) + "\n" )
@@ -128,7 +125,6 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         imageData       = slicer.util.arrayFromVolume(inModel)
         imageSliceNum   = imageData.shape
         self._imageSliceNum = imageSliceNum
-        self._workspace = "/home/yl/software/mmaptest"
         self._segNumpy  = numpy.zeros(imageSliceNum)
 
     def processStartMaskSync(self):

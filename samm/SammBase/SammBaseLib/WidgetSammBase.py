@@ -18,7 +18,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-import slicer, qt, zmq
+import slicer, qt, os
 from SammBaseLib.WidgetSamm import SammWidgetBase
 from slicer.util import VTKObservationMixin
 from vtk.util.numpy_support import vtk_to_numpy
@@ -96,6 +96,7 @@ class SammBaseWidget(SammWidgetBase):
         self._parameterNode.SetNodeReferenceID("sammPromptRemove", self.ui.markupsRemove.currentNode().GetID())
         self._parameterNode.GetNodeReference("sammMask").SetReferenceImageGeometryParameterFromVolumeNode(
             self._parameterNode.GetNodeReference("sammInputVolume"))
+        self._parameterNode._workspace = os.path.dirname(os.path.abspath(self.ui.pathWorkSpace.currentPath.strip()))
 
         self._parameterNode.EndModify(wasModified)
 

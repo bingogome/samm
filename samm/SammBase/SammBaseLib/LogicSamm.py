@@ -47,7 +47,6 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         self._flag_prompt_sync      = False
         self._flag_promptpts_sync   = False
         self._frozenSlice           = []
-        self._workspace = "/home/yl/software/mmaptest"
 
 
     def setDefaultParameters(self, parameterNode):
@@ -77,13 +76,6 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         if not self._parameterNode.GetNodeReferenceID("sammInputVolume"):
             slicer.util.errorDisplay("Please select a volume first!")
             return
-        
-        # get workspaces (optimize this!)
-        workspacepath_arr = self.ui.pathWorkSpace.currentPath.strip().split("/")
-        workspacepath_arr.pop()
-        workspacepath = ""
-        for i in workspacepath_arr:
-            workspacepath = workspacepath + i + "/"
 
         # load in volume meta data (need to optimize here)
         inModel         = self._parameterNode.GetNodeReference("sammInputVolume")
@@ -94,7 +86,7 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         self._parameterNode._volMetaData = metadata
 
         # create a folder to store slices
-        output_folder = os.path.join(workspacepath, 'slices')
+        output_folder = os.path.join(self._parameterNode._workspace, 'slices')
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
 
@@ -108,7 +100,7 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
 
             # send to server temp files
             img = imageData[:,slc,:]
-            memmap = numpy.memmap(workspacepath + "slices/slc" + str(slc), dtype='float64', mode='w+', shape=img.shape)
+            memmap = numpy.memmap(self._parameterNode._workspace + "/slices/slc" + str(slc), dtype='float64', mode='w+', shape=img.shape)
             memmap[:] = img[:]
             memmap.flush()
 
@@ -142,7 +134,7 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
             curslc = round((self._parameterNode._volMetaData[0][1]-self._slider.value)/self._parameterNode._volMetaData[0][2])
             
             if curslc not in self._frozenSlice:
-                memmap = numpy.memmap(self._workspace + '/mask.memmap', \
+                memmap = numpy.memmap(self._parameterNode._workspace + '/mask.memmap', \
                     dtype='bool', mode='r+', shape=(self._imageSliceNum[0], self._imageSliceNum[2])) 
                 self._segNumpy[:,curslc,:] = memmap.astype(int)
                 del memmap

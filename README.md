@@ -36,7 +36,7 @@ pip.main(['install', 'pyzmq'])
 
 SD Slicer -> `Developer Tools` &rarr; `Extension Wizard`.
 
-`Extension Tools` -> `Select Extension' -> import the samm/samm folder. 
+`Extension Tools` -> `Select Extension` -> import the samm/samm folder. 
 
 Back to terminal, cd to samm (upper level)
 

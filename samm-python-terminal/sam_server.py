@@ -59,8 +59,8 @@ class sam_server():
             (int(yaml_file["ORIGINAL_WIDTH"]), int(yaml_file["ORIGINAL_HEIGHT"]))
         
         masks = np.full(self.predictor.original_size, False)
-        memmap = np.memmap(self.workspace + '/mask.memmap', dtype='bool', mode='w+', shape=masks[0].shape)
-        memmap[:] = masks[0][:]
+        memmap = np.memmap(self.workspace + '/mask.memmap', dtype='bool', mode='w+', shape=masks.shape)
+        memmap[:] = masks[:]
         memmap.flush()
 
         # create a folder to store slices

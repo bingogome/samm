@@ -93,6 +93,11 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         minSliceVal, maxSliceVal, spacingSlice = metadata[0][0], metadata[0][1], metadata[0][2]
         self._parameterNode._volMetaData = metadata
 
+        # create a folder to store slices
+        output_folder = os.path.join(workspacepath, 'slices')
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder)
+
         for slc in range(imageSliceNum[1]):
 
             # set current slice offset

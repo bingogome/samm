@@ -14,9 +14,38 @@ Accurate image segmentation is crucial for medical image analysis as it enables 
 
 Our project, **Segment Any Medical-Model** aims to develop an integration for [Segment Anything Model (SAM)](https://github.com/facebookresearch/segment-anything) and [3D Slicer](https://www.slicer.org/) for future development and validation of the potentials of transferring Large Language Model to the medical image analysis field.
 
+## Installation and How-To-Use
 
+### TLDR version
 
-## Installation
+```bash
+git clone git@github.com:bingogome/samm.git
+conda create --name samm
+conda activate samm
+pip install git+https://github.com/facebookresearch/segment-anything.git
+pip install opencv-python pycocotools matplotlib onnxruntime onnx
+```
+
+Start 3D Slicer, in the Python Console:
+
+```python
+import pip
+pip.main(['install', 'pyyaml'])
+pip.main(['install', 'pyzmq'])
+```
+
+SD Slicer -> `Developer Tools` &rarr; `Extension Wizard`.
+
+`Extension Tools` -> `Select Extension' -> import the samm/samm folder. 
+
+Back to terminal, cd to samm (upper level)
+
+Run ./samm-python-terminal/sam_server.py
+
+If it throws an error missing "sam_vit_h_4b8939.pth", move segment-anything/notebooks/sam_vit_h_4b8939.pth to samm/samm-python-terminal/samm-workspace
+
+Follow the [demo](https://www.youtube.com/watch?v=vZK45noZVIA) and Segment Any Medical Model away!
+
 
 ### Install samm
 
@@ -25,8 +54,6 @@ Install this repo:
 ```bash
 git clone git@github.com:bingogome/samm.git
 ```
-
-​	
 
 ### Create Virtual Environment
 
@@ -42,8 +69,6 @@ conda activate samm
 ```
 
 Note: The given python script in this [folder](/samm-python-terminal) has to be executed in samm venv.
-
-
 
 ### Install SAM
 
@@ -62,20 +87,16 @@ git clone git@github.com:facebookresearch/segment-anything.git
 cd segment-anything; pip install -e .
 ```
 
-The following optional dependencies are necessary for mask post-processing, saving masks in COCO format, the example notebooks, and exporting the model in ONNX format. `jupyter` is also required to run the example notebooks.
+Then,
 
 ```
 pip install opencv-python pycocotools matplotlib onnxruntime onnx
 ```
 
 
-
-
-
 ### Install 3D Slicer
 
 Follow this [page](https://slicer.readthedocs.io/en/latest/user_guide/getting_started.html) to download a compatible version of 3D Slicer and install it in your local environment.
-
 
 
 ### Install the SAMM Extension to 3D Slicer

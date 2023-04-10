@@ -104,7 +104,7 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
             memmap[:] = img[:]
             memmap.flush()
 
-        f = open(self._parameterNode._workspace + "imgsize", "w+")
+        f = open(self._parameterNode._workspace + "/imgsize", "w+")
         f.write("IMAGE_WIDTH: " + str(img.shape[0]) + "\n" + "IMAGE_HEIGHT: " + str(img.shape[1]) + "\n" )
         f.close()
 

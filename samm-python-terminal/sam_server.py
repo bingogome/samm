@@ -8,29 +8,65 @@ class sam_server():
 
     def __init__(self):
 
-        # Load parameters (use config!!!)
-        self.workspace = "/home/yl/software/mmaptest"
-        self.config_path = self.workspace + "/config.yaml"
-        self.slices_folder_path = self.workspace + "/slices"
-        self.sam_checkpoint = self.workspace + "/sam_vit_h_4b8939.pth" #
+        # create a workspace
+        workspace = os.path.dirname(os.path.abspath(__file__))
+        workspace = os.path.join(workspace, 'samm-workspace')
+        if not os.path.exists(workspace):
+            os.makedirs(workspace)
+        self.workspace = workspace
+
+        # check if model exists
+        self.sam_checkpoint = self.workspace + "/sam_vit_h_4b8939.pth" 
+        if not os.path.isfile(self.sam_checkpoint):
+            raise Exception("SAM model file is not in " + self.sam_checkpoint)
+        
+        # Load the segmentation model
         self.model_type = "vit_h"
         self.device = "cuda"
-
-        # Load the segmentation model
         sam = sam_model_registry[self.model_type](checkpoint=self.sam_checkpoint)
         sam.to(device=self.device)
         self.predictor = SamPredictor(sam)
 
+        # temp files, just for initialization, will be overwritten
+        self.imgsize_path = self.workspace + "/imgsize"
+        if not os.path.isfile(self.imgsize_path):
+            f = open(self.workspace + "/imgsize", "w+")
+            f.write("IMAGE_WIDTH: " + str(240) + "\n" + "IMAGE_HEIGHT: " + str(352) + "\n" )
+            f.close()
+        if not os.path.isfile(self.workspace + "/imgsize_input_size"):
+            f = open(self.workspace + "/imgsize_input_size", "w")
+            f.write("INPUT_WIDTH: " + str(698) + "\n" \
+                + "INPUT_HEIGHT: " + str(1024) + "\n" )
+            f.close()
+        if not os.path.isfile(self.workspace + "/imgsize_original_size"):
+            f = open(self.workspace + "/imgsize_original_size", "w")
+            f.write("ORIGINAL_WIDTH: " + str(240) + "\n" \
+                + "ORIGINAL_HEIGHT: " + str(352) + "\n" )
+            f.close()
+        if not os.path.isfile(self.workspace + "/config.yaml"):
+            with open(self.workspace + "/config.yaml", 'w') as fp:
+                pass
+
         # initialize some parameters for testing (assumes the embeddings are saved)
         self.predictor.is_image_set = True
-        with open(self.workspace+"/config_input_size.yaml", 'r') as file:
+        with open(self.workspace+"/imgsize_input_size", 'r') as file:
             yaml_file = yaml.safe_load(file)
         self.predictor.input_size = \
             (int(yaml_file["INPUT_WIDTH"]), int(yaml_file["INPUT_HEIGHT"]))
-        with open(self.workspace+"/config_original_size.yaml", 'r') as file:
+        with open(self.workspace+"/imgsize_original_size", 'r') as file:
             yaml_file = yaml.safe_load(file)
         self.predictor.original_size = \
             (int(yaml_file["ORIGINAL_WIDTH"]), int(yaml_file["ORIGINAL_HEIGHT"]))
+        
+        masks = np.full(self.predictor.original_size, False)
+        memmap = np.memmap(self.workspace + '/mask.memmap', dtype='bool', mode='w+', shape=masks[0].shape)
+        memmap[:] = masks[0][:]
+        memmap.flush()
+
+        # create a folder to store slices
+        self.slices_folder_path = os.path.join(self.workspace, 'slices')
+        if not os.path.exists(self.slices_folder_path):
+            os.makedirs(self.slices_folder_path)
 
     def computeEmbedding(self):
 
@@ -40,7 +76,7 @@ class sam_server():
             os.makedirs(output_folder)
 
         # read size of images
-        with open(self.config_path, 'r') as file:
+        with open(self.imgsize_path, 'r') as file:
             yaml_file = yaml.safe_load(file)
         image_width = int(yaml_file["IMAGE_WIDTH"])
         image_height = int(yaml_file["IMAGE_HEIGHT"])
@@ -61,11 +97,11 @@ class sam_server():
                 pickle.dump(self.predictor.features, f)
                 print(f'Predictor successfully saved to "{f}"')
 
-        f = open(self.workspace + "/config_input_size.yaml", "w")
+        f = open(self.workspace + "/imgsize_input_size", "w")
         f.write("INPUT_WIDTH: " + str(self.predictor.input_size[0]) + "\n" \
             + "INPUT_HEIGHT: " + str(self.predictor.input_size[1]) + "\n" )
         f.close()
-        f = open(self.workspace + "/config_original_size.yaml", "w")
+        f = open(self.workspace + "/imgsize_original_size", "w")
         f.write("ORIGINAL_WIDTH: " + str(self.predictor.original_size[0]) + "\n" \
             + "ORIGINAL_HEIGHT: " + str(self.predictor.original_size[1]) + "\n" )
         f.close()
@@ -96,13 +132,13 @@ class sam_server():
             self.predict(input_point,input_label)
         else:
             self.masks = np.full(self.predictor.original_size, False)
-        # self.imageshow("/home/yl/software/mmaptest/slices/" + image_name)
+        # self.imageshow(self.workspace + "/slices/" + image_name)
         memmap = np.memmap(self.workspace + '/mask.memmap', dtype='bool', mode='w+', shape=self.masks[0].shape)
         memmap[:] = self.masks[0][:]
         memmap.flush()
 
     def imageshow(self, image_path):
-        with open(self.config_path, 'r') as file:
+        with open(self.imgsize_path, 'r') as file:
             yaml_file = yaml.safe_load(file)
         image_width = int(yaml_file["IMAGE_WIDTH"])
         image_height = int(yaml_file["IMAGE_HEIGHT"])

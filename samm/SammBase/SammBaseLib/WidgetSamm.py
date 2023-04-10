@@ -19,7 +19,7 @@ SOFTWARE.
 """
 
 from SammBaseLib.LogicSamm import SammBaseLogic
-import vtk, qt, ctk, slicer
+import vtk, qt, ctk, slicer, os
 from SammBaseLib.UtilConnections import UtilConnections
 from slicer.ScriptedLoadableModule import *
 from slicer.util import VTKObservationMixin
@@ -111,6 +111,14 @@ class SammWidgetBase(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # so that when the scene is saved and reloaded, these settings are restored.
 
         self.setParameterNode(self.logic.getParameterNode())
+        self._parameterNode._workspace = \
+            os.path.dirname( \
+            os.path.dirname( \
+            os.path.dirname( \
+            os.path.dirname( \
+            os.path.abspath(self.resourcePath('Configs/') ))))) \
+            + "/samm-python-terminal/samm-workspace/" 
+        self.ui.pathWorkSpace.currentPath = self._parameterNode._workspace + "config.yaml"
 
         # Select default input nodes if nothing is selected yet to save a few clicks for the user
         if not self._parameterNode.GetNodeReferenceID("sammPromptAdd"):

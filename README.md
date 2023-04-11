@@ -29,9 +29,8 @@ pip install opencv-python pycocotools matplotlib onnxruntime onnx
 Start 3D Slicer, in the Python Console:
 
 ```python
-import pip
-pip.main(['install', 'pyyaml'])
-pip.main(['install', 'pyzmq'])
+slicer.util.pip_install("pyyaml")
+slicer.util.pip_install("pyzmq")
 ```
 
 SD Slicer -> `Developer Tools` &rarr; `Extension Wizard`.

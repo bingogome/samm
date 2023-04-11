@@ -14,8 +14,9 @@ class sam_server():
         self.flag_loglat = False
         if self.flag_loglat:
             now = datetime.now()
-            self.timearr_RCV_INF = [now for idx in range(1000)]
-            self.timearr_CPL_INF = [now for idx in range(1000)]
+            self.logctrmax = 300
+            self.timearr_RCV_INF = [now for idx in range(self.logctrmax)]
+            self.timearr_CPL_INF = [now for idx in range(self.logctrmax)]
             self.timearr_EMB = [now, now]
 
         # create a workspace
@@ -198,11 +199,13 @@ def main():
 
     print("Starting To Wait for Messages ... ")
 
+    # Time log
+    if srv.flag_loglat:
+        ctr_RCV_INF = 0
+        ctr_CPL_INF = 0
+
     while True:
-        # Time log
-        if srv.flag_loglat:
-            ctr_RCV_INF = 0
-            ctr_CPL_INF = 0
+        
         # Main loop
         try:
             # Recv msg
@@ -230,11 +233,11 @@ def main():
                 if srv.flag_loglat:
                     srv.timearr_CPL_INF[ctr_CPL_INF] = datetime.now()
                     ctr_CPL_INF = ctr_CPL_INF + 1
-                    if ctr_RCV_INF >= 999 or ctr_CPL_INF >= 999:
-                        file_name = srv.workspace + "timearr_RCV_INF.pkl"
+                    if ctr_RCV_INF >= srv.logctrmax - 1 or ctr_CPL_INF >= srv.logctrmax - 1:
+                        file_name = srv.workspace + "/timearr_RCV_INF.pkl"
                         with open(file_name, 'wb') as file:
                             pickle.dump(srv.timearr_RCV_INF, file)
-                        file_name = srv.workspace + "timearr_CPL_INF.pkl"
+                        file_name = srv.workspace + "/timearr_CPL_INF.pkl"
                         with open(file_name, 'wb') as file:
                             pickle.dump(srv.timearr_CPL_INF, file)
                         print("Time for inference is saved.")

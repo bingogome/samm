@@ -48,17 +48,19 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         self._flag_prompt_sync      = False
         self._flag_promptpts_sync   = False
         self._frozenSlice           = []
+
         # Latency logging
         # log latency?
-        self.flag_loglat = False
+        self.flag_loglat            = False
         if self.flag_loglat:
-            now = datetime.now()
-            self.timearr_SND_INF = [now for idx in range(1000)]
-            self.timearr_RCV_MSK = [now for idx in range(1000)]
-            self.timearr_APL_MSK = [now for idx in range(1000)]
-            self.ctr_SND_INF = 0
-            self.ctr_RCV_MSK = 0
-            self.ctr_APL_MSK = 0
+            now                     = datetime.now()
+            self.logctrmax          = 300
+            self.timearr_SND_INF    = [now for idx in range(self.logctrmax)]
+            self.timearr_RCV_MSK    = [now for idx in range(self.logctrmax)]
+            self.timearr_APL_MSK    = [now for idx in range(self.logctrmax)]
+            self.ctr_SND_INF        = 0
+            self.ctr_RCV_MSK        = 0
+            self.ctr_APL_MSK        = 0
 
     def setDefaultParameters(self, parameterNode):
         """
@@ -137,15 +139,15 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
 
     def processSaveLatencyLog(self):
 
-        file_name = self._parameterNode._workspace + "timearr_SND_INF.pkl"
+        file_name = self._parameterNode._workspace + "/timearr_SND_INF.pkl"
         with open(file_name, 'wb') as file:
             pickle.dump(self.timearr_SND_INF, file)
 
-        file_name = self._parameterNode._workspace + "timearr_RCV_MSK.pkl"
+        file_name = self._parameterNode._workspace + "/timearr_RCV_MSK.pkl"
         with open(file_name, 'wb') as file:
             pickle.dump(self.timearr_RCV_MSK, file)
 
-        file_name = self._parameterNode._workspace + "timearr_APL_MSK.pkl"
+        file_name = self._parameterNode._workspace + "/timearr_APL_MSK.pkl"
         with open(file_name, 'wb') as file:
             pickle.dump(self.timearr_APL_MSK, file)
 
@@ -168,7 +170,7 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
                 if self.flag_loglat:
                     self.timearr_RCV_MSK[self.ctr_RCV_MSK] = datetime.now()
                     self.ctr_RCV_MSK = self.ctr_RCV_MSK + 1
-                    if self.ctr_RCV_MSK >= 999:
+                    if self.ctr_RCV_MSK >= self.logctrmax - 1:
                         self.processSaveLatencyLog()
                         self.flag_loglat = False
 
@@ -182,7 +184,7 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
             if self.flag_loglat:
                 self.timearr_APL_MSK[self.ctr_APL_MSK] = datetime.now()
                 self.ctr_APL_MSK = self.ctr_APL_MSK + 1
-                if self.ctr_APL_MSK >= 999:
+                if self.ctr_APL_MSK >= self.logctrmax - 1:
                     self.processSaveLatencyLog()
                     self.flag_loglat = False
                     
@@ -247,7 +249,7 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
             if self.flag_loglat:
                 self.timearr_SND_INF[self.ctr_SND_INF] = datetime.now()
                 self.ctr_SND_INF = self.ctr_SND_INF + 1
-                if self.ctr_SND_INF >= 999:
+                if self.ctr_SND_INF >= self.logctrmax - 1:
                     self.processSaveLatencyLog()
                     self.flag_loglat = False
 

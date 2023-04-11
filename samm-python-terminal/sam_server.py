@@ -3,10 +3,20 @@ from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
 import yaml, cv2, os, pickle, zmq, json
+from datetime import datetime
 
 class sam_server():
 
     def __init__(self):
+
+        # Latency logging
+        # log latency?
+        self.flag_loglat = False
+        if self.flag_loglat:
+            now = datetime.now()
+            self.timearr_RCV_INF = [now for idx in range(1000)]
+            self.timearr_CPL_INF = [now for idx in range(1000)]
+            self.timearr_EMB = [now, now]
 
         # create a workspace
         workspace = os.path.dirname(os.path.abspath(__file__))
@@ -189,15 +199,46 @@ def main():
     print("Starting To Wait for Messages ... ")
 
     while True:
+        # Time log
+        if srv.flag_loglat:
+            ctr_RCV_INF = 0
+            ctr_CPL_INF = 0
+        # Main loop
         try:
+            # Recv msg
             msg = json.loads(srv.sock_rcv.recv_json())
+            # Embedding command
             if msg["command"] == "COMPUTE_EMBEDDING":
+                if srv.flag_loglat:
+                    srv.timearr_EMB[0] = datetime.now()
                 srv.computeEmbedding()
+                if srv.flag_loglat:
+                    srv.timearr_EMB[1] = datetime.now()
+                    file_name = srv.workspace + "timearr_EMB.pkl"
+                    with open(file_name, 'wb') as file:
+                        pickle.dump(srv.timearr_EMB, file)
+                        print("Time for embedding computing is saved.")
+            # Inference command
             if msg["command"] == "INFER_IMAGE":
+                if srv.flag_loglat:
+                    srv.timearr_RCV_INF[ctr_RCV_INF] = datetime.now()
+                    ctr_RCV_INF = ctr_RCV_INF + 1
                 srv.infer_image( \
                     np.array(msg["parameters"]["point"]), \
                     np.array(msg["parameters"]["label"]), \
                     msg["parameters"]["name"])
+                if srv.flag_loglat:
+                    srv.timearr_CPL_INF[ctr_CPL_INF] = datetime.now()
+                    ctr_CPL_INF = ctr_CPL_INF + 1
+                    if ctr_RCV_INF >= 999 or ctr_CPL_INF >= 999:
+                        file_name = srv.workspace + "timearr_RCV_INF.pkl"
+                        with open(file_name, 'wb') as file:
+                            pickle.dump(srv.timearr_RCV_INF, file)
+                        file_name = srv.workspace + "timearr_CPL_INF.pkl"
+                        with open(file_name, 'wb') as file:
+                            pickle.dump(srv.timearr_CPL_INF, file)
+                        print("Time for inference is saved.")
+                        break
         except:
             continue
         

@@ -20,7 +20,8 @@ SOFTWARE.
 
 from slicer.ScriptedLoadableModule import *
 from slicer.util import VTKObservationMixin
-import slicer, qt, json, os, vtk, numpy, copy
+import slicer, qt, json, os, vtk, numpy, copy, pickle
+from datetime import datetime
 
 #
 # SammBaseLogic
@@ -47,7 +48,17 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         self._flag_prompt_sync      = False
         self._flag_promptpts_sync   = False
         self._frozenSlice           = []
-
+        # Latency logging
+        # log latency?
+        self.flag_loglat = False
+        if self.flag_loglat:
+            now = datetime.now()
+            self.timearr_SND_INF = [now for idx in range(1000)]
+            self.timearr_RCV_MSK = [now for idx in range(1000)]
+            self.timearr_APL_MSK = [now for idx in range(1000)]
+            self.ctr_SND_INF = 0
+            self.ctr_RCV_MSK = 0
+            self.ctr_APL_MSK = 0
 
     def setDefaultParameters(self, parameterNode):
         """
@@ -124,6 +135,22 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         self._imageSliceNum = imageSliceNum
         self._segNumpy  = numpy.zeros(imageSliceNum)
 
+    def processSaveLatencyLog(self):
+
+        file_name = self._parameterNode._workspace + "timearr_SND_INF.pkl"
+        with open(file_name, 'wb') as file:
+            pickle.dump(self.timearr_SND_INF, file)
+
+        file_name = self._parameterNode._workspace + "timearr_RCV_MSK.pkl"
+        with open(file_name, 'wb') as file:
+            pickle.dump(self.timearr_RCV_MSK, file)
+
+        file_name = self._parameterNode._workspace + "timearr_APL_MSK.pkl"
+        with open(file_name, 'wb') as file:
+            pickle.dump(self.timearr_APL_MSK, file)
+
+        print("Time for inference is saved.")
+
     def processStartMaskSync(self):
         """
         Receives updated masks 
@@ -137,6 +164,14 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
                 memmap = numpy.memmap(self._parameterNode._workspace + '/mask.memmap', \
                     dtype='bool', mode='r+', shape=(self._imageSliceNum[0], self._imageSliceNum[2])) 
                 self._segNumpy[:,curslc,:] = memmap.astype(int)
+
+                if self.flag_loglat:
+                    self.timearr_RCV_MSK[self.ctr_RCV_MSK] = datetime.now()
+                    self.ctr_RCV_MSK = self.ctr_RCV_MSK + 1
+                    if self.ctr_RCV_MSK >= 999:
+                        self.processSaveLatencyLog()
+                        self.flag_loglat = False
+
                 del memmap
                 slicer.util.updateSegmentBinaryLabelmapFromArray( \
                     self._segNumpy, \
@@ -144,7 +179,14 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
                     "current", \
                     self._parameterNode.GetNodeReference("sammInputVolume") )
                 
-            qt.QTimer.singleShot(250, self.processStartMaskSync)
+            if self.flag_loglat:
+                self.timearr_APL_MSK[self.ctr_APL_MSK] = datetime.now()
+                self.ctr_APL_MSK = self.ctr_APL_MSK + 1
+                if self.ctr_APL_MSK >= 999:
+                    self.processSaveLatencyLog()
+                    self.flag_loglat = False
+                    
+            qt.QTimer.singleShot(60, self.processStartMaskSync)
 
     def processInitPromptSync(self):
         # Init
@@ -201,7 +243,15 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
                 }
                 msg = json.dumps(msg)
                 self._connections.sendCmd(msg)
-            qt.QTimer.singleShot(400, self.processStartPromptSync)
+
+            if self.flag_loglat:
+                self.timearr_SND_INF[self.ctr_SND_INF] = datetime.now()
+                self.ctr_SND_INF = self.ctr_SND_INF + 1
+                if self.ctr_SND_INF >= 999:
+                    self.processSaveLatencyLog()
+                    self.flag_loglat = False
+
+            qt.QTimer.singleShot(60, self.processStartPromptSync)
 
     def processPromptPointsSync(self):
         if self._flag_promptpts_sync:

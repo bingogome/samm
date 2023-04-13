@@ -4,6 +4,10 @@
 
 [Yihao Liu](https://yihao.one/), [Jeremy Zhang](https://jeremyzz830.github.io/), Zhangcong She
 
+##
+Known issue:
+For some images with different axes then the tested images, the annotations will be on a different plane. Meta data was ignored. Issue #13.
+
 ## Demo
 
 https://www.youtube.com/watch?v=vZK45noZVIA

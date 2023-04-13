@@ -2,7 +2,7 @@ from segment_anything import sam_model_registry, SamPredictor
 from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
-import yaml, cv2, os, pickle, zmq, json
+import yaml, cv2, os, pickle, zmq, json, shutil
 from datetime import datetime
 
 class sam_server():
@@ -85,6 +85,16 @@ class sam_server():
         output_folder = os.path.join(self.workspace, 'segmented_images')
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
+
+        for filename in os.listdir(output_folder):
+            file_path = os.path.join(output_folder, filename)
+            try:
+                if os.path.isfile(file_path) or os.path.islink(file_path):
+                    os.unlink(file_path)
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)
+            except Exception as e:
+                print('Failed to delete %s. Reason: %s' % (file_path, e))
 
         # read size of images
         with open(self.imgsize_path, 'r') as file:

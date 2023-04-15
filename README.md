@@ -5,7 +5,9 @@
 [Yihao Liu](https://yihao.one/), [Jeremy Zhang](https://jeremyzz830.github.io/), Zhangcong She
 
 ## Known issues
-#13 Resolved with a not-so-elegant way. Tested work on MRHead, DZ-MR and CTChest data from Slicer. Please report a bug if your data is not working. Note for the first few seconds when you start "Mask Sync", the server is not so stable, wait a few seconds then slide it up and down, the mask then will be updated.
+#13 Resolved with a not-so-elegant way. Tested work on MRHead, DZ-MR, MRBrainTumor2 and CTChest data from Slicer. Please report a bug if your data is not working. Note for the first few seconds when you start "Mask Sync", the server is not so stable, wait a few seconds then slide it up and down, the mask then will be updated. Note now you can only work on the RED view. Will update later to support all 3 views.
+
+2D data is currently not supported. Will update later to have a selection.
 
 ## Demo
 
@@ -48,7 +50,6 @@ If it throws an error missing "sam_vit_h_4b8939.pth", move segment-anything/note
 
 Follow the [demo](https://www.youtube.com/watch?v=vZK45noZVIA) and Segment Any Medical Model away!
 
-
 ### Install samm
 
 Install this repo:
@@ -56,7 +57,6 @@ Install this repo:
 ```bash
 git clone git@github.com:bingogome/samm.git
 ```
-
 ### Create Virtual Environment
 
 It's essential to have a clean virtual environment to avoid any potential conflicts. Therefore, you'd better to create a new environment for running the rest part of the code.
@@ -95,11 +95,9 @@ Then,
 pip install opencv-python pycocotools matplotlib onnxruntime onnx
 ```
 
-
 ### Install 3D Slicer
 
 Follow this [page](https://slicer.readthedocs.io/en/latest/user_guide/getting_started.html) to download a compatible version of 3D Slicer and install it in your local environment.
-
 
 ### Install the SAMM Extension to 3D Slicer
 
@@ -109,10 +107,14 @@ In the GUI of 3D Slicer, expand the extension drop-down menu, and choose `Develo
 
 Then on the left side of the GUI, click the toggle bar named `Extension Tools` and click `Select Extension' button. It will prompt a navigation window where you can find, select and import the samm folder. 
 
-## Tutorial
+## Citation 
+If you use SAMM in your research, please consider use the following BibTeX entry.
 
-To launch the extension, go back to the extension drop-down menu, and choose `Segmentation`  &rarr;`Samm Base`. 
-
-
+@article{liu2023samm,
+  title={SAMM (Segment Any Medical Model): A 3D Slicer Integration to SAM},
+  author={Liu, Yihao and Zhang, Jiaming and She, Zhangcong and Kheradmand, Amir and Armand, Mehran},
+  journal={arXiv preprint arXiv:2304.05622},
+  year={2023}
+}
 
 

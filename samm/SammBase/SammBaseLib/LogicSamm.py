@@ -78,7 +78,9 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
             spacingSlice    = (maxSliceVal - minSliceVal) / imageDataShape[numview]
             return [minSliceVal, maxSliceVal, spacingSlice]
         
-        return [getViewData("Red", 2), getViewData("Green", 1), getViewData("Yellow", 0)]
+        return [getViewData("Red", self._parameterNode.RGYNpArrOrder[0]), \
+                getViewData("Green", self._parameterNode.RGYNpArrOrder[1]), \
+                getViewData("Yellow", self._parameterNode.RGYNpArrOrder[2])]
 
     def processComputePredictor(self):
         # checkers
@@ -97,12 +99,18 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         metadata        = self.processGetVolumeMetaData(imageSliceNum)
         minSliceVal, maxSliceVal, spacingSlice = metadata[0][0], metadata[0][1], metadata[0][2]
         self._parameterNode._volMetaData = metadata
+        IjkToRasDir = numpy.array([[0,0,0],[0,0,0],[0,0,0]])
+        self._parameterNode.GetNodeReference("sammInputVolume").GetIJKToRASDirections(IjkToRasDir)
+        self._parameterNode.RGYNpArrOrder = [0, 0, 0]
+        for i in range(3):
+            self._parameterNode.RGYNpArrOrder[i] = numpy.argmax(numpy.abs(IjkToRasDir.transpose()[i]))
 
         # create a folder to store slices
         output_folder = os.path.join(self._parameterNode._workspace, 'slices')
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
 
+        # clear previous slices
         for filename in os.listdir(output_folder):
             file_path = os.path.join(output_folder, filename)
             try:
@@ -113,16 +121,22 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
             except Exception as e:
                 print('Failed to delete %s. Reason: %s' % (file_path, e))
 
-        for slc in range(imageSliceNum[1]):
+        # assume red TODO (expand to different view)
+        for slc in range(imageSliceNum[self._parameterNode.RGYNpArrOrder[0]]):
 
             # set current slice offset
             lm = slicer.app.layoutManager()
-            redWidget = lm.sliceWidget('Red')
+            redWidget = lm.sliceWidget('Red') # assume red TODO (expand to different view)
             redWidget.sliceController().sliceOffsetSlider().value = maxSliceVal - slc * spacingSlice
             slicer.app.processEvents()
 
-            # send to server temp files
-            img = imageData[:,slc,:]
+            # send to server temp files # assume red TODO (expand to different view)
+            if self._parameterNode.RGYNpArrOrder[0] == 0:
+                img = imageData[slc,:,:]
+            elif self._parameterNode.RGYNpArrOrder[0] == 1:
+                img = imageData[:,slc,:]
+            elif self._parameterNode.RGYNpArrOrder[0] == 2:
+                img = imageData[:,:,slc]
             memmap = numpy.memmap(self._parameterNode._workspace + "/slices/slc" + str(slc), dtype='float64', mode='w+', shape=img.shape)
             memmap[:] = img[:]
             memmap.flush()
@@ -133,7 +147,8 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
 
         msg = {
             "command": "COMPUTE_EMBEDDING",
-            "parameters": []
+            "parameters": {
+            }
         }
         msg = json.dumps(msg)
         self._connections.sendCmd(msg)
@@ -169,13 +184,26 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         """
         
         if self._flag_mask_sync:
-
+            
+            # assume red TODO (expand to different view)
             curslc = round((self._parameterNode._volMetaData[0][1]-self._slider.value)/self._parameterNode._volMetaData[0][2])
+            if self._parameterNode.RGYNpArrOrder[0] == 0:
+                sliceshape = (self._imageSliceNum[1], self._imageSliceNum[2])
+            elif self._parameterNode.RGYNpArrOrder[0] == 1:
+                sliceshape = (self._imageSliceNum[0], self._imageSliceNum[2])
+            elif self._parameterNode.RGYNpArrOrder[0] == 2:
+                sliceshape = (self._imageSliceNum[0], self._imageSliceNum[1])
             
             if curslc not in self._frozenSlice:
                 memmap = numpy.memmap(self._parameterNode._workspace + '/mask.memmap', \
-                    dtype='bool', mode='r+', shape=(self._imageSliceNum[0], self._imageSliceNum[2])) 
-                self._segNumpy[:,curslc,:] = memmap.astype(int)
+                    dtype='bool', mode='r+', shape=sliceshape) 
+                # assume red TODO (expand to different view)
+                if self._parameterNode.RGYNpArrOrder[0] == 0:
+                    self._segNumpy[curslc,:,:] = memmap.astype(int)
+                elif self._parameterNode.RGYNpArrOrder[0] == 1:
+                    self._segNumpy[:,curslc,:] = memmap.astype(int)
+                elif self._parameterNode.RGYNpArrOrder[0] == 2:
+                    self._segNumpy[:,:,curslc] = memmap.astype(int)
 
                 if self.flag_loglat:
                     self.timearr_RCV_MSK[self.ctr_RCV_MSK] = datetime.now()
@@ -210,6 +238,7 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         imageSliceNum   = imageData.shape
         metadata        = self.processGetVolumeMetaData(imageSliceNum)
         self._parameterNode._volMetaData = metadata
+        # assume red TODO (expand to different view)
         self._slider    = slicer.app.layoutManager().sliceWidget('Red').sliceController().sliceOffsetSlider()
         volumeRasToIjk  = vtk.vtkMatrix4x4()
         self._parameterNode.GetNodeReference("sammInputVolume").GetRASToIJKMatrix(volumeRasToIjk)

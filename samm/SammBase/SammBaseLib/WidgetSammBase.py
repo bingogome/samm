@@ -119,11 +119,13 @@ class SammBaseWidget(SammWidgetBase):
         self.logic._flag_mask_sync = False
 
     def onPushFreezeSlice(self):
+        # assume red TODO (expand to different view)
         curslc = round((self._parameterNode._volMetaData[0][1]-self.logic._slider.value)/self._parameterNode._volMetaData[0][2])
         if curslc not in self.logic._frozenSlice:
             self.logic._frozenSlice.append(curslc)
 
     def onPushUnfreezeSlice(self):
+        # assume red TODO (expand to different view)
         curslc = round((self._parameterNode._volMetaData[0][1]-self.logic._slider.value)/self._parameterNode._volMetaData[0][2])
         if curslc in self.logic._frozenSlice:
             self.logic._frozenSlice.remove(curslc)

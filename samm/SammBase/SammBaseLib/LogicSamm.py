@@ -78,7 +78,9 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
             spacingSlice    = (maxSliceVal - minSliceVal) / imageDataShape[numview]
             return [minSliceVal, maxSliceVal, spacingSlice]
         
-        return [getViewData("Red", 2), getViewData("Green", 1), getViewData("Yellow", 0)]
+        return [getViewData("Red", 2-self._parameterNode.RGYNpArrOrder[0]), \
+                getViewData("Green", 2-self._parameterNode.RGYNpArrOrder[1]), \
+                getViewData("Yellow", 2-self._parameterNode.RGYNpArrOrder[2])]
 
     def processComputePredictor(self):
         # checkers
@@ -91,6 +93,11 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
             return
 
         # load in volume meta data (need to optimize here)
+        IjkToRasDir = numpy.array([[0,0,0],[0,0,0],[0,0,0]])
+        self._parameterNode.GetNodeReference("sammInputVolume").GetIJKToRASDirections(IjkToRasDir)
+        self._parameterNode.RGYNpArrOrder = [0, 0, 0]
+        for i in range(3):
+            self._parameterNode.RGYNpArrOrder[i] = 2-numpy.argmax(numpy.abs(IjkToRasDir.transpose()[i]))
         inModel         = self._parameterNode.GetNodeReference("sammInputVolume")
         imageData       = slicer.util.arrayFromVolume(inModel)
         imageSliceNum   = imageData.shape
@@ -103,6 +110,7 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
 
+        # clear previous slices
         for filename in os.listdir(output_folder):
             file_path = os.path.join(output_folder, filename)
             try:
@@ -113,16 +121,29 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
             except Exception as e:
                 print('Failed to delete %s. Reason: %s' % (file_path, e))
 
-        for slc in range(imageSliceNum[1]):
+        # assume red TODO (expand to different view)
+        for slc in range(imageSliceNum[2-self._parameterNode.RGYNpArrOrder[0]]):
 
             # set current slice offset
             lm = slicer.app.layoutManager()
-            redWidget = lm.sliceWidget('Red')
-            redWidget.sliceController().sliceOffsetSlider().value = maxSliceVal - slc * spacingSlice
+            redWidget = lm.sliceWidget('Red') # assume red TODO (expand to different view)
+            # send to server temp files # assume red TODO (expand to different view)
+            if self._parameterNode.RGYNpArrOrder[0] == 0:
+                redWidget.sliceController().sliceOffsetSlider().value = minSliceVal + slc * spacingSlice
+            elif self._parameterNode.RGYNpArrOrder[1] == 1:
+                redWidget.sliceController().sliceOffsetSlider().value = maxSliceVal - slc * spacingSlice
+            elif self._parameterNode.RGYNpArrOrder[2] == 2:
+                redWidget.sliceController().sliceOffsetSlider().value = minSliceVal + slc * spacingSlice
+
             slicer.app.processEvents()
 
-            # send to server temp files
-            img = imageData[:,slc,:]
+            # send to server temp files # assume red TODO (expand to different view)
+            if self._parameterNode.RGYNpArrOrder[0] == 0:
+                img = imageData[:,:,slc]
+            elif self._parameterNode.RGYNpArrOrder[0] == 1:
+                img = imageData[:,slc,:]
+            elif self._parameterNode.RGYNpArrOrder[0] == 2:
+                img = imageData[slc,:,:]
             memmap = numpy.memmap(self._parameterNode._workspace + "/slices/slc" + str(slc), dtype='float64', mode='w+', shape=img.shape)
             memmap[:] = img[:]
             memmap.flush()
@@ -133,7 +154,8 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
 
         msg = {
             "command": "COMPUTE_EMBEDDING",
-            "parameters": []
+            "parameters": {
+            }
         }
         msg = json.dumps(msg)
         self._connections.sendCmd(msg)
@@ -169,13 +191,28 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         """
         
         if self._flag_mask_sync:
-
-            curslc = round((self._parameterNode._volMetaData[0][1]-self._slider.value)/self._parameterNode._volMetaData[0][2])
+            
+            # assume red TODO (expand to different view)
+            if self._parameterNode.RGYNpArrOrder[0] == 0:
+                curslc = round((self._slider.value-self._parameterNode._volMetaData[0][0])/self._parameterNode._volMetaData[0][2])
+                sliceshape = (self._imageSliceNum[0], self._imageSliceNum[1])
+            elif self._parameterNode.RGYNpArrOrder[0] == 1:
+                curslc = round((self._parameterNode._volMetaData[0][1]-self._slider.value)/self._parameterNode._volMetaData[0][2])
+                sliceshape = (self._imageSliceNum[0], self._imageSliceNum[2])
+            elif self._parameterNode.RGYNpArrOrder[0] == 2:
+                curslc = round((self._slider.value-self._parameterNode._volMetaData[0][0])/self._parameterNode._volMetaData[0][2])
+                sliceshape = (self._imageSliceNum[1], self._imageSliceNum[2])
             
             if curslc not in self._frozenSlice:
                 memmap = numpy.memmap(self._parameterNode._workspace + '/mask.memmap', \
-                    dtype='bool', mode='r+', shape=(self._imageSliceNum[0], self._imageSliceNum[2])) 
-                self._segNumpy[:,curslc,:] = memmap.astype(int)
+                    dtype='bool', mode='r+', shape=sliceshape) 
+                # assume red TODO (expand to different view)
+                if self._parameterNode.RGYNpArrOrder[0] == 0:
+                    self._segNumpy[:,:,curslc] = memmap.astype(int)
+                elif self._parameterNode.RGYNpArrOrder[0] == 1:
+                    self._segNumpy[:,curslc,:] = memmap.astype(int)
+                elif self._parameterNode.RGYNpArrOrder[0] == 2:
+                    self._segNumpy[curslc,:,:] = memmap.astype(int)
 
                 if self.flag_loglat:
                     self.timearr_RCV_MSK[self.ctr_RCV_MSK] = datetime.now()
@@ -205,11 +242,17 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         self._prompt_add    = self._parameterNode.GetNodeReference("sammPromptAdd")
         self._prompt_remove = self._parameterNode.GetNodeReference("sammPromptRemove")
         # load in volume meta data (need to optimize here)
+        IjkToRasDir = numpy.array([[0,0,0],[0,0,0],[0,0,0]])
+        self._parameterNode.GetNodeReference("sammInputVolume").GetIJKToRASDirections(IjkToRasDir)
+        self._parameterNode.RGYNpArrOrder = [0, 0, 0]
+        for i in range(3):
+            self._parameterNode.RGYNpArrOrder[i] = 2-numpy.argmax(numpy.abs(IjkToRasDir.transpose()[i]))
         inModel         = self._parameterNode.GetNodeReference("sammInputVolume")
         imageData       = slicer.util.arrayFromVolume(inModel)
         imageSliceNum   = imageData.shape
         metadata        = self.processGetVolumeMetaData(imageSliceNum)
         self._parameterNode._volMetaData = metadata
+        # assume red TODO (expand to different view)
         self._slider    = slicer.app.layoutManager().sliceWidget('Red').sliceController().sliceOffsetSlider()
         volumeRasToIjk  = vtk.vtkMatrix4x4()
         self._parameterNode.GetNodeReference("sammInputVolume").GetRASToIJKMatrix(volumeRasToIjk)
@@ -227,7 +270,13 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
 
         if self._flag_prompt_sync:
 
-            curslc = round((self._parameterNode._volMetaData[0][1]-self._slider.value)/self._parameterNode._volMetaData[0][2])
+            # assume red TODO (expand to different view)
+            if self._parameterNode.RGYNpArrOrder[0] == 0:
+                curslc = round((self._slider.value-self._parameterNode._volMetaData[0][0])/self._parameterNode._volMetaData[0][2])
+            elif self._parameterNode.RGYNpArrOrder[0] == 1:
+                curslc = round((self._parameterNode._volMetaData[0][1]-self._slider.value)/self._parameterNode._volMetaData[0][2])
+            elif self._parameterNode.RGYNpArrOrder[0] == 2:
+                curslc = round((self._slider.value-self._parameterNode._volMetaData[0][0])/self._parameterNode._volMetaData[0][2])
 
             if curslc not in self._frozenSlice:
 
@@ -236,14 +285,24 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
                     ras = vtk.vtkVector3d(0,0,0)
                     self._prompt_add.GetNthControlPointPosition(i,ras)
                     temp = self._volumeRasToIjk.MultiplyPoint([ras[0],ras[1],ras[2],1])
-                    prompt_add_point.append([temp[0], temp[2]])
+                    if self._parameterNode.RGYNpArrOrder[0] == 0: # assume red TODO (expand to different view)
+                        prompt_add_point.append([temp[1], temp[2]])
+                    elif self._parameterNode.RGYNpArrOrder[0] == 1:
+                        prompt_add_point.append([temp[0], temp[2]])
+                    elif self._parameterNode.RGYNpArrOrder[0] == 2:
+                        prompt_add_point.append([temp[0], temp[1]])
 
                 numControlPoints = self._prompt_remove.GetNumberOfControlPoints()
                 for i in range(numControlPoints):
                     ras = vtk.vtkVector3d(0,0,0)
                     self._prompt_remove.GetNthControlPointPosition(i,ras)
                     temp = self._volumeRasToIjk.MultiplyPoint([ras[0],ras[1],ras[2],1])
-                    prompt_remove_point.append([temp[0], temp[2]])
+                    if self._parameterNode.RGYNpArrOrder[0] == 0: # assume red TODO (expand to different view)
+                        prompt_remove_point.append([temp[1], temp[2]])
+                    elif self._parameterNode.RGYNpArrOrder[0] == 1:
+                        prompt_remove_point.append([temp[0], temp[2]])
+                    elif self._parameterNode.RGYNpArrOrder[0] == 2:
+                        prompt_remove_point.append([temp[0], temp[1]])
 
                 msg = {
                     "command": "INFER_IMAGE",
@@ -268,8 +327,7 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
     def processPromptPointsSync(self):
         if self._flag_promptpts_sync:
 
-            mode = slicer.mrmlScene.GetNodeByID("vtkMRMLInteractionNodeSingleton").GetInteractionModeAsString()
-            curslc = (self._parameterNode._volMetaData[0][1]-self._slider.value)/self._parameterNode._volMetaData[0][2]
+            mode = slicer.mrmlScene.GetNodeByID("vtkMRMLInteractionNodeSingleton").GetInteractionModeAsString()            
             numControlPoints = self._prompt_add.GetNumberOfControlPoints()
             if mode == "Place":
                 numControlPoints = numControlPoints - 1
@@ -277,7 +335,15 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
                 ras = vtk.vtkVector3d(0,0,0)
                 self._prompt_add.GetNthControlPointPosition(i,ras)
                 temp = self._volumeRasToIjk.MultiplyPoint([ras[0],ras[1],ras[2],1])
-                ras = self._volumeIjkToRas.MultiplyPoint([temp[0],curslc,temp[2],1])
+                if self._parameterNode.RGYNpArrOrder[0] == 0: # assume red TODO (expand to different view)
+                    curslc = (self._slider.value-self._parameterNode._volMetaData[0][0])/self._parameterNode._volMetaData[0][2]
+                    ras = self._volumeIjkToRas.MultiplyPoint([curslc,temp[1],temp[2],1])
+                elif self._parameterNode.RGYNpArrOrder[0] == 1:
+                    curslc = (self._parameterNode._volMetaData[0][1]-self._slider.value)/self._parameterNode._volMetaData[0][2]
+                    ras = self._volumeIjkToRas.MultiplyPoint([temp[0],curslc,temp[2],1])
+                elif self._parameterNode.RGYNpArrOrder[0] == 2:
+                    curslc = (self._slider.value-self._parameterNode._volMetaData[0][0])/self._parameterNode._volMetaData[0][2]
+                    ras = self._volumeIjkToRas.MultiplyPoint([temp[0],temp[1],curslc, 1])
                 self._prompt_add.SetNthControlPointPosition(i,ras[0],ras[1],ras[2])
 
             numControlPoints = self._prompt_remove.GetNumberOfControlPoints()
@@ -287,7 +353,12 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
                 ras = vtk.vtkVector3d(0,0,0)
                 self._prompt_remove.GetNthControlPointPosition(i,ras)
                 temp = self._volumeRasToIjk.MultiplyPoint([ras[0],ras[1],ras[2],1])
-                ras = self._volumeIjkToRas.MultiplyPoint([temp[0],curslc,temp[2],1])
+                if self._parameterNode.RGYNpArrOrder[0] == 0: # assume red TODO (expand to different view)
+                    ras = self._volumeIjkToRas.MultiplyPoint([curslc,temp[1],temp[2],1])
+                elif self._parameterNode.RGYNpArrOrder[0] == 1:
+                    ras = self._volumeIjkToRas.MultiplyPoint([temp[0],curslc,temp[2],1])
+                elif self._parameterNode.RGYNpArrOrder[0] == 2:
+                    ras = self._volumeIjkToRas.MultiplyPoint([temp[0],temp[1],curslc, 1])
                 self._prompt_remove.SetNthControlPointPosition(i,ras[0],ras[1],ras[2])
                 
             qt.QTimer.singleShot(60, self.processPromptPointsSync)

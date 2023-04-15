@@ -5,9 +5,7 @@
 [Yihao Liu](https://yihao.one/), [Jeremy Zhang](https://jeremyzz830.github.io/), Zhangcong She
 
 ## Known issues
-For some images (CTs) with different axes than the tested images (MRIs), the annotations will be on a different plane. Meta data was ignored. Issue #13.
-
-A very not elegant fix is 1. disable processPromptPointsSync() in LogicSamm.py and 2. observe which view (Red, Green or Yellow) is the axis that slices were computed along, then put prompts there.
+#13 Resolved with a not-so-elegant way. Tested work on MRHead and CTChest data from Slicer. Please report a bug if your data is not working.
 
 ## Demo
 

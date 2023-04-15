@@ -256,6 +256,7 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
 
         if self._flag_prompt_sync:
 
+            # assume red TODO (expand to different view)
             curslc = round((self._parameterNode._volMetaData[0][1]-self._slider.value)/self._parameterNode._volMetaData[0][2])
 
             if curslc not in self._frozenSlice:
@@ -265,14 +266,24 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
                     ras = vtk.vtkVector3d(0,0,0)
                     self._prompt_add.GetNthControlPointPosition(i,ras)
                     temp = self._volumeRasToIjk.MultiplyPoint([ras[0],ras[1],ras[2],1])
-                    prompt_add_point.append([temp[0], temp[2]])
+                    if self._parameterNode.RGYNpArrOrder[0] == 0: # assume red TODO (expand to different view)
+                        prompt_add_point.append([temp[1], temp[2]])
+                    elif self._parameterNode.RGYNpArrOrder[0] == 1:
+                        prompt_add_point.append([temp[0], temp[2]])
+                    elif self._parameterNode.RGYNpArrOrder[0] == 2:
+                        prompt_add_point.append([temp[0], temp[1]])
 
                 numControlPoints = self._prompt_remove.GetNumberOfControlPoints()
                 for i in range(numControlPoints):
                     ras = vtk.vtkVector3d(0,0,0)
                     self._prompt_remove.GetNthControlPointPosition(i,ras)
                     temp = self._volumeRasToIjk.MultiplyPoint([ras[0],ras[1],ras[2],1])
-                    prompt_remove_point.append([temp[0], temp[2]])
+                    if self._parameterNode.RGYNpArrOrder[0] == 0: # assume red TODO (expand to different view)
+                        prompt_remove_point.append([temp[1], temp[2]])
+                    elif self._parameterNode.RGYNpArrOrder[0] == 1:
+                        prompt_remove_point.append([temp[0], temp[2]])
+                    elif self._parameterNode.RGYNpArrOrder[0] == 2:
+                        prompt_remove_point.append([temp[0], temp[1]])
 
                 msg = {
                     "command": "INFER_IMAGE",
@@ -298,6 +309,7 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         if self._flag_promptpts_sync:
 
             mode = slicer.mrmlScene.GetNodeByID("vtkMRMLInteractionNodeSingleton").GetInteractionModeAsString()
+            # assume red TODO (expand to different view)
             curslc = (self._parameterNode._volMetaData[0][1]-self._slider.value)/self._parameterNode._volMetaData[0][2]
             numControlPoints = self._prompt_add.GetNumberOfControlPoints()
             if mode == "Place":
@@ -306,7 +318,12 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
                 ras = vtk.vtkVector3d(0,0,0)
                 self._prompt_add.GetNthControlPointPosition(i,ras)
                 temp = self._volumeRasToIjk.MultiplyPoint([ras[0],ras[1],ras[2],1])
-                ras = self._volumeIjkToRas.MultiplyPoint([temp[0],curslc,temp[2],1])
+                if self._parameterNode.RGYNpArrOrder[0] == 0: # assume red TODO (expand to different view)
+                    ras = self._volumeIjkToRas.MultiplyPoint([curslc,temp[1],temp[2],1])
+                elif self._parameterNode.RGYNpArrOrder[0] == 1:
+                    ras = self._volumeIjkToRas.MultiplyPoint([temp[0],curslc,temp[2],1])
+                elif self._parameterNode.RGYNpArrOrder[0] == 2:
+                    ras = self._volumeIjkToRas.MultiplyPoint([temp[0],temp[1],curslc,1])
                 self._prompt_add.SetNthControlPointPosition(i,ras[0],ras[1],ras[2])
 
             numControlPoints = self._prompt_remove.GetNumberOfControlPoints()
@@ -316,7 +333,12 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
                 ras = vtk.vtkVector3d(0,0,0)
                 self._prompt_remove.GetNthControlPointPosition(i,ras)
                 temp = self._volumeRasToIjk.MultiplyPoint([ras[0],ras[1],ras[2],1])
-                ras = self._volumeIjkToRas.MultiplyPoint([temp[0],curslc,temp[2],1])
+                if self._parameterNode.RGYNpArrOrder[0] == 0: # assume red TODO (expand to different view)
+                    ras = self._volumeIjkToRas.MultiplyPoint([curslc,temp[1],temp[2],1])
+                elif self._parameterNode.RGYNpArrOrder[0] == 1:
+                    ras = self._volumeIjkToRas.MultiplyPoint([temp[0],curslc,temp[2],1])
+                elif self._parameterNode.RGYNpArrOrder[0] == 2:
+                    ras = self._volumeIjkToRas.MultiplyPoint([temp[0],temp[1],curslc,1])
                 self._prompt_remove.SetNthControlPointPosition(i,ras[0],ras[1],ras[2])
                 
             qt.QTimer.singleShot(60, self.processPromptPointsSync)

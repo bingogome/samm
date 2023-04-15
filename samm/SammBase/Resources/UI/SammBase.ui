@@ -101,21 +101,21 @@
           </size>
          </property>
          <property name="text">
-          <string>Work Space Config:</string>
+          <string>Work Space Config</string>
          </property>
         </widget>
        </item>
        <item row="2" column="0" colspan="3">
         <widget class="QLabel" name="label_7">
          <property name="text">
-          <string>Data Type:</string>
+          <string>Data Type</string>
          </property>
         </widget>
        </item>
        <item row="0" column="0" colspan="3">
         <widget class="QLabel" name="label_6">
          <property name="text">
-          <string>Work on:</string>
+          <string>Work on</string>
          </property>
         </widget>
        </item>
@@ -161,7 +161,7 @@
           </size>
          </property>
          <property name="text">
-          <string>Volume Data</string>
+          <string>Data</string>
          </property>
         </widget>
        </item>

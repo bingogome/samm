@@ -1,6 +1,6 @@
 """
 MIT License
-Copyright (c) 2022 [Insert copyright holders]
+Copyright (c) 2023 Yihao Liu
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -39,11 +39,16 @@ class SammBaseWidget(SammWidgetBase):
         self.addObserver(slicer.mrmlScene, slicer.mrmlScene.EndCloseEvent, self.onSceneEndClose)
 
         # UI
+
+        self.ui.radioDataVolume.connect("toggled(bool)", self.onRadioDataOptions)
+        self.ui.radioData2D.connect("toggled(bool)", self.onRadioDataOptions)
+
         self.ui.pushComputePredictor.connect('clicked(bool)', self.onPushComputePredictor)
         self.ui.pushStartMaskSync.connect('clicked(bool)', self.onPushStartMaskSync)
         self.ui.pushStopMaskSync.connect('clicked(bool)', self.onPushStopMaskSync)
         self.ui.pushFreezeSlice.connect('clicked(bool)', self.onPushFreezeSlice)
         self.ui.pushUnfreezeSlice.connect('clicked(bool)', self.onPushUnfreezeSlice)
+
         self.ui.comboVolumeNode.connect("currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
         self.ui.markupsAdd.connect("markupsNodeChanged()", self.updateParameterNodeFromGUI)
         self.ui.markupsRemove.connect("markupsNodeChanged()", self.updateParameterNodeFromGUI)
@@ -100,6 +105,12 @@ class SammBaseWidget(SammWidgetBase):
 
         self._parameterNode.EndModify(wasModified)
 
+    def onRadioDataOptions(self):
+        if self.ui.radioDataVolume.checked:
+            self._parameterNode.SetParameter("sammDataOptions", "Volume")
+        if self.ui.radioData2D.checked:
+            self._parameterNode.SetParameter("sammDataOptions", "2D")
+
     def onPushComputePredictor(self):
         self.logic.processComputePredictor()
 
@@ -110,8 +121,9 @@ class SammBaseWidget(SammWidgetBase):
         self.logic._flag_mask_sync = True
         self.logic.processInitMaskSync()
         self.logic.processStartMaskSync()
-        self.logic._flag_promptpts_sync = True
-        self.logic.processPromptPointsSync()
+        if self._parameterNode.GetParameter("sammDataOptions") == "Volume":
+            self.logic._flag_promptpts_sync = True
+            self.logic.processPromptPointsSync()
         
     def onPushStopMaskSync(self):
         self.logic._flag_promptpts_sync = False

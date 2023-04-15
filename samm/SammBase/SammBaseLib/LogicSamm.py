@@ -1,6 +1,6 @@
 """
 MIT License
-Copyright (c) 2022 [Insert copyright holders]
+Copyright (c) 2023 Yihao Liu
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -66,6 +66,8 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         """
         Initialize parameter node with default settings.
         """
+        if not parameterNode.GetParameter("sammDataOptions"):
+            parameterNode.SetParameter("sammDataOptions", "Volume")
 
     def processGetVolumeMetaData(self, imageDataShape):
         """

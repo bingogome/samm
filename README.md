@@ -1,13 +1,13 @@
 # Segment Any Medical-Model (SAMM): A 3D Slicer integration to Meta's SAM.
 
+[A 3-pager](arxiv.org/abs/2304.05622)
+
 [Laboratory of Biomechanical and Image Guided Surgical Systems](https://bigss.lcsr.jhu.edu/), [Johns Hopkins University](https://www.jhu.edu/)
 
 [Yihao Liu](https://yihao.one/), [Jeremy Zhang](https://jeremyzz830.github.io/), Zhangcong She
 
 ## Known issues
 #13 Resolved with a not-so-elegant way. Tested work on MRHead, DZ-MR, MRBrainTumor2 and CTChest data from Slicer. Please report a bug if your data is not working. Note for the first few seconds when you start "Mask Sync", the server is not so stable, wait a few seconds then slide it up and down, the mask then will be updated. Note now you can only work on the RED view. Will update later to support all 3 views.
-
-2D data is currently not supported. Will update later to have a selection.
 
 ## Demo
 

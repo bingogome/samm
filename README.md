@@ -23,6 +23,10 @@ Our project, **Segment Any Medical-Model** aims to develop an integration for [S
 
 ### TLDR version
 
+Works both on Linux and Windows.
+
+This assumes cv2 and pytorch are in your environment.
+
 ```bash
 git clone git@github.com:bingogome/samm.git
 conda create --name samm
@@ -30,6 +34,7 @@ conda activate samm
 pip install git+https://github.com/facebookresearch/segment-anything.git
 pip install opencv-python pycocotools matplotlib onnxruntime onnx
 ```
+If you are using Windows, it's okay if you don't install pycocotools.
 
 Start 3D Slicer, in the Python Console:
 

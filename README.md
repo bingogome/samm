@@ -25,7 +25,7 @@ Our project, **Segment Any Medical-Model** aims to develop an integration for [S
 
 Works both on Linux and Windows.
 
-This assumes cv2 and pytorch are in your environment.
+This assumes Cuda, cv2 and pytorch are in your environment.
 
 ```bash
 git clone git@github.com:bingogome/samm.git

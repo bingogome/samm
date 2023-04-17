@@ -24,6 +24,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import yaml, cv2, os, pickle, zmq, json, shutil
 from datetime import datetime
+import traceback
+import logging
 
 class sam_server():
 
@@ -272,8 +274,10 @@ def main():
                             pickle.dump(srv.timearr_CPL_INF, file)
                         print("Time for inference is saved.")
                         break
-        except:
+        except zmq.error.Again:
             continue
+        except Exception as e:
+            logging.error(traceback.format_exc())
         
 if __name__=="__main__":
     main()

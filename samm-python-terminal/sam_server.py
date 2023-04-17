@@ -82,17 +82,17 @@ class sam_server():
 
         # initialize some parameters for testing (assumes the embeddings are saved)
         self.predictor.is_image_set = True
-        with open(self.workspace+"/imgsize_input_size", 'r') as file:
+        with open(os.path.join(self.workspace,"imgsize_input_size"), 'r') as file:
             yaml_file = yaml.safe_load(file)
         self.predictor.input_size = \
             (int(yaml_file["INPUT_WIDTH"]), int(yaml_file["INPUT_HEIGHT"]))
-        with open(self.workspace+"/imgsize_original_size", 'r') as file:
+        with open(os.path.join(self.workspace,"imgsize_original_size"), 'r') as file:
             yaml_file = yaml.safe_load(file)
         self.predictor.original_size = \
             (int(yaml_file["ORIGINAL_WIDTH"]), int(yaml_file["ORIGINAL_HEIGHT"]))
         
         masks = np.full(self.predictor.original_size, False)
-        memmap = np.memmap(self.workspace + '/mask.memmap', dtype='bool', mode='w+', shape=masks.shape)
+        memmap = np.memmap(os.path.join(self.workspace, 'mask.memmap'), dtype='bool', mode='w+', shape=masks.shape)
         memmap[:] = masks[:]
         memmap.flush()
 
@@ -140,11 +140,11 @@ class sam_server():
                 pickle.dump(self.predictor.features, f)
                 print(f'Predictor successfully saved to "{f}"')
 
-        f = open(self.workspace + "/imgsize_input_size", "w")
+        f = open(os.path.join(self.workspace, "imgsize_input_size"), "w")
         f.write("INPUT_WIDTH: " + str(self.predictor.input_size[0]) + "\n" \
             + "INPUT_HEIGHT: " + str(self.predictor.input_size[1]) + "\n" )
         f.close()
-        f = open(self.workspace + "/imgsize_original_size", "w")
+        f = open(os.path.join(self.workspace, "imgsize_original_size"), "w")
         f.write("ORIGINAL_WIDTH: " + str(self.predictor.original_size[0]) + "\n" \
             + "ORIGINAL_HEIGHT: " + str(self.predictor.original_size[1]) + "\n" )
         f.close()
@@ -171,12 +171,12 @@ class sam_server():
         # input_point = np.array([[200, 100]])
         # input_label = np.array([1])
         if len(input_label) != 0:
-            self.load_feature(self.workspace + "/segmented_images/segmented_" + image_name + ".pkl")
+            self.load_feature(os.path.join(self.workspace, "segmented_images", "segmented_" + image_name + ".pkl"))
             self.predict(input_point,input_label)
         else:
             self.masks = np.full(self.predictor.original_size, False)
         # self.imageshow(self.workspace + "/slices/" + image_name)
-        memmap = np.memmap(self.workspace + '/mask.memmap', dtype='bool', mode='w+', shape=self.masks[0].shape)
+        memmap = np.memmap(os.path.join(self.workspace, "mask.memmap"), dtype='bool', mode='w+', shape=self.masks[0].shape)
         memmap[:] = self.masks[0][:]
         memmap.flush()
 

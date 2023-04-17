@@ -117,11 +117,12 @@ Then on the left side of the GUI, click the toggle bar named `Extension Tools` a
 ## Citation 
 If you use SAMM in your research, please consider use the following BibTeX entry.
 
+```bibtex
 @article{liu2023samm,
   title={SAMM (Segment Any Medical Model): A 3D Slicer Integration to SAM},
   author={Liu, Yihao and Zhang, Jiaming and She, Zhangcong and Kheradmand, Amir and Armand, Mehran},
   journal={arXiv preprint arXiv:2304.05622},
   year={2023}
 }
-
+```
 

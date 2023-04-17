@@ -9,6 +9,8 @@
 ## Known issues
 #13 Resolved with a not-so-elegant way. Tested work on MRHead, DZ-MR, MRBrainTumor2 and CTChest data from Slicer. Please report a bug if your data is not working. Note for the first few seconds when you start "Mask Sync", the server is not so stable, wait a few seconds then slide it up and down, the mask then will be updated. Note now you can only work on the RED view. Will update later to support all 3 views.
 
+4GB Nvidia GeForce RTX 3050Ti VRAM issue. On testing a larger test machine, the VRam usage is at around 3GB. Might have issues with smaller machines.
+
 ## Demo
 
 https://www.youtube.com/watch?v=vZK45noZVIA

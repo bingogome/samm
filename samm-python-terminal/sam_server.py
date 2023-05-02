@@ -26,6 +26,7 @@ import yaml, cv2, os, pickle, zmq, json, shutil
 from datetime import datetime
 import traceback
 import logging
+import torch
 
 class sam_server():
 
@@ -55,7 +56,12 @@ class sam_server():
         
         # Load the segmentation model
         self.model_type = "vit_h"
-        self.device = "cuda"
+        if torch.cuda.is_available():
+            self.device = "cuda"
+            print("CUDA detected.")
+        if torch.backends.mps.is_available():
+            self.device = "mps"
+            print("MPS detected.")
         sam = sam_model_registry[self.model_type](checkpoint=self.sam_checkpoint)
         sam.to(device=self.device)
         self.predictor = SamPredictor(sam)

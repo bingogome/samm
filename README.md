@@ -25,7 +25,7 @@ Our project, **Segment Any Medical-Model** aims to develop an integration for [S
 
 ### TLDR version
 
-Works both on Linux and Windows.
+Works both on Linux and Windows. Has Mac support, but not tested yet.
 
 This assumes Cuda, cv2 and pytorch are in your environment.
 

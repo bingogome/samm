@@ -48,6 +48,8 @@ class SammBaseWidget(SammWidgetBase):
         self.ui.pushStopMaskSync.connect('clicked(bool)', self.onPushStopMaskSync)
         self.ui.pushFreezeSlice.connect('clicked(bool)', self.onPushFreezeSlice)
         self.ui.pushUnfreezeSlice.connect('clicked(bool)', self.onPushUnfreezeSlice)
+        self.ui.pushModuleSeg.connect('clicked(bool)', self.onPushModuleSeg)
+        self.ui.pushModuleSegEditor.connect('clicked(bool)', self.onPushModuleSegEditor)
 
         self.ui.comboVolumeNode.connect("currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
         self.ui.comboSegmentationNode.connect("currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
@@ -93,6 +95,8 @@ class SammBaseWidget(SammWidgetBase):
             self.ui.comboSegmentNode.clear()
             for i in range(nOfSegments):
                 self.ui.comboSegmentNode.addItem(segmentationNode.GetSegmentation().GetNthSegmentID(i))
+
+        self.ui.comboSegmentNode.setCurrentText(self._parameterNode.GetParameter("sammCurrentSegment"))
         
         # All the GUI updates are done
         self._updatingGUIFromParameterNode = False
@@ -155,3 +159,9 @@ class SammBaseWidget(SammWidgetBase):
         curslc = round((self._parameterNode._volMetaData[0][1]-self.logic._slider.value)/self._parameterNode._volMetaData[0][2])
         if curslc in self.logic._frozenSlice:
             self.logic._frozenSlice.remove(curslc)        
+
+    def onPushModuleSeg(self):
+        slicer.util.selectModule("Segmentations")
+
+    def onPushModuleSegEditor(self):
+        slicer.util.selectModule("SegmentEditor")

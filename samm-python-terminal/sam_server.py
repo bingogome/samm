@@ -101,6 +101,9 @@ class sam_server():
         if not os.path.exists(self.slices_folder_path):
             os.makedirs(self.slices_folder_path)
 
+    def cleanup(self):
+        self.sock_rcv.close()
+
     def computeEmbedding(self):
 
         # create a folder to store segmented data
@@ -220,6 +223,8 @@ class sam_server():
 
 def main():
 
+    flag_loop = True
+
     print("Initializing SAM server  ... ")
     srv = sam_server()
     print("SAM server initialized ... ")
@@ -236,7 +241,7 @@ def main():
         ctr_RCV_INF = 0
         ctr_CPL_INF = 0
 
-    while True:
+    while flag_loop:
         
         # Main loop
         try:
@@ -276,6 +281,9 @@ def main():
                         break
         except zmq.error.Again:
             continue
+        except KeyboardInterrupt:
+            flag_loop = False
+            srv.cleanup()
         except Exception as e:
             logging.error(traceback.format_exc())
         

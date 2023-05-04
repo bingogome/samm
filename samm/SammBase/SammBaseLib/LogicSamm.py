@@ -226,8 +226,8 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
                 del memmap
                 slicer.util.updateSegmentBinaryLabelmapFromArray( \
                     self._segNumpy, \
-                    self._parameterNode.GetNodeReference("sammMask"), \
-                    "current", \
+                    self._parameterNode.GetNodeReference("sammSegmentation"), \
+                    self._parameterNode.GetParameter("sammCurrentSegment"), \
                     self._parameterNode.GetNodeReference("sammInputVolume") )
                 
             if self.flag_loglat:

@@ -34,6 +34,52 @@
          </attribute>
         </widget>
        </item>
+       <item row="11" column="0" colspan="3">
+        <widget class="QPushButton" name="pushButton">
+         <property name="text">
+          <string>Segmentations Module</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QRadioButton" name="radioWorkOnGreen">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="text">
+          <string>Green</string>
+         </property>
+         <attribute name="buttonGroup">
+          <string notr="true">buttonGroupWorkOn</string>
+         </attribute>
+        </widget>
+       </item>
+       <item row="5" column="0" colspan="3">
+        <widget class="ctkPathLineEdit" name="pathWorkSpace"/>
+       </item>
+       <item row="7" column="0" colspan="3">
+        <widget class="qMRMLNodeComboBox" name="comboSegmentationNode">
+         <property name="nodeTypes">
+          <stringlist>
+           <string>vtkMRMLSegmentationNode</string>
+          </stringlist>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="0" colspan="3">
+        <widget class="QLabel" name="label_8">
+         <property name="text">
+          <string>Active Segmentation</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0" colspan="3">
+        <widget class="QLabel" name="label_6">
+         <property name="text">
+          <string>Work on</string>
+         </property>
+        </widget>
+       </item>
        <item row="1" column="2">
         <widget class="QRadioButton" name="radioWorkOnYellow">
          <property name="enabled">
@@ -44,6 +90,43 @@
          </property>
          <attribute name="buttonGroup">
           <string notr="true">buttonGroupWorkOn</string>
+         </attribute>
+        </widget>
+       </item>
+       <item row="8" column="0" colspan="3">
+        <widget class="QLabel" name="label_9">
+         <property name="text">
+          <string>Active Segment</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0" colspan="3">
+        <widget class="QLabel" name="label_7">
+         <property name="text">
+          <string>Data Type</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="2">
+        <widget class="QRadioButton" name="radioButton">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="text">
+          <string>Color Image</string>
+         </property>
+         <attribute name="buttonGroup">
+          <string notr="true">buttonGroupDataType</string>
+         </attribute>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QRadioButton" name="radioData2D">
+         <property name="text">
+          <string>2D Image</string>
+         </property>
+         <attribute name="buttonGroup">
+          <string notr="true">buttonGroupDataType</string>
          </attribute>
         </widget>
        </item>
@@ -60,31 +143,15 @@
          </attribute>
         </widget>
        </item>
-       <item row="1" column="1">
-        <widget class="QRadioButton" name="radioWorkOnGreen">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="text">
-          <string>Green</string>
-         </property>
-         <attribute name="buttonGroup">
-          <string notr="true">buttonGroupWorkOn</string>
-         </attribute>
-        </widget>
+       <item row="9" column="0" colspan="3">
+        <widget class="QComboBox" name="comboSegmentNode"/>
        </item>
-       <item row="3" column="1">
-        <widget class="QRadioButton" name="radioData2D">
+       <item row="12" column="0" colspan="3">
+        <widget class="QPushButton" name="pushButton_2">
          <property name="text">
-          <string>2D Image</string>
+          <string>Segmentation Editor Module</string>
          </property>
-         <attribute name="buttonGroup">
-          <string notr="true">buttonGroupDataType</string>
-         </attribute>
         </widget>
-       </item>
-       <item row="5" column="0" colspan="3">
-        <widget class="ctkPathLineEdit" name="pathWorkSpace"/>
        </item>
        <item row="4" column="0" colspan="3">
         <widget class="QLabel" name="label">
@@ -105,17 +172,10 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="0" colspan="3">
-        <widget class="QLabel" name="label_7">
+       <item row="10" column="0" colspan="3">
+        <widget class="QLabel" name="label_10">
          <property name="text">
-          <string>Data Type</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0" colspan="3">
-        <widget class="QLabel" name="label_6">
-         <property name="text">
-          <string>Work on</string>
+          <string>Other Modules</string>
          </property>
         </widget>
        </item>
@@ -391,6 +451,22 @@
     <hint type="destinationlabel">
      <x>153</x>
      <y>425</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>SammBase</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>comboSegmentationNode</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>153</x>
+     <y>420</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>153</x>
+     <y>217</y>
     </hint>
    </hints>
   </connection>

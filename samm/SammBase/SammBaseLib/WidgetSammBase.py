@@ -50,9 +50,11 @@ class SammBaseWidget(SammWidgetBase):
         self.ui.pushUnfreezeSlice.connect('clicked(bool)', self.onPushUnfreezeSlice)
 
         self.ui.comboVolumeNode.connect("currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
+        self.ui.comboSegmentationNode.connect("currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
+        self.ui.comboSegmentNode.connect("currentIndexChanged(int)", self.updateParameterNodeFromGUI)
+
         self.ui.markupsAdd.connect("markupsNodeChanged()", self.updateParameterNodeFromGUI)
         self.ui.markupsRemove.connect("markupsNodeChanged()", self.updateParameterNodeFromGUI)
-
         self.ui.markupsAdd.markupsPlaceWidget().setPlaceModePersistency(True)
         self.ui.markupsRemove.markupsPlaceWidget().setPlaceModePersistency(True)
 
@@ -78,9 +80,19 @@ class SammBaseWidget(SammWidgetBase):
         self.ui.comboVolumeNode.setCurrentNode(self._parameterNode.GetNodeReference("sammInputVolume"))
         self.ui.markupsAdd.setCurrentNode(self._parameterNode.GetNodeReference("sammPromptAdd"))
         self.ui.markupsRemove.setCurrentNode(self._parameterNode.GetNodeReference("sammPromptRemove"))
-        if self._parameterNode.GetNodeReferenceID("sammMask"):
-            self._parameterNode.GetNodeReference("sammMask").SetReferenceImageGeometryParameterFromVolumeNode(
+
+        self.ui.comboSegmentationNode.setCurrentNode(self._parameterNode.GetNodeReference("sammSegmentation"))
+
+        if self._parameterNode.GetNodeReferenceID("sammSegmentation"):
+            self._parameterNode.GetNodeReference("sammSegmentation").SetReferenceImageGeometryParameterFromVolumeNode(
                 self._parameterNode.GetNodeReference("sammInputVolume"))
+        
+        if self._parameterNode.GetNodeReferenceID("sammSegmentation"):
+            segmentationNode = self._parameterNode.GetNodeReference("sammSegmentation")
+            nOfSegments = segmentationNode.GetSegmentation().GetNumberOfSegments()
+            self.ui.comboSegmentNode.clear()
+            for i in range(nOfSegments):
+                self.ui.comboSegmentNode.addItem(segmentationNode.GetSegmentation().GetNthSegmentID(i))
         
         # All the GUI updates are done
         self._updatingGUIFromParameterNode = False
@@ -99,9 +111,11 @@ class SammBaseWidget(SammWidgetBase):
         self._parameterNode.SetNodeReferenceID("sammInputVolume", self.ui.comboVolumeNode.currentNodeID)
         self._parameterNode.SetNodeReferenceID("sammPromptAdd", self.ui.markupsAdd.currentNode().GetID())
         self._parameterNode.SetNodeReferenceID("sammPromptRemove", self.ui.markupsRemove.currentNode().GetID())
-        self._parameterNode.GetNodeReference("sammMask").SetReferenceImageGeometryParameterFromVolumeNode(
-            self._parameterNode.GetNodeReference("sammInputVolume"))
         self._parameterNode._workspace = os.path.dirname(os.path.abspath(self.ui.pathWorkSpace.currentPath.strip()))
+        self._parameterNode.SetNodeReferenceID("sammSegmentation", self.ui.comboSegmentationNode.currentNodeID)
+        self._parameterNode.GetNodeReference("sammSegmentation").SetReferenceImageGeometryParameterFromVolumeNode(
+            self._parameterNode.GetNodeReference("sammInputVolume"))
+        self._parameterNode.SetParameter("sammCurrentSegment", self.ui.comboSegmentNode.currentText)
 
         self._parameterNode.EndModify(wasModified)
 
@@ -140,4 +154,4 @@ class SammBaseWidget(SammWidgetBase):
         # assume red TODO (expand to different view)
         curslc = round((self._parameterNode._volMetaData[0][1]-self.logic._slider.value)/self._parameterNode._volMetaData[0][2])
         if curslc in self.logic._frozenSlice:
-            self.logic._frozenSlice.remove(curslc)
+            self.logic._frozenSlice.remove(curslc)        

@@ -133,11 +133,12 @@ class SammWidgetBase(ScriptedLoadableModuleWidget, VTKObservationMixin):
             markupsNode.GetDisplayNode().SetSelectedColor(1,0,0) 
             markupsNode.GetDisplayNode().SetTextScale(0)
         
-        if not self._parameterNode.GetNodeReferenceID("sammMask"):
+        if not self._parameterNode.GetNodeReferenceID("sammSegmentation"):
             segmentationNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLSegmentationNode', 'msk')
-            self._parameterNode.SetNodeReferenceID("sammMask", segmentationNode.GetID())
+            self._parameterNode.SetNodeReferenceID("sammSegmentation", segmentationNode.GetID())
             segmentationNode.CreateDefaultDisplayNodes() 
             addedSegmentID = segmentationNode.GetSegmentation().AddEmptySegment("current")
+            self._parameterNode.SetParameter("sammCurrentSegment", "current")
             
     def setParameterNode(self, inputParameterNode):
         """

@@ -224,7 +224,7 @@ def main():
 
     flag_loop = True
 
-    print("[SAMM INFO] Initializing SAM server  ... ")
+    print("[SAMM INFO] Initializing SAM server ... ")
     srv = sam_server()
     
     print("[SAMM INFO] SAM server initialized ... ")
@@ -235,6 +235,7 @@ def main():
     srv.sock_rcv = zmqsocket
 
     print("[SAMM INFO] Starting To Wait for Messages ... ")
+    print("[SAMM INFO] ctrl+c to exist server.")
 
     while flag_loop:
         

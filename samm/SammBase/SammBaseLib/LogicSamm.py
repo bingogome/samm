@@ -18,10 +18,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from SammBaseLib.UtilLatencyLogger import LatencyLogger
 from slicer.ScriptedLoadableModule import *
 from slicer.util import VTKObservationMixin
 import slicer, qt, json, os, vtk, numpy, copy, pickle, shutil
-from datetime import datetime
 
 #
 # SammBaseLogic
@@ -48,19 +48,7 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         self._flag_prompt_sync      = False
         self._flag_promptpts_sync   = False
         self._frozenSlice           = []
-
-        # Latency logging
-        # log latency?
-        self.flag_loglat            = False
-        if self.flag_loglat:
-            now                     = datetime.now()
-            self.logctrmax          = 300
-            self.timearr_SND_INF    = [now for idx in range(self.logctrmax)]
-            self.timearr_RCV_MSK    = [now for idx in range(self.logctrmax)]
-            self.timearr_APL_MSK    = [now for idx in range(self.logctrmax)]
-            self.ctr_SND_INF        = 0
-            self.ctr_RCV_MSK        = 0
-            self.ctr_APL_MSK        = 0
+        self._latlogger             = LatencyLogger()
 
     def setDefaultParameters(self, parameterNode):
         """
@@ -121,7 +109,7 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
                 elif os.path.isdir(file_path):
                     shutil.rmtree(file_path)
             except Exception as e:
-                print('Failed to delete %s. Reason: %s' % (file_path, e))
+                print('[SAMM ERROR] Failed to delete %s. Reason: %s' % (file_path, e))
 
         # assume red TODO (expand to different view)
         for slc in range(imageSliceNum[2-self._parameterNode.RGYNpArrOrder[0]]):
@@ -161,7 +149,7 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         }
         msg = json.dumps(msg)
         self._connections.sendCmd(msg)
-        print("Sent Embedding Computing Command.")
+        print("[SAMM INFO] Sent Embedding Computing Command.")
 
     def processInitMaskSync(self):
         # load in volume meta data (need to optimize here)
@@ -170,22 +158,6 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         imageSliceNum   = imageData.shape
         self._imageSliceNum = imageSliceNum
         self._segNumpy  = numpy.zeros(imageSliceNum)
-
-    def processSaveLatencyLog(self):
-
-        file_name = self._parameterNode._workspace + "/timearr_SND_INF.pkl"
-        with open(file_name, 'wb') as file:
-            pickle.dump(self.timearr_SND_INF, file)
-
-        file_name = self._parameterNode._workspace + "/timearr_RCV_MSK.pkl"
-        with open(file_name, 'wb') as file:
-            pickle.dump(self.timearr_RCV_MSK, file)
-
-        file_name = self._parameterNode._workspace + "/timearr_APL_MSK.pkl"
-        with open(file_name, 'wb') as file:
-            pickle.dump(self.timearr_APL_MSK, file)
-
-        print("Time for inference is saved.")
 
     def processStartMaskSync(self):
         """
@@ -215,14 +187,7 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
                     self._segNumpy[:,curslc,:] = memmap.astype(int)
                 elif self._parameterNode.RGYNpArrOrder[0] == 2:
                     self._segNumpy[curslc,:,:] = memmap.astype(int)
-
-                if self.flag_loglat:
-                    self.timearr_RCV_MSK[self.ctr_RCV_MSK] = datetime.now()
-                    self.ctr_RCV_MSK = self.ctr_RCV_MSK + 1
-                    if self.ctr_RCV_MSK >= self.logctrmax - 1:
-                        self.processSaveLatencyLog()
-                        self.flag_loglat = False
-
+                self._latlogger.event_receive_mask()
                 del memmap
                 slicer.util.updateSegmentBinaryLabelmapFromArray( \
                     self._segNumpy, \
@@ -230,13 +195,7 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
                     self._parameterNode.GetParameter("sammCurrentSegment"), \
                     self._parameterNode.GetNodeReference("sammInputVolume") )
                 
-            if self.flag_loglat:
-                self.timearr_APL_MSK[self.ctr_APL_MSK] = datetime.now()
-                self.ctr_APL_MSK = self.ctr_APL_MSK + 1
-                if self.ctr_APL_MSK >= self.logctrmax - 1:
-                    self.processSaveLatencyLog()
-                    self.flag_loglat = False
-                    
+            self._latlogger.event_apply_mask()
             qt.QTimer.singleShot(60, self.processStartMaskSync)
 
     def processInitPromptSync(self):
@@ -317,13 +276,7 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
                 msg = json.dumps(msg)
                 self._connections.sendCmd(msg)
 
-            if self.flag_loglat:
-                self.timearr_SND_INF[self.ctr_SND_INF] = datetime.now()
-                self.ctr_SND_INF = self.ctr_SND_INF + 1
-                if self.ctr_SND_INF >= self.logctrmax - 1:
-                    self.processSaveLatencyLog()
-                    self.flag_loglat = False
-
+            self._latlogger.event_send_inferencerequest()
             qt.QTimer.singleShot(60, self.processStartPromptSync)
 
     def processPromptPointsSync(self):

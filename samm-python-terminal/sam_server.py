@@ -18,12 +18,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from utl_latencylogger import latency_logger
 from segment_anything import sam_model_registry, SamPredictor
 from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
 import yaml, cv2, os, pickle, zmq, json, shutil
-from datetime import datetime
 import traceback
 import logging
 import torch
@@ -32,16 +32,6 @@ class sam_server():
 
     def __init__(self):
 
-        # Latency logging
-        # log latency?
-        self.flag_loglat = False
-        if self.flag_loglat:
-            now = datetime.now()
-            self.logctrmax = 300
-            self.timearr_RCV_INF = [now for idx in range(self.logctrmax)]
-            self.timearr_CPL_INF = [now for idx in range(self.logctrmax)]
-            self.timearr_EMB = [now, now]
-
         # create a workspace
         workspace = os.path.dirname(os.path.abspath(__file__))
         workspace = os.path.join(workspace, 'samm-workspace')
@@ -49,19 +39,22 @@ class sam_server():
             os.makedirs(workspace)
         self.workspace = workspace
 
+        # create logger
+        self.latlogger = latency_logger(workspace)
+
         # check if model exists
         self.sam_checkpoint = self.workspace + "/sam_vit_h_4b8939.pth" 
         if not os.path.isfile(self.sam_checkpoint):
-            raise Exception("SAM model file is not in " + self.sam_checkpoint)
+            raise Exception("[SAMM ERROR] SAM model file is not in " + self.sam_checkpoint)
         
         # Load the segmentation model
         self.model_type = "vit_h"
         if torch.cuda.is_available():
             self.device = "cuda"
-            print("CUDA detected.")
+            print("[SAMM INFO] CUDA detected.")
         if torch.backends.mps.is_available():
             self.device = "mps"
-            print("MPS detected.")
+            print("[SAMM INFO] MPS detected.")
         sam = sam_model_registry[self.model_type](checkpoint=self.sam_checkpoint)
         sam.to(device=self.device)
         self.predictor = SamPredictor(sam)
@@ -125,7 +118,7 @@ class sam_server():
                 elif os.path.isdir(file_path):
                     shutil.rmtree(file_path)
             except Exception as e:
-                print('Failed to delete %s. Reason: %s' % (file_path, e))
+                print('[SAMM ERROR] Failed to delete %s. Reason: %s' % (file_path, e))
 
         # read size of images
         with open(self.imgsize_path, 'r') as file:
@@ -147,7 +140,7 @@ class sam_server():
             pkl_file = os.path.join(output_folder, "segmented_" + str(filename) + ".pkl")
             with open(pkl_file, 'wb') as f:
                 pickle.dump(self.predictor.features, f)
-                print(f'Predictor successfully saved to "{f}"')
+                print(f'[SAMM INFO] Predictor successfully saved to "{f}"')
 
         f = open(os.path.join(self.workspace, "imgsize_input_size"), "w")
         f.write("INPUT_WIDTH: " + str(self.predictor.input_size[0]) + "\n" \
@@ -158,7 +151,7 @@ class sam_server():
             + "ORIGINAL_HEIGHT: " + str(self.predictor.original_size[1]) + "\n" )
         f.close()
 
-        print("All images have been processed.")
+        print("[SAMM INFO] All images have been processed.")
 
     def load_feature(self, feature_path: str):
         self.feature_path = feature_path
@@ -231,60 +224,41 @@ def main():
 
     flag_loop = True
 
-    print("Initializing SAM server  ... ")
+    print("[SAMM INFO] Initializing SAM server  ... ")
     srv = sam_server()
-    print("SAM server initialized ... ")
+    
+    print("[SAMM INFO] SAM server initialized ... ")
     context = zmq.Context()
     zmqsocket = context.socket(zmq.PULL)
     zmqsocket.bind("tcp://*:5555")
     zmqsocket.setsockopt(zmq.RCVTIMEO, 30)
     srv.sock_rcv = zmqsocket
 
-    print("Starting To Wait for Messages ... ")
-
-    # Time log
-    if srv.flag_loglat:
-        ctr_RCV_INF = 0
-        ctr_CPL_INF = 0
+    print("[SAMM INFO] Starting To Wait for Messages ... ")
 
     while flag_loop:
         
         # Main loop
         try:
+
             # Recv msg
             msg = json.loads(srv.sock_rcv.recv_json())
+
             # Embedding command
             if msg["command"] == "COMPUTE_EMBEDDING":
-                if srv.flag_loglat:
-                    srv.timearr_EMB[0] = datetime.now()
+                srv.latlogger.event_start_computeembedding()
                 srv.computeEmbedding()
-                if srv.flag_loglat:
-                    srv.timearr_EMB[1] = datetime.now()
-                    file_name = srv.workspace + "timearr_EMB.pkl"
-                    with open(file_name, 'wb') as file:
-                        pickle.dump(srv.timearr_EMB, file)
-                        print("Time for embedding computing is saved.")
+                srv.latlogger.event_complete_computeembedding()
+                
             # Inference command
             if msg["command"] == "INFER_IMAGE":
-                if srv.flag_loglat:
-                    srv.timearr_RCV_INF[ctr_RCV_INF] = datetime.now()
-                    ctr_RCV_INF = ctr_RCV_INF + 1
+                srv.latlogger.event_receive_inferencerequest()
                 srv.infer_image( \
                     np.array(msg["parameters"]["point"]), \
                     np.array(msg["parameters"]["label"]), \
                     msg["parameters"]["name"])
-                if srv.flag_loglat:
-                    srv.timearr_CPL_INF[ctr_CPL_INF] = datetime.now()
-                    ctr_CPL_INF = ctr_CPL_INF + 1
-                    if ctr_RCV_INF >= srv.logctrmax - 1 or ctr_CPL_INF >= srv.logctrmax - 1:
-                        file_name = srv.workspace + "/timearr_RCV_INF.pkl"
-                        with open(file_name, 'wb') as file:
-                            pickle.dump(srv.timearr_RCV_INF, file)
-                        file_name = srv.workspace + "/timearr_CPL_INF.pkl"
-                        with open(file_name, 'wb') as file:
-                            pickle.dump(srv.timearr_CPL_INF, file)
-                        print("Time for inference is saved.")
-                        break
+                srv.latlogger.event_complete_inference()
+
         except zmq.error.Again:
             continue
         except KeyboardInterrupt:

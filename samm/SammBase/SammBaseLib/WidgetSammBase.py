@@ -39,7 +39,9 @@ class SammBaseWidget(SammWidgetBase):
         self.addObserver(slicer.mrmlScene, slicer.mrmlScene.EndCloseEvent, self.onSceneEndClose)
 
         # UI
-
+        self.ui.radioWorkOnRed.connect("toggled(bool)", self.onRadioWorkOnOptions)
+        self.ui.radioWorkOnGreen.connect("toggled(bool)", self.onRadioWorkOnOptions)
+        self.ui.radioWorkOnYellow.connect("toggled(bool)", self.onRadioWorkOnOptions)
         self.ui.radioDataVolume.connect("toggled(bool)", self.onRadioDataOptions)
         self.ui.radioData2D.connect("toggled(bool)", self.onRadioDataOptions)
 
@@ -128,6 +130,14 @@ class SammBaseWidget(SammWidgetBase):
             self._parameterNode.SetParameter("sammDataOptions", "Volume")
         if self.ui.radioData2D.checked:
             self._parameterNode.SetParameter("sammDataOptions", "2D")
+
+    def onRadioWorkOnOptions(self):
+        if self.ui.radioWorkOnRed.checked:
+            self._parameterNode.SetParameter("sammDataOptions", "RED")
+        if self.ui.radioWorkOnGreen.checked:
+            self._parameterNode.SetParameter("sammDataOptions", "GREEN")
+        if self.ui.radioWorkOnYellow.checked:
+            self._parameterNode.SetParameter("sammDataOptions", "YELLOW")
 
     def onPushComputePredictor(self):
         self.logic.processComputePredictor()

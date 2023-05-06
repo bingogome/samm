@@ -119,6 +119,7 @@ class SammWidgetBase(ScriptedLoadableModuleWidget, VTKObservationMixin):
             os.path.abspath(self.resourcePath('Configs/') ))))) \
             + "/samm-python-terminal/samm-workspace/" 
         self.ui.pathWorkSpace.currentPath = self._parameterNode._workspace + "config.yaml"
+        self.logic._latlogger.workspace = self._parameterNode._workspace
 
         # Select default input nodes if nothing is selected yet to save a few clicks for the user
         if not self._parameterNode.GetNodeReferenceID("sammPromptAdd"):

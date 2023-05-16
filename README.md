@@ -11,6 +11,8 @@
 
 #17 4GB Nvidia GeForce RTX 3050Ti VRAM issue. On testing a larger test machine, the VRam usage is at around 3GB. Might have issues with smaller machines.
 
+Switch out the model to smaller ones if you have VRAM limit.
+
 ## Demo
 
 https://www.youtube.com/watch?v=vZK45noZVIA

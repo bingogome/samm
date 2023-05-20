@@ -1,6 +1,6 @@
 # Segment Any Medical-Model (SAMM): A 3D Slicer integration to Meta's SAM.
 
-[A 3-pager](https://arxiv.org/abs/2304.05622)
+[paper](https://arxiv.org/abs/2304.05622)
 
 [Laboratory of Biomechanical and Image Guided Surgical Systems](https://bigss.lcsr.jhu.edu/), [Johns Hopkins University](https://www.jhu.edu/)
 

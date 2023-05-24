@@ -7,8 +7,9 @@ tags:
   - 3D Slicer
 authors:
   - name: Yihao Liu
-    orcid: 0000-0000-0000-0000
+    orcid: 0000-0002-2654-9793
     equal-contrib: true
+    corresponding: true
     affiliation: 1
   - name: Jiaming Zhang
     orcid: 0009-0002-6787-8590
@@ -17,21 +18,21 @@ authors:
   - name: Zhangcong She
     equal-contrib: true
     affiliation: 2
-  - name: Author with no affiliation
+  - name: Amir Kheradmand
     corresponding: true # (This is how to denote the corresponding author)
     affiliation: 3
 affiliations:
  - name: Department of Computer Science, The Johns Hopkins University, USA
    index: 1
- - name: Department of Mechanical Engineering
+ - name: Department of Mechanical Engineering, The Johns Hopkins University, USA
    index: 2
- - name: Independent Researcher, Country
+ - name: Department of Neurology, The Johns Hopkins University, USA
    index: 3
-date: 13 August 2017
+date: 13 May 2023
 bibliography: paper.bib
 
-# Optional fields if submitting to a AAS journal too, see this blog post:
+<!-- # Optional fields if submitting to a AAS journal too, see this blog post:
 # https://blog.joss.theoj.org/2018/12/a-new-collaboration-with-aas-publishing
 aas-doi: 10.3847/xxxxx <- update this with the DOI from AAS once you know it.
-aas-journal: Astrophysical Journal <- The name of the AAS journal.
+aas-journal: Astrophysical Journal <- The name of the AAS journal. -->
 ---

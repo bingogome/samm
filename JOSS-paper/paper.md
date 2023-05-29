@@ -38,7 +38,7 @@ bibliography: paper.bib
 ---
 
 # Summary
-The Segment Anything Model (SAM) is a new image segmentation tool trained with the largest available segmentation dataset. The model has demonstrated that, with efficient prompting, it can create high-quality, generalized masks for image segmentation. However, the performance of the model on medical images requires further validation. To assist with the development, assessment, and application of SAM on medical images, we introduce Segment Any Medical Model (SAMM), an extension of SAM on 3D Slicer - an open-source image processing and visualization software extensively used by the medical imaging community. By combining AI-based medical image models with the 3D Slicer software, SAMM enables users to directly enhance their research and work through the use of AI tools.
+The Segment Anything Model (SAM) is a novel image segmentation tool trained with the largest available segmentation dataset. The model has demonstrated that, with efficient prompting, it can create high-quality, generalized masks for image segmentation. However, the performance of the model on medical images requires further validation. To assist with the development, assessment, and application of SAM on medical images, we introduce Segment Any Medical Model (SAMM), an extension of SAM on 3D Slicer - an open-source image processing and visualization software extensively used by the medical imaging community. By combining AI-based medical image models with the 3D Slicer software, SAMM enables users to directly enhance their research and work through the use of AI tools.
 
 # Statement of Need
 The advent of large language models (LLM) has led to significant progress in image analysis with potential for future advancements. 
@@ -58,7 +58,8 @@ This feature makes SAM promising for segmenting multi-modality medical images wi
 
 Despite the extensive usage of AI-based methodologies in medical image analysis, the use of foundation models within this field remains a largely unexplored area of research. 
 However, migrating SAM to the medical image analysis field requires resolving the difference in coordinate systems and image structure between medical images and normal images. 
-3D Slicer [@pieper20043d], as an open-source software for medical images, provides routines to read and write various file formats, manipulate 2D and 3D coordinate systems, and present a consistent user interface paradigm and visualization tool. Here we provide a unified framework incorporating 3D Slicer and SAM to perform medical image segmentation.
+3D Slicer [@pieper20043d], as an open-source software for medical images, provides routines to read and write various file formats, manipulate 2D and 3D coordinate systems, and present a consistent user interface paradigm and visualization tool. 
+Here we provide a unified framework incorporating 3D Slicer and SAM to perform medical image segmentation.
 
 
 # Architecture and Functionalities

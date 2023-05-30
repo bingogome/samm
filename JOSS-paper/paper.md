@@ -58,7 +58,7 @@ This feature makes SAM promising for segmenting multi-modality medical images wi
 
 Despite the extensive usage of AI-based methodologies in medical image analysis, the use of foundation models within this field remains a largely unexplored area of research. 
 However, migrating SAM to the medical image analysis field requires resolving the difference in coordinate systems and image structure between medical images and normal images. 
-3D Slicer [@pieper20043d], as an open-source software for medical images, provides routines to read and write various file formats, manipulate 2D and 3D coordinate systems, and present a consistent user interface paradigm and visualization tool. 
+3D Slicer [@fedorov2012], as an open-source software for medical images, provides routines to read and write various file formats, manipulate 2D and 3D coordinate systems, and present a consistent user interface paradigm and visualization tool. 
 Here we provide a unified framework incorporating 3D Slicer and SAM to perform medical image segmentation.
 
 

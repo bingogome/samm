@@ -45,6 +45,7 @@ Start 3D Slicer, in the Python Console:
 ```python
 slicer.util.pip_install("pyyaml")
 slicer.util.pip_install("pyzmq")
+slicer.util.pip_install("tqdm")
 ```
 
 SD Slicer -> `Developer Tools` &rarr; `Extension Wizard`.

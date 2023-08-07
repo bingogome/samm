@@ -1,6 +1,6 @@
 # Segment Any Medical-Model (SAMM): A 3D Slicer integration to Meta's SAM.
 
-[A 3-pager](https://arxiv.org/abs/2304.05622)
+[paper](https://arxiv.org/abs/2304.05622)
 
 [Laboratory of Biomechanical and Image Guided Surgical Systems](https://bigss.lcsr.jhu.edu/), [Johns Hopkins University](https://www.jhu.edu/)
 
@@ -10,6 +10,8 @@
 #13 Resolved with a not-so-elegant way. Tested work on MRHead, DZ-MR, MRBrainTumor2 and CTChest data from Slicer. Please report a bug if your data is not working. Note for the first few seconds when you start "Mask Sync", the server is not so stable, wait a few seconds then slide it up and down, the mask then will be updated. Note now you can only work on the RED view. Will update later to support all 3 views.
 
 #17 4GB Nvidia GeForce RTX 3050Ti VRAM issue. On testing a larger test machine, the VRam usage is at around 3GB. Might have issues with smaller machines.
+
+Switch out the model to smaller ones if you have VRAM limit.
 
 ## Demo
 
@@ -43,6 +45,7 @@ Start 3D Slicer, in the Python Console:
 ```python
 slicer.util.pip_install("pyyaml")
 slicer.util.pip_install("pyzmq")
+slicer.util.pip_install("tqdm")
 ```
 
 SD Slicer -> `Developer Tools` &rarr; `Extension Wizard`.

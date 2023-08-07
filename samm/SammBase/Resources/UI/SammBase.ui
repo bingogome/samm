@@ -159,8 +159,38 @@
       <attribute name="title">
        <string>Initialization</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_2">
-       <item>
+      <layout class="QGridLayout" name="gridLayout_4">
+       <item row="5" column="1">
+        <widget class="QPushButton" name="pushComputePredictor">
+         <property name="text">
+          <string>Compute Embedding</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="1">
+        <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="5" column="0">
+        <widget class="QPushButton" name="pushUseLocalEmb">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="text">
+          <string>Use Local Emb</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0" colspan="2">
         <widget class="QLabel" name="label_2">
          <property name="minimumSize">
           <size>
@@ -179,7 +209,7 @@
          </property>
         </widget>
        </item>
-       <item>
+       <item row="1" column="0" colspan="2">
         <widget class="qMRMLNodeComboBox" name="comboVolumeNode">
          <property name="nodeTypes">
           <stringlist notr="true">
@@ -194,7 +224,7 @@
          </property>
         </widget>
        </item>
-       <item>
+       <item row="2" column="0" colspan="2">
         <widget class="QLabel" name="label_5">
          <property name="minimumSize">
           <size>
@@ -207,25 +237,12 @@
          </property>
         </widget>
        </item>
-       <item>
-        <widget class="QPushButton" name="pushComputePredictor">
+       <item row="3" column="0" colspan="2">
+        <widget class="QCheckBox" name="checkSaveToLocal">
          <property name="text">
-          <string>Compute Embedding</string>
+          <string>Save To Local</string>
          </property>
         </widget>
-       </item>
-       <item>
-        <spacer name="verticalSpacer_2">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
        </item>
       </layout>
      </widget>
@@ -473,7 +490,7 @@
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="buttonGroupWorkOn"/>
   <buttongroup name="buttonGroupDataType"/>
+  <buttongroup name="buttonGroupWorkOn"/>
  </buttongroups>
 </ui>

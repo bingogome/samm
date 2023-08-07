@@ -58,8 +58,19 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         """
         if not parameterNode.GetParameter("sammDataOptions"):
             parameterNode.SetParameter("sammDataOptions", "Volume")
+        if not parameterNode.GetParameter("PlanOnBrain"):
+            parameterNode.SetParameter("sammSaveEmbToLocal", "false")
 
     def processGetVolumeMetaData(self):
+
+        # checkers
+        if not self.ui.pathWorkSpace.currentPath:
+            slicer.util.errorDisplay("Please select workspace path first!")
+            return
+
+        if not self._parameterNode.GetNodeReferenceID("sammInputVolume"):
+            slicer.util.errorDisplay("Please select a volume first!")
+            return
         
         inModel         = self._parameterNode.GetNodeReference("sammInputVolume")
         imageData       = slicer.util.arrayFromVolume(inModel)
@@ -105,17 +116,7 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
 
         return imageNormalized
     
-
-    def processComputeEmbeddings(self):
-        # checkers
-        if not self.ui.pathWorkSpace.currentPath:
-            slicer.util.errorDisplay("Please select workspace path first!")
-            return
-
-        if not self._parameterNode.GetNodeReferenceID("sammInputVolume"):
-            slicer.util.errorDisplay("Please select a volume first!")
-            return
-
+    def processPreEmbeddings(self):
         # get image slices
         imageNormalized = self.processSlicePreProcess()
 
@@ -139,9 +140,25 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
                 "image" : imageNormalized[i,:,:]
             })
         print("[SAMM INFO] Sent Image.")
-
+    
+    def processLoadEmbeddings(self):
+        print("test1")
+        self.processPreEmbeddings()
         # send embedding request    
-        self._connections.pushRequest(SammMsgType.CALCULATE_EMBEDDINGS, {})
+        self._connections.pushRequest(SammMsgType.CALCULATE_EMBEDDINGS, {
+            "saveToLocal" : int(self._parameterNode.GetParameter("sammSaveEmbToLocal") == "false"),
+            "loadLocal" : 1
+        })
+        print("[SAMM INFO] Sent Embedding Command.")
+
+    def processComputeEmbeddings(self):
+        
+        self.processPreEmbeddings()
+        # send embedding request    
+        self._connections.pushRequest(SammMsgType.CALCULATE_EMBEDDINGS, {
+            "saveToLocal" : int(self._parameterNode.GetParameter("sammSaveEmbToLocal") == "true"),
+            "loadLocal" : 0
+        })
         print("[SAMM INFO] Sent Embedding Computing Command.")
         
 

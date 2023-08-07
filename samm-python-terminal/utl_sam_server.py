@@ -2,8 +2,9 @@ from utl_sam_msg import *
 import numpy as np
 from tqdm import tqdm
 import sys,os, cv2, matplotlib.pyplot as plt
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"#
+# os.environ["CUDA_VISIBLE_DEVICES"] = "0"#
 from segment_anything import sam_model_registry, SamPredictor
+import torch, functools, pickle
 
 def singleton(cls):
     instances = {}
@@ -31,6 +32,15 @@ class SammParameterNode:
         self.initNetWork()
     
     def initNetWork(self):
+
+        # Load the segmentation model
+        if torch.cuda.is_available():
+            self.device = "cuda"
+            print("[SAMM INFO] CUDA detected. Waiting for Model ...")
+        if torch.backends.mps.is_available():
+            self.device = "mps"
+            print("[SAMM INFO] MPS detected. Waiting for Model ...")
+
         workspace = os.path.dirname(os.path.abspath(__file__))
         workspace = os.path.join(workspace, 'samm-workspace')
         if not os.path.exists(workspace):
@@ -41,7 +51,7 @@ class SammParameterNode:
             raise Exception("[SAMM ERROR] SAM model file is not in " + self.sam_checkpoint)
         model_type = "vit_h"
         sam = sam_model_registry[model_type](checkpoint=self.sam_checkpoint)
-        sam.to(device="cuda")
+        sam.to(device=self.device)
         self.samPredictor["R"] = SamPredictor(sam)
         self.samPredictor["G"] = SamPredictor(sam)
         self.samPredictor["Y"] = SamPredictor(sam)
@@ -58,25 +68,60 @@ def sammProcessingCallBack_SET_NTH_IMAGE(msg):
     dataNode.mainVolume[msg["n"],:,:] = msg["image"][:,:]
     return np.array([1],dtype = np.uint8).tobytes(), None 
     
-def CalculateEmbeddings():
+def CalculateEmbeddings(msg):
     dataNode = SammParameterNode()
     dataNode.features = {
         "R": [None for i in range(dataNode.N["R"])], 
         "G": [None for i in range(dataNode.N["G"])], 
         "Y": [None for i in range(dataNode.N["Y"])]
     }
-    print("[SAMM INFO] Red View Progress:")
-    for i in tqdm(range(dataNode.N["R"])):
-        dataNode.samPredictor["R"].set_image(cv2.cvtColor(dataNode.mainVolume[i,:,:],cv2.COLOR_GRAY2RGB))
-        dataNode.features["R"][i] = dataNode.samPredictor["R"].features.to('cpu')
-    print("[SAMM INFO] Green View Progress:")
-    for i in tqdm(range(dataNode.N["G"])):
-        dataNode.samPredictor["G"].set_image(cv2.cvtColor(dataNode.mainVolume[:,i,:],cv2.COLOR_GRAY2RGB))
-        dataNode.features["G"][i] = dataNode.samPredictor["G"].features.to('cpu')
-    print("[SAMM INFO] Yellow View Progress:")
-    for i in tqdm(range(dataNode.N["Y"])):
-        dataNode.samPredictor["Y"].set_image(cv2.cvtColor(dataNode.mainVolume[:,:,i],cv2.COLOR_GRAY2RGB))
-        dataNode.features["Y"][i] = dataNode.samPredictor["Y"].features.to('cpu')
+    workspace = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'samm-workspace')
+    output_folder = os.path.join(workspace, 'emb')
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+    pkl_file = os.path.join(output_folder, "emb" + ".pkl")
+    
+    if msg["loadLocal"]:
+        dataNode.samPredictor["R"].input_size = (dataNode.imageSize[1], dataNode.imageSize[2])
+        dataNode.samPredictor["R"].original_size = (dataNode.imageSize[1], dataNode.imageSize[2])
+        dataNode.samPredictor["G"].input_size = (dataNode.imageSize[0], dataNode.imageSize[2])
+        dataNode.samPredictor["G"].original_size = (dataNode.imageSize[0], dataNode.imageSize[2])
+        dataNode.samPredictor["Y"].input_size = (dataNode.imageSize[0], dataNode.imageSize[1])
+        dataNode.samPredictor["Y"].original_size = (dataNode.imageSize[0], dataNode.imageSize[1])
+        with open(pkl_file, 'rb') as f:
+            dataNode.features = pickle.load(f)
+        print("[SAMM INFO] Red View Progress:")
+        dataNode.samPredictor["R"].is_image_set = True
+        for i in tqdm(range(dataNode.N["R"])):
+            dataNode.features["R"][i] = dataNode.features["R"][i].to('cpu')
+        print("[SAMM INFO] Green View Progress:")
+        dataNode.samPredictor["G"].is_image_set = True
+        for i in tqdm(range(dataNode.N["G"])):
+            dataNode.features["G"][i] = dataNode.features["G"][i].to('cpu')
+        print("[SAMM INFO] Yellow View Progress:")
+        dataNode.samPredictor["Y"].is_image_set = True
+        for i in tqdm(range(dataNode.N["Y"])):
+            dataNode.features["Y"][i] = dataNode.features["Y"][i].to('cpu')
+        print("[SAMM INFO] Loaded Local Embeddings.")
+    else:
+        print("[SAMM INFO] Red View Progress:")
+        for i in tqdm(range(dataNode.N["R"])):
+            dataNode.samPredictor["R"].set_image(cv2.cvtColor(dataNode.mainVolume[i,:,:],cv2.COLOR_GRAY2RGB))
+            dataNode.features["R"][i] = dataNode.samPredictor["R"].features.to('cpu')
+        print("[SAMM INFO] Green View Progress:")
+        for i in tqdm(range(dataNode.N["G"])):
+            dataNode.samPredictor["G"].set_image(cv2.cvtColor(dataNode.mainVolume[:,i,:],cv2.COLOR_GRAY2RGB))
+            dataNode.features["G"][i] = dataNode.samPredictor["G"].features.to('cpu')
+        print("[SAMM INFO] Yellow View Progress:")
+        for i in tqdm(range(dataNode.N["Y"])):
+            dataNode.samPredictor["Y"].set_image(cv2.cvtColor(dataNode.mainVolume[:,:,i],cv2.COLOR_GRAY2RGB))
+            dataNode.features["Y"][i] = dataNode.samPredictor["Y"].features.to('cpu')
+
+        if msg["saveToLocal"]:
+            with open(pkl_file, 'wb') as f:
+                pickle.dump(dataNode.features, f)
+                print(f'[SAMM INFO] Predictor successfully saved to "{f}"')
+
     print("[SAMM INFO] Embeddings Cached.")
 
 def sammProcessingCallBack_INFERENCE(msg):
@@ -124,7 +169,7 @@ def sammProcessingCallBack_INFERENCE(msg):
 
 def sammProcessingCallBack_CALCULATE_EMBEDDINGS(msg):
     print("[SAMM INFO] Received Embeddings Request.")
-    return np.array([1],dtype=np.uint8).tobytes(), CalculateEmbeddings 
+    return np.array([1],dtype=np.uint8).tobytes(), functools.partial(CalculateEmbeddings, msg)
 
 callBackList = {
     SammMsgType.SET_IMAGE_SIZE : sammProcessingCallBack_SET_IMAGE_SIZE,

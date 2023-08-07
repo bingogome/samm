@@ -1,4 +1,4 @@
-import zmq, threading, time, logging, traceback
+import zmq, threading, time, logging, traceback, os
 
 from utl_sam_server import *
 
@@ -13,6 +13,19 @@ class SamServer:
         self.execThread = None
         self.interv = interv
         self.cacheExec = []
+        self.dataNode = SammParameterNode()
+
+        # create a workspace
+        workspace = os.path.dirname(os.path.abspath(__file__))
+        workspace = os.path.join(workspace, 'samm-workspace')
+        if not os.path.exists(workspace):
+            os.makedirs(workspace)
+        self.workspace = workspace
+
+        # check if model exists
+        self.sam_checkpoint = self.workspace + "/sam_vit_h_4b8939.pth" 
+        if not os.path.isfile(self.sam_checkpoint):
+            raise Exception("[SAMM ERROR] SAM model file is not in " + self.sam_checkpoint)
 
     def cleanup():
         pass
@@ -50,14 +63,15 @@ class SamServer:
 
                 # print("[SAMM TEST] Got Something.")
 
+            except KeyboardInterrupt:
+                self.shouldTerminate = True
+                self.cleanup()
             except zmq.error.Again:
                 continue
-            except KeyboardInterrupt:
-                self.cleanup()
-            # except Exception as e:
-            #     logging.error(traceback.format_exc())
-            #     time.sleep(self.interv)
-            #     continue
+            except Exception as e:
+                logging.error(traceback.format_exc())
+                time.sleep(self.interv)
+                continue
 
             time.sleep(self.interv)
 
@@ -65,11 +79,20 @@ class SamServer:
 
     def execLooping(self):
         while not self.shouldTerminate:
-            if len(self.cacheExec) > 0:
-                # print("[SAMM TEST] Execute Something.")
-                execFunc = self.cacheExec.pop(0)
-                execFunc()
-            else:
+            try:
+                if len(self.cacheExec) > 0:
+                    # print("[SAMM TEST] Execute Something.")
+                    execFunc = self.cacheExec.pop(0)
+                    execFunc()
+                else:
+                    time.sleep(self.interv)
+                    continue
+
+            except KeyboardInterrupt:
+                self.shouldTerminate = True
+                self.cleanup()
+            except Exception as e:
+                logging.error(traceback.format_exc())
                 time.sleep(self.interv)
                 continue
 

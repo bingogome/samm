@@ -67,7 +67,7 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         self._segNumpy  = numpy.zeros(imageDataShape)
 
         # get axis directions aligning RGY views (need to optimize here)
-        IjkToRasDir = numpy.array([[0,0,0],[0,0,0],[0,0,0]])
+        IjkToRasDir = numpy.array([[0.0, 0.0, 0.0],[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]])
         self._parameterNode.GetNodeReference("sammInputVolume").GetIJKToRASDirections(IjkToRasDir)
         self._parameterNode.RGYNpArrOrder = [0, 0, 0]
         for i in range(3):
@@ -209,7 +209,7 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
     def utilGetCurrentSliceIndex(self):
         
         mat = self._viewController.GetXYToRAS()
-        temp = mat.MultiplyPoint([0,0,0,1])
+        temp = mat.MultiplyPoint([0.0, 0.0, 0.0, 1.0])
         ras2ijk = vtk.vtkMatrix4x4()
         self._parameterNode.GetNodeReference("sammInputVolume").GetRASToIJKMatrix(ras2ijk)
         temp = ras2ijk.MultiplyPoint(temp)
@@ -252,7 +252,7 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
 
                 numControlPoints = self._prompt_add.GetNumberOfControlPoints()
                 for i in range(numControlPoints):
-                    ras = vtk.vtkVector3d(0,0,0)
+                    ras = vtk.vtkVector3d(0.0, 0.0, 0.0)
                     self._prompt_add.GetNthControlPointPosition(i,ras)
                     temp = self._volumeRasToIjk.MultiplyPoint([ras[0],ras[1],ras[2],1])
                     temp = np.array([temp[0], temp[1], temp[2]])[self._parameterNode.RGYNpArrOrder]
@@ -260,7 +260,7 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
 
                 numControlPoints = self._prompt_remove.GetNumberOfControlPoints()
                 for i in range(numControlPoints):
-                    ras = vtk.vtkVector3d(0,0,0)
+                    ras = vtk.vtkVector3d(0.0, 0.0, 0.0)
                     self._prompt_remove.GetNthControlPointPosition(i,ras)
                     temp = self._volumeRasToIjk.MultiplyPoint([ras[0],ras[1],ras[2],1])
                     temp = np.array([temp[0], temp[1], temp[2]])[self._parameterNode.RGYNpArrOrder]

@@ -19,25 +19,24 @@ SOFTWARE.
 """
 
 import zmq
+import numpy as np
+from SammBaseLib.UtilMsgFactory import *
 
 class UtilConnections():
-    """
-    Connection class.
-    Blocking send and receive
-    """
 
-    def __init__(self):
+    def __init__(self, ip, portControl):
+        self.ip = ip
+        self.portControl = portControl
         self.context = zmq.Context()
-        self.socket = None
-        
-    def setup(self):
-        self.socket = self.context.socket(zmq.PUSH)
-        self.socket.connect("tcp://localhost:5555")
 
-    def clear(self):
-        if self.socket:
-            self.socket.close()
-        self.context.destroy()
-
-    def sendCmd(self, msg_json):
-        self.socket.send_json(msg_json)
+    def pushRequest(self, requireType, MSG):
+        commandByte = np.array([requireType.value], dtype='int32').tobytes()
+        msgByte = SammMsgSolverMapper[requireType](MSG).getEncodedData()
+        sock = self.context.socket(zmq.REQ)
+        # if no receiption, try extending the wait time. The first setup time takes longer
+        sock.setsockopt(zmq.RCVTIMEO, 10000) 
+        sock.connect("tcp://%s:%s" % (self.ip, self.portControl))
+        sock.send_multipart([commandByte, msgByte])
+        feedback = sock.recv()
+        sock.close()
+        return feedback

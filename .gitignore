@@ -3,3 +3,4 @@
 .vs
 samm-workspace/
 *sam_vit_h_4b8939.pth
+.ipynb_checkpoints/

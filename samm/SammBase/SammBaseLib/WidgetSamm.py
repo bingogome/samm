@@ -60,15 +60,13 @@ class SammWidgetBase(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # Create logic class. Logic implements all computations that should be possible to run
         # in batch mode, without a graphical user interface.
         self.logic = SammBaseLogic()
-        self.logic._connections = UtilConnections()
-        self.logic._connections.setup()
+        self.logic._connections = UtilConnections("127.0.0.1", 8799)
 
     def cleanup(self):
         """
         Called when the application closes and the module widget is destroyed.
         """
         self.removeObservers()
-        self.logic._flag_mask_sync = False
         self.logic._flag_prompt_sync = False
         self.logic._flag_promptpts_sync = False
         if self.logic._connections:
@@ -119,6 +117,7 @@ class SammWidgetBase(ScriptedLoadableModuleWidget, VTKObservationMixin):
             os.path.abspath(self.resourcePath('Configs/') ))))) \
             + "/samm-python-terminal/samm-workspace/" 
         self.ui.pathWorkSpace.currentPath = self._parameterNode._workspace + "config.yaml"
+        self.logic._latlogger.workspace = self._parameterNode._workspace
 
         # Select default input nodes if nothing is selected yet to save a few clicks for the user
         if not self._parameterNode.GetNodeReferenceID("sammPromptAdd"):
@@ -139,6 +138,13 @@ class SammWidgetBase(ScriptedLoadableModuleWidget, VTKObservationMixin):
             segmentationNode.CreateDefaultDisplayNodes() 
             addedSegmentID = segmentationNode.GetSegmentation().AddEmptySegment("current")
             self._parameterNode.SetParameter("sammCurrentSegment", "current")
+        
+        if not self._parameterNode.GetParameter("sammViewOptions"):
+            self._parameterNode.SetParameter("sammViewOptions", "RED")
+        
+        if not self._parameterNode.GetParameter("sammDataOptions"):
+            self._parameterNode.SetParameter("sammDataOptions", "Volume")
+
             
     def setParameterNode(self, inputParameterNode):
         """

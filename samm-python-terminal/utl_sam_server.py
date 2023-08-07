@@ -27,7 +27,7 @@ class SammParameterNode:
         self.features = {"R": [], "G": [], "Y": []}
         
         ## pred
-        self.samPredictor = None
+        self.samPredictor = {"R": None, "G": None, "Y": None}
         self.initNetWork()
     
     def initNetWork(self):
@@ -42,7 +42,9 @@ class SammParameterNode:
         model_type = "vit_h"
         sam = sam_model_registry[model_type](checkpoint=self.sam_checkpoint)
         sam.to(device="cuda")
-        self.samPredictor = SamPredictor(sam)
+        self.samPredictor["R"] = SamPredictor(sam)
+        self.samPredictor["G"] = SamPredictor(sam)
+        self.samPredictor["Y"] = SamPredictor(sam)
 
 def sammProcessingCallBack_SET_IMAGE_SIZE(msg):
     dataNode = SammParameterNode()
@@ -65,16 +67,16 @@ def CalculateEmbeddings():
     }
     print("[SAMM INFO] Red View Progress:")
     for i in tqdm(range(dataNode.N["R"])):
-        dataNode.samPredictor.set_image(cv2.cvtColor(dataNode.mainVolume[i,:,:],cv2.COLOR_GRAY2RGB))
-        dataNode.features["R"][i] = dataNode.samPredictor.features.to('cpu')
+        dataNode.samPredictor["R"].set_image(cv2.cvtColor(dataNode.mainVolume[i,:,:],cv2.COLOR_GRAY2RGB))
+        dataNode.features["R"][i] = dataNode.samPredictor["R"].features.to('cpu')
     print("[SAMM INFO] Green View Progress:")
     for i in tqdm(range(dataNode.N["G"])):
-        dataNode.samPredictor.set_image(cv2.cvtColor(dataNode.mainVolume[:,i,:],cv2.COLOR_GRAY2RGB))
-        dataNode.features["G"][i] = dataNode.samPredictor.features.to('cpu')
+        dataNode.samPredictor["G"].set_image(cv2.cvtColor(dataNode.mainVolume[:,i,:],cv2.COLOR_GRAY2RGB))
+        dataNode.features["G"][i] = dataNode.samPredictor["G"].features.to('cpu')
     print("[SAMM INFO] Yellow View Progress:")
     for i in tqdm(range(dataNode.N["Y"])):
-        dataNode.samPredictor.set_image(cv2.cvtColor(dataNode.mainVolume[:,:,i],cv2.COLOR_GRAY2RGB))
-        dataNode.features["Y"][i] = dataNode.samPredictor.features.to('cpu')
+        dataNode.samPredictor["Y"].set_image(cv2.cvtColor(dataNode.mainVolume[:,:,i],cv2.COLOR_GRAY2RGB))
+        dataNode.features["Y"][i] = dataNode.samPredictor["Y"].features.to('cpu')
     print("[SAMM INFO] Embeddings Cached.")
 
 def sammProcessingCallBack_INFERENCE(msg):
@@ -102,10 +104,9 @@ def sammProcessingCallBack_INFERENCE(msg):
             tempsize = [dataNode.imageSize[0], dataNode.imageSize[2]]
         if msg["view"] == "Y":
             tempsize = [dataNode.imageSize[0], dataNode.imageSize[1]]
-        dataNode.samPredictor.input_size = (tempsize[0],tempsize[1])
-        dataNode.samPredictor.original_size = (tempsize[0],tempsize[1])
-        dataNode.samPredictor.features = dataNode.features[msg["view"]][msg["n"]].to("cuda")
-        seg, _, _ = dataNode.samPredictor.predict(
+        
+        dataNode.samPredictor[msg["view"]].features = dataNode.features[msg["view"]][msg["n"]].to("cuda")
+        seg, _, _ = dataNode.samPredictor[msg["view"]].predict(
             point_coords = np.array(points),
             point_labels = np.array(labels),
             multimask_output = False,)
@@ -118,9 +119,7 @@ def sammProcessingCallBack_INFERENCE(msg):
         if msg["view"] == "Y":
             seg = np.zeros([dataNode.imageSize[0], dataNode.imageSize[1]],dtype=np.uint8)
 
-    print(seg.shape)
-
-    return seg[:].astype(np.uint8).tobytes(), None
+    return seg[0][:].astype(np.uint8).tobytes(), None
 
 def sammProcessingCallBack_CALCULATE_EMBEDDINGS(msg):
     print("[SAMM INFO] Received Embeddings Request.")

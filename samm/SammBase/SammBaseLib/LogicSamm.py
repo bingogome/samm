@@ -47,10 +47,9 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         ScriptedLoadableModuleLogic.__init__(self)
         self._parameterNode         = self.getParameterNode()
         self._connections           = None
-        self._flag_mask_sync        = False
         self._flag_prompt_sync      = False
         self._flag_promptpts_sync   = False
-        self._frozenSlice           = []
+        self._frozenSlice           = {"R": [], "G": [], "Y": []}
         self._latlogger             = LatencyLogger()
 
     def setDefaultParameters(self, parameterNode):
@@ -151,7 +150,7 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         Receives updated masks 
         """
         
-        if curslc not in self._frozenSlice:
+        if curslc not in self._frozenSlice[view[0]]:
             mask = np.frombuffer(mask, dtype="uint8").reshape(shape)
             self._segNumpy = self._segNumpy.transpose(
                 2-np.array(self._parameterNode.RGYNpArrOrder)
@@ -247,7 +246,9 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
             curslc, view, imshape = self.utilGetCurrentSliceIndex()
             curslc = int(curslc)
 
-            if curslc not in self._frozenSlice:
+            mask = None
+
+            if curslc not in self._frozenSlice[view[0]]:
 
                 numControlPoints = self._prompt_add.GetNumberOfControlPoints()
                 for i in range(numControlPoints):

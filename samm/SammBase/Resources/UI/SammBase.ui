@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>308</width>
-    <height>842</height>
+    <height>854</height>
    </rect>
   </property>
   <layout class="QGridLayout" name="gridLayout">
@@ -41,19 +41,6 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="1">
-        <widget class="QRadioButton" name="radioWorkOnGreen">
-         <property name="enabled">
-          <bool>true</bool>
-         </property>
-         <property name="text">
-          <string>Green</string>
-         </property>
-         <attribute name="buttonGroup">
-          <string notr="true">buttonGroupWorkOn</string>
-         </attribute>
-        </widget>
-       </item>
        <item row="5" column="0" colspan="3">
         <widget class="ctkPathLineEdit" name="pathWorkSpace"/>
        </item>
@@ -71,26 +58,6 @@
          <property name="text">
           <string>Active Segmentation</string>
          </property>
-        </widget>
-       </item>
-       <item row="0" column="0" colspan="3">
-        <widget class="QLabel" name="label_6">
-         <property name="text">
-          <string>Work on</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="2">
-        <widget class="QRadioButton" name="radioWorkOnYellow">
-         <property name="enabled">
-          <bool>true</bool>
-         </property>
-         <property name="text">
-          <string>Yellow</string>
-         </property>
-         <attribute name="buttonGroup">
-          <string notr="true">buttonGroupWorkOn</string>
-         </attribute>
         </widget>
        </item>
        <item row="8" column="0" colspan="3">
@@ -127,19 +94,6 @@
          </property>
          <attribute name="buttonGroup">
           <string notr="true">buttonGroupDataType</string>
-         </attribute>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QRadioButton" name="radioWorkOnRed">
-         <property name="text">
-          <string>Red</string>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
-         <attribute name="buttonGroup">
-          <string notr="true">buttonGroupWorkOn</string>
          </attribute>
         </widget>
        </item>
@@ -279,36 +233,75 @@
       <attribute name="title">
        <string>Prompts</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_3">
-       <item>
+      <layout class="QGridLayout" name="gridLayout_3">
+       <item row="1" column="0">
+        <widget class="QRadioButton" name="radioWorkOnRed">
+         <property name="text">
+          <string>Red</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+         <attribute name="buttonGroup">
+          <string notr="true">buttonGroupWorkOn</string>
+         </attribute>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QRadioButton" name="radioWorkOnGreen">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="text">
+          <string>Green</string>
+         </property>
+         <attribute name="buttonGroup">
+          <string notr="true">buttonGroupWorkOn</string>
+         </attribute>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QRadioButton" name="radioWorkOnYellow">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="text">
+          <string>Yellow</string>
+         </property>
+         <attribute name="buttonGroup">
+          <string notr="true">buttonGroupWorkOn</string>
+         </attribute>
+        </widget>
+       </item>
+       <item row="3" column="0">
         <widget class="QPushButton" name="pushStartMaskSync">
          <property name="text">
           <string>Start Mask Sync</string>
          </property>
         </widget>
        </item>
-       <item>
+       <item row="3" column="1">
         <widget class="QPushButton" name="pushStopMaskSync">
          <property name="text">
           <string>Stop Mask Sync</string>
          </property>
         </widget>
        </item>
-       <item>
+       <item row="4" column="0">
         <widget class="QPushButton" name="pushFreezeSlice">
          <property name="text">
-          <string>Freeze Current Slice</string>
+          <string>Freeze Slice</string>
          </property>
         </widget>
        </item>
-       <item>
+       <item row="4" column="1">
         <widget class="QPushButton" name="pushUnfreezeSlice">
          <property name="text">
-          <string>Un-feeze Current Slice</string>
+          <string>Unfreeze Slice</string>
          </property>
         </widget>
        </item>
-       <item>
+       <item row="5" column="0">
         <widget class="QLabel" name="label_3">
          <property name="minimumSize">
           <size>
@@ -321,7 +314,7 @@
          </property>
         </widget>
        </item>
-       <item>
+       <item row="6" column="0" colspan="2">
         <widget class="qSlicerSimpleMarkupsWidget" name="markupsAdd">
          <property name="enterPlaceModeOnNodeChange">
           <bool>false</bool>
@@ -342,7 +335,7 @@
          </property>
         </widget>
        </item>
-       <item>
+       <item row="7" column="0">
         <widget class="QLabel" name="label_4">
          <property name="minimumSize">
           <size>
@@ -355,7 +348,7 @@
          </property>
         </widget>
        </item>
-       <item>
+       <item row="8" column="0" colspan="2">
         <widget class="qSlicerSimpleMarkupsWidget" name="markupsRemove">
          <property name="enterPlaceModeOnNodeChange">
           <bool>false</bool>
@@ -366,6 +359,14 @@
            <green>0</green>
            <blue>0</blue>
           </color>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0" colspan="2">
+        <widget class="QLabel" name="label_6">
+         <property name="text">
+          <string>Work on 
+(stop syncing first before changing view)</string>
          </property>
         </widget>
        </item>

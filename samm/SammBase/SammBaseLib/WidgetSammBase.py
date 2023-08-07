@@ -170,18 +170,14 @@ class SammBaseWidget(SammWidgetBase):
         self.logic._flag_prompt_sync = False
 
     def onPushFreezeSlice(self):
-        return
-        # assume red TODO (expand to different view)
-        curslc = round((self._parameterNode._volMetaData[0][1]-self.logic._slider.value)/self._parameterNode._volMetaData[0][2])
-        if curslc not in self.logic._frozenSlice:
-            self.logic._frozenSlice.append(curslc)
+        curslc, view, _ = self.logic.utilGetCurrentSliceIndex()
+        if curslc not in self.logic._frozenSlice[view[0]]:
+            self.logic._frozenSlice[view[0]].append(curslc)
 
     def onPushUnfreezeSlice(self):
-        return
-        # assume red TODO (expand to different view)
-        curslc = round((self._parameterNode._volMetaData[0][1]-self.logic._slider.value)/self._parameterNode._volMetaData[0][2])
-        if curslc in self.logic._frozenSlice:
-            self.logic._frozenSlice.remove(curslc)        
+        curslc, view, _ = self.logic.utilGetCurrentSliceIndex()
+        if curslc in self.logic._frozenSlice[view[0]]:
+            self.logic._frozenSlice[view[0]].remove(curslc)        
 
     def onPushModuleSeg(self):
         slicer.util.selectModule("Segmentations")

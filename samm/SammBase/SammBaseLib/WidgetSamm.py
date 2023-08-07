@@ -67,7 +67,6 @@ class SammWidgetBase(ScriptedLoadableModuleWidget, VTKObservationMixin):
         Called when the application closes and the module widget is destroyed.
         """
         self.removeObservers()
-        self.logic._flag_mask_sync = False
         self.logic._flag_prompt_sync = False
         self.logic._flag_promptpts_sync = False
         if self.logic._connections:

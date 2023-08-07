@@ -110,6 +110,7 @@ def sammProcessingCallBack_INFERENCE(msg):
             point_coords = np.array(points),
             point_labels = np.array(labels),
             multimask_output = False,)
+        seg = seg[0]
         
     else:
         if msg["view"] == "R":
@@ -119,7 +120,7 @@ def sammProcessingCallBack_INFERENCE(msg):
         if msg["view"] == "Y":
             seg = np.zeros([dataNode.imageSize[0], dataNode.imageSize[1]],dtype=np.uint8)
 
-    return seg[0][:].astype(np.uint8).tobytes(), None
+    return seg[:].astype(np.uint8).tobytes(), None
 
 def sammProcessingCallBack_CALCULATE_EMBEDDINGS(msg):
     print("[SAMM INFO] Received Embeddings Request.")

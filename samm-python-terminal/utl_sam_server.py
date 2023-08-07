@@ -2,8 +2,9 @@ from utl_sam_msg import *
 import numpy as np
 from tqdm import tqdm
 import sys,os, cv2, matplotlib.pyplot as plt
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"#
+# os.environ["CUDA_VISIBLE_DEVICES"] = "0"#
 from segment_anything import sam_model_registry, SamPredictor
+import torch
 
 def singleton(cls):
     instances = {}
@@ -31,6 +32,15 @@ class SammParameterNode:
         self.initNetWork()
     
     def initNetWork(self):
+
+        # Load the segmentation model
+        if torch.cuda.is_available():
+            self.device = "cuda"
+            print("[SAMM INFO] CUDA detected.")
+        if torch.backends.mps.is_available():
+            self.device = "mps"
+            print("[SAMM INFO] MPS detected.")
+
         workspace = os.path.dirname(os.path.abspath(__file__))
         workspace = os.path.join(workspace, 'samm-workspace')
         if not os.path.exists(workspace):
@@ -41,7 +51,7 @@ class SammParameterNode:
             raise Exception("[SAMM ERROR] SAM model file is not in " + self.sam_checkpoint)
         model_type = "vit_h"
         sam = sam_model_registry[model_type](checkpoint=self.sam_checkpoint)
-        sam.to(device="cuda")
+        sam.to(device=self.device)
         self.samPredictor["R"] = SamPredictor(sam)
         self.samPredictor["G"] = SamPredictor(sam)
         self.samPredictor["Y"] = SamPredictor(sam)

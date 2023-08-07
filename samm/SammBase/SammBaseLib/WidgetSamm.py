@@ -139,6 +139,13 @@ class SammWidgetBase(ScriptedLoadableModuleWidget, VTKObservationMixin):
             segmentationNode.CreateDefaultDisplayNodes() 
             addedSegmentID = segmentationNode.GetSegmentation().AddEmptySegment("current")
             self._parameterNode.SetParameter("sammCurrentSegment", "current")
+        
+        if not self._parameterNode.GetParameter("sammViewOptions"):
+            self._parameterNode.SetParameter("sammViewOptions", "RED")
+        
+        if not self._parameterNode.GetParameter("sammDataOptions"):
+            self._parameterNode.SetParameter("sammDataOptions", "Volume")
+
             
     def setParameterNode(self, inputParameterNode):
         """

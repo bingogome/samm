@@ -23,6 +23,7 @@ class SamServer:
         self.workingThread.start()
         self.execThread = threading.Thread(target=self.execLooping)
         self.execThread.start()
+        print("[SAMM INFO] Server Online.")
 
     def stopWorking(self):
         self.shouldTerminate = True
@@ -53,10 +54,10 @@ class SamServer:
                 continue
             except KeyboardInterrupt:
                 self.cleanup()
-            except Exception as e:
-                logging.error(traceback.format_exc())
-                time.sleep(self.interv)
-                continue
+            # except Exception as e:
+            #     logging.error(traceback.format_exc())
+            #     time.sleep(self.interv)
+            #     continue
 
             time.sleep(self.interv)
 

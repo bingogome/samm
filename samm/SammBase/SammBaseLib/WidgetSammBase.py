@@ -122,6 +122,8 @@ class SammBaseWidget(SammWidgetBase):
         self._parameterNode.GetNodeReference("sammSegmentation").SetReferenceImageGeometryParameterFromVolumeNode(
             self._parameterNode.GetNodeReference("sammInputVolume"))
         self._parameterNode.SetParameter("sammCurrentSegment", self.ui.comboSegmentNode.currentText)
+        self.onRadioWorkOnOptions()
+        self.onRadioDataOptions()
 
         self._parameterNode.EndModify(wasModified)
 
@@ -133,11 +135,23 @@ class SammBaseWidget(SammWidgetBase):
 
     def onRadioWorkOnOptions(self):
         if self.ui.radioWorkOnRed.checked:
-            self._parameterNode.SetParameter("sammDataOptions", "RED")
+            self._parameterNode.SetParameter("sammViewOptions", "RED")
+            self.logic._slider = \
+                slicer.app.layoutManager().sliceWidget('Red').sliceController().sliceOffsetSlider()
+            self.logic._viewController = \
+                slicer.app.layoutManager().sliceWidget('Red').sliceController().mrmlSliceNode()
         if self.ui.radioWorkOnGreen.checked:
-            self._parameterNode.SetParameter("sammDataOptions", "GREEN")
+            self._parameterNode.SetParameter("sammViewOptions", "GREEN")
+            self.logic._slider = \
+                slicer.app.layoutManager().sliceWidget('Green').sliceController().sliceOffsetSlider()
+            self.logic._viewController = \
+                slicer.app.layoutManager().sliceWidget('Green').sliceController().mrmlSliceNode()
         if self.ui.radioWorkOnYellow.checked:
-            self._parameterNode.SetParameter("sammDataOptions", "YELLOW")
+            self._parameterNode.SetParameter("sammViewOptions", "YELLOW")
+            self.logic._slider = \
+                slicer.app.layoutManager().sliceWidget('Yellow').sliceController().sliceOffsetSlider()
+            self.logic._viewController = \
+                slicer.app.layoutManager().sliceWidget('Yellow').sliceController().mrmlSliceNode()
 
     def onPushComputePredictor(self):
         self.logic.processComputeEmbeddings()
@@ -146,9 +160,7 @@ class SammBaseWidget(SammWidgetBase):
         self.logic._flag_prompt_sync = True
         self.logic.processInitPromptSync()
         self.logic.processStartPromptSync()
-        self.logic._flag_mask_sync = True
-        self.logic.processInitMaskSync()
-        self.logic.processStartMaskSync()
+
         if self._parameterNode.GetParameter("sammDataOptions") == "Volume":
             self.logic._flag_promptpts_sync = True
             self.logic.processPromptPointsSync()
@@ -156,15 +168,16 @@ class SammBaseWidget(SammWidgetBase):
     def onPushStopMaskSync(self):
         self.logic._flag_promptpts_sync = False
         self.logic._flag_prompt_sync = False
-        self.logic._flag_mask_sync = False
 
     def onPushFreezeSlice(self):
+        return
         # assume red TODO (expand to different view)
         curslc = round((self._parameterNode._volMetaData[0][1]-self.logic._slider.value)/self._parameterNode._volMetaData[0][2])
         if curslc not in self.logic._frozenSlice:
             self.logic._frozenSlice.append(curslc)
 
     def onPushUnfreezeSlice(self):
+        return
         # assume red TODO (expand to different view)
         curslc = round((self._parameterNode._volMetaData[0][1]-self.logic._slider.value)/self._parameterNode._volMetaData[0][2])
         if curslc in self.logic._frozenSlice:

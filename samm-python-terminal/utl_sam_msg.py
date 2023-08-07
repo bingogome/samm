@@ -5,7 +5,7 @@ import numpy as np
 class SammMsgType(Enum):
     SET_IMAGE_SIZE = 0
     SET_NTH_IMAGE = 1
-    CALCULATE_EMBEDING = 2
+    CALCULATE_EMBEDDINGS = 2
     INFERENCE = 3
 
 class SammMsgTypeCommandTemplate:
@@ -90,7 +90,7 @@ class SammMsgType_SET_NTH_IMAGE(SammMsgTypeCommandTemplate):
 '''
 '''
 
-class SammMsgType_CALCULATE_EMBEDING(SammMsgTypeCommandTemplate):
+class SammMsgType_CALCULATE_EMBEDDINGS(SammMsgTypeCommandTemplate):
     def getEncodedData(self):
         return b''
 
@@ -106,11 +106,15 @@ negativePrompts, int 32
 
 class SammMsgType_INFERENCE(SammMsgTypeCommandTemplate):
     def getEncodedData(self):
-        n = self.msg['n']
-        positivePoints = self.msg['positivePrompts']
-        negativePoints = self.msg['negativePrompts']
+        
+        n = self.msg["n"]
+        view = SammViewMapper[self.msg["view"]]
+        positivePoints = self.msg["positivePrompts"]
+        negativePoints = self.msg["negativePrompts"]
+        
         msg = b''
         msg += np.array([n], dtype='int32').tobytes()
+        msg += np.array([view], dtype='int32').tobytes()
 
         if positivePoints is not None and positivePoints.shape[0] > 0:
             msg += np.array([positivePoints.shape[0]], dtype='int32').tobytes()
@@ -130,7 +134,11 @@ class SammMsgType_INFERENCE(SammMsgTypeCommandTemplate):
     def getDecodedData(msgbyte):
         msg = {}
         pt = 0
+
         msg["n"] = np.frombuffer(msgbyte[0:4], dtype="int32").reshape([1])[0]
+        pt += 4
+
+        msg["view"] = SammViewMapper["DICT"][np.frombuffer(msgbyte[pt:pt+4], dtype="int32").reshape([1])[0]]
         pt += 4
 
         positivePromptNum = np.frombuffer(msgbyte[pt:pt+4], dtype="int32").reshape([1])[0]
@@ -158,6 +166,13 @@ class SammMsgType_INFERENCE(SammMsgTypeCommandTemplate):
 SammMsgSolverMapper = {
     SammMsgType.SET_IMAGE_SIZE : SammMsgType_SET_IMAGE_SIZE,
     SammMsgType.SET_NTH_IMAGE : SammMsgType_SET_NTH_IMAGE,
-    SammMsgType.CALCULATE_EMBEDING : SammMsgType_CALCULATE_EMBEDING,
+    SammMsgType.CALCULATE_EMBEDDINGS : SammMsgType_CALCULATE_EMBEDDINGS,
     SammMsgType.INFERENCE : SammMsgType_INFERENCE
+}
+
+SammViewMapper = {
+    "R" : 0,
+    "G" : 1,
+    "Y" : 2,
+    "DICT" : "RGY"
 }

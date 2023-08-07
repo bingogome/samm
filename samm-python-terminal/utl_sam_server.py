@@ -86,28 +86,43 @@ def sammProcessingCallBack_INFERENCE(msg):
     labels = []
     if positivePoints is not None:
         for i in range(positivePoints.shape[0]):
-            points.append([positivePoints[i,1], positivePoints[i,0]])
+            points.append([positivePoints[i,0], positivePoints[i,1]])
             labels.append(1)
 
     if negativePoints is not None:
         for i in range(negativePoints.shape[0]):
-            points.append([negativePoints[i,1], negativePoints[i,0]])
+            points.append([negativePoints[i,0], negativePoints[i,1]])
             labels.append(0)
 
     seg = None
-    if  len(points) > 0:
-        dataNode.samPredictor.features = dataNode.features[msg["n"]].to("cuda")
+    if len(points) > 0:
+        if msg["view"] == "R":
+            tempsize = [dataNode.imageSize[1], dataNode.imageSize[2]]
+        if msg["view"] == "G":
+            tempsize = [dataNode.imageSize[0], dataNode.imageSize[2]]
+        if msg["view"] == "Y":
+            tempsize = [dataNode.imageSize[0], dataNode.imageSize[1]]
+        dataNode.samPredictor.input_size = (tempsize[0],tempsize[1])
+        dataNode.samPredictor.original_size = (tempsize[0],tempsize[1])
+        dataNode.samPredictor.features = dataNode.features[msg["view"]][msg["n"]].to("cuda")
         seg, _, _ = dataNode.samPredictor.predict(
             point_coords = np.array(points),
             point_labels = np.array(labels),
             multimask_output = False,)
         
     else:
-        seg = np.zeros([dataNode.imageSize[1], dataNode.imageSize[2]],dtype=np.uint8)
+        if msg["view"] == "R":
+            seg = np.zeros([dataNode.imageSize[1], dataNode.imageSize[2]],dtype=np.uint8)
+        if msg["view"] == "G":
+            seg = np.zeros([dataNode.imageSize[0], dataNode.imageSize[2]],dtype=np.uint8)
+        if msg["view"] == "Y":
+            seg = np.zeros([dataNode.imageSize[0], dataNode.imageSize[1]],dtype=np.uint8)
+
+    print(seg.shape)
 
     return seg[:].astype(np.uint8).tobytes(), None
 
-def sammProcessingCallBack_CALCULATE_EMBEDING(msg):
+def sammProcessingCallBack_CALCULATE_EMBEDDINGS(msg):
     print("[SAMM INFO] Received Embeddings Request.")
     return np.array([1],dtype=np.uint8).tobytes(), CalculateEmbeddings 
 
@@ -115,7 +130,7 @@ callBackList = {
     SammMsgType.SET_IMAGE_SIZE : sammProcessingCallBack_SET_IMAGE_SIZE,
     SammMsgType.SET_NTH_IMAGE : sammProcessingCallBack_SET_NTH_IMAGE,
     SammMsgType.INFERENCE : sammProcessingCallBack_INFERENCE,
-    SammMsgType.CALCULATE_EMBEDING : sammProcessingCallBack_CALCULATE_EMBEDING
+    SammMsgType.CALCULATE_EMBEDDINGS : sammProcessingCallBack_CALCULATE_EMBEDDINGS
 }
 
 def sammProcessingCallBack(cmd, msg):

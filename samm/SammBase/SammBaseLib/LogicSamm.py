@@ -19,9 +19,12 @@ SOFTWARE.
 """
 
 from SammBaseLib.UtilLatencyLogger import LatencyLogger
+from SammBaseLib.UtilMsgFactory import *
 from slicer.ScriptedLoadableModule import *
 from slicer.util import VTKObservationMixin
 import slicer, qt, json, os, vtk, numpy, copy, pickle, shutil
+from tqdm import tqdm
+
 
 #
 # SammBaseLogic
@@ -57,10 +60,8 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         if not parameterNode.GetParameter("sammDataOptions"):
             parameterNode.SetParameter("sammDataOptions", "Volume")
 
-    def processGetVolumeMetaData(self, imageDataShape):
-        """
-        Get the spacing, min, max of the view slider
-        """
+    def processGetVolumeMetaData(self):
+
         def getViewData(strview, numview):
             sliceController = slicer.app.layoutManager().sliceWidget(strview).sliceController()
             minSliceVal     = sliceController.sliceOffsetSlider().minimum
@@ -68,11 +69,49 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
             spacingSlice    = (maxSliceVal - minSliceVal) / imageDataShape[numview]
             return [minSliceVal, maxSliceVal, spacingSlice]
         
-        return [getViewData("Red", 2-self._parameterNode.RGYNpArrOrder[0]), \
-                getViewData("Green", 2-self._parameterNode.RGYNpArrOrder[1]), \
-                getViewData("Yellow", 2-self._parameterNode.RGYNpArrOrder[2])]
+        inModel         = self._parameterNode.GetNodeReference("sammInputVolume")
+        imageData       = slicer.util.arrayFromVolume(inModel)
+        imageDataShape  = imageData.shape
 
-    def processComputePredictor(self):
+        # get axis directions aligning RGY views (need to optimize here)
+        IjkToRasDir = numpy.array([[0,0,0],[0,0,0],[0,0,0]])
+        self._parameterNode.GetNodeReference("sammInputVolume").GetIJKToRASDirections(IjkToRasDir)
+        self._parameterNode.RGYNpArrOrder = [0, 0, 0]
+        for i in range(3):
+            self._parameterNode.RGYNpArrOrder[i] = numpy.argmax(numpy.abs(IjkToRasDir.transpose()[i]))
+        metadata        = \
+                [getViewData("Red", self._parameterNode.RGYNpArrOrder[0]), \
+                getViewData("Green", self._parameterNode.RGYNpArrOrder[1]), \
+                getViewData("Yellow", self._parameterNode.RGYNpArrOrder[2]), \
+                self._parameterNode.RGYNpArrOrder]
+        self._parameterNode._volMetaData = metadata
+        return 
+
+                
+    def processSlicePreProcess(self):
+        """
+        Takes in slices and pre process
+            1. Get the intensity changed images
+            2. Apply a "conversion" from original axis to a axis-agnostic format (order: RGY)
+        """
+        self.processGetVolumeMetaData()
+
+        volumeNodeDataPointer = slicer.util.arrayFromVolume(
+            self._parameterNode.GetNodeReference("sammInputVolume"))
+        volumeDisplayNode = self._parameterNode.GetNodeReference("sammInputVolume").GetDisplayNode()
+        window = volumeDisplayNode.GetWindow()
+        level = volumeDisplayNode.GetLevel()
+
+        imageMin = level - window / 2
+        imageMax = level + window / 2
+
+        imageNormalized = (((copy.deepcopy(volumeNodeDataPointer) - imageMin).astype("float32") / (imageMax - imageMin)) * 256).astype(numpy.uint8)
+        imageNormalized = imageNormalized.transpose(self._parameterNode.RGYNpArrOrder)
+
+        return imageNormalized
+    
+
+    def processComputeEmbeddings(self):
         # checkers
         if not self.ui.pathWorkSpace.currentPath:
             slicer.util.errorDisplay("Please select workspace path first!")
@@ -82,75 +121,41 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
             slicer.util.errorDisplay("Please select a volume first!")
             return
 
-        # load in volume meta data (need to optimize here)
-        IjkToRasDir = numpy.array([[0,0,0],[0,0,0],[0,0,0]])
-        self._parameterNode.GetNodeReference("sammInputVolume").GetIJKToRASDirections(IjkToRasDir)
-        self._parameterNode.RGYNpArrOrder = [0, 0, 0]
-        for i in range(3):
-            self._parameterNode.RGYNpArrOrder[i] = 2-numpy.argmax(numpy.abs(IjkToRasDir.transpose()[i]))
-        inModel         = self._parameterNode.GetNodeReference("sammInputVolume")
-        imageData       = slicer.util.arrayFromVolume(inModel)
-        imageSliceNum   = imageData.shape
-        metadata        = self.processGetVolumeMetaData(imageSliceNum)
-        minSliceVal, maxSliceVal, spacingSlice = metadata[0][0], metadata[0][1], metadata[0][2]
-        self._parameterNode._volMetaData = metadata
+        # get meta data
+        self.processGetVolumeMetaData()
 
-        # create a folder to store slices
-        output_folder = os.path.join(self._parameterNode._workspace, 'slices')
-        if not os.path.exists(output_folder):
-            os.makedirs(output_folder)
+        # get image slices
+        imageNormalized = self.processSlicePreProcess()
 
-        # clear previous slices
-        for filename in os.listdir(output_folder):
-            file_path = os.path.join(output_folder, filename)
-            try:
-                if os.path.isfile(file_path) or os.path.islink(file_path):
-                    os.unlink(file_path)
-                elif os.path.isdir(file_path):
-                    shutil.rmtree(file_path)
-            except Exception as e:
-                print('[SAMM ERROR] Failed to delete %s. Reason: %s' % (file_path, e))
+        # send sizes to server
+        self._connections.pushRequest(SammMsgType.SET_IMAGE_SIZE, {
+            "r" : imageNormalized.shape[0],
+            "g" : imageNormalized.shape[1],
+            "y" : imageNormalized.shape[2]
+        })
+        print("[SAMM INFO] Sent Size Command.")
 
-        # assume red TODO (expand to different view)
-        for slc in range(imageSliceNum[2-self._parameterNode.RGYNpArrOrder[0]]):
+        # send volume, slice by slice on R view
+        for i in tqdm(range(imageNormalized.shape[0])):
+            self._connections.pushRequest(SammMsgType.SET_NTH_IMAGE, {
+                "n"     : i, 
+                "N"     : {
+                    "R": imageNormalized.shape[0], 
+                    "G": imageNormalized.shape[1], 
+                    "Y": imageNormalized.shape[2]
+                },
+                "image" : imageNormalized[i,:,:]
+            })
+        print("[SAMM INFO] Sent Image.")
 
-            # set current slice offset
-            lm = slicer.app.layoutManager()
-            redWidget = lm.sliceWidget('Red') # assume red TODO (expand to different view)
-            # send to server temp files # assume red TODO (expand to different view)
-            if self._parameterNode.RGYNpArrOrder[0] == 0:
-                redWidget.sliceController().sliceOffsetSlider().value = minSliceVal + slc * spacingSlice
-            elif self._parameterNode.RGYNpArrOrder[1] == 1:
-                redWidget.sliceController().sliceOffsetSlider().value = maxSliceVal - slc * spacingSlice
-            elif self._parameterNode.RGYNpArrOrder[2] == 2:
-                redWidget.sliceController().sliceOffsetSlider().value = minSliceVal + slc * spacingSlice
-
-            slicer.app.processEvents()
-
-            # send to server temp files # assume red TODO (expand to different view)
-            if self._parameterNode.RGYNpArrOrder[0] == 0:
-                img = imageData[:,:,slc]
-            elif self._parameterNode.RGYNpArrOrder[0] == 1:
-                img = imageData[:,slc,:]
-            elif self._parameterNode.RGYNpArrOrder[0] == 2:
-                img = imageData[slc,:,:]
-            memmap = numpy.memmap(self._parameterNode._workspace + "/slices/slc" + str(slc), dtype='float64', mode='w+', shape=img.shape)
-            memmap[:] = img[:]
-            memmap.flush()
-
-        f = open(self._parameterNode._workspace + "/imgsize", "w+")
-        f.write("IMAGE_WIDTH: " + str(img.shape[0]) + "\n" + "IMAGE_HEIGHT: " + str(img.shape[1]) + "\n" )
-        f.close()
-
-        msg = {
-            "command": "COMPUTE_EMBEDDING",
-            "parameters": {
-            }
-        }
-        msg = json.dumps(msg)
-        self._connections.sendCmd(msg)
+        # send embedding request    
+        self._connections.pushRequest(SammMsgType.CALCULATE_EMBEDING, {})
         print("[SAMM INFO] Sent Embedding Computing Command.")
 
+        # f = open(self._parameterNode._workspace + "/imgsize", "w+")
+        # f.write("IMAGE_WIDTH: " + str(img.shape[0]) + "\n" + "IMAGE_HEIGHT: " + str(img.shape[1]) + "\n" )
+        # f.close()
+        
     def processInitMaskSync(self):
         # load in volume meta data (need to optimize here)
         inModel         = self._parameterNode.GetNodeReference("sammInputVolume")
@@ -199,20 +204,14 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
             qt.QTimer.singleShot(60, self.processStartMaskSync)
 
     def processInitPromptSync(self):
+        
         # Init
         self._prompt_add    = self._parameterNode.GetNodeReference("sammPromptAdd")
         self._prompt_remove = self._parameterNode.GetNodeReference("sammPromptRemove")
-        # load in volume meta data (need to optimize here)
-        IjkToRasDir = numpy.array([[0,0,0],[0,0,0],[0,0,0]])
-        self._parameterNode.GetNodeReference("sammInputVolume").GetIJKToRASDirections(IjkToRasDir)
-        self._parameterNode.RGYNpArrOrder = [0, 0, 0]
-        for i in range(3):
-            self._parameterNode.RGYNpArrOrder[i] = 2-numpy.argmax(numpy.abs(IjkToRasDir.transpose()[i]))
-        inModel         = self._parameterNode.GetNodeReference("sammInputVolume")
-        imageData       = slicer.util.arrayFromVolume(inModel)
-        imageSliceNum   = imageData.shape
-        metadata        = self.processGetVolumeMetaData(imageSliceNum)
-        self._parameterNode._volMetaData = metadata
+
+        # get meta data
+        self.processGetVolumeMetaData()
+        
         # assume red TODO (expand to different view)
         self._slider    = slicer.app.layoutManager().sliceWidget('Red').sliceController().sliceOffsetSlider()
         volumeRasToIjk  = vtk.vtkMatrix4x4()

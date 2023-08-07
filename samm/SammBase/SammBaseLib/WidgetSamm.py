@@ -60,8 +60,7 @@ class SammWidgetBase(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # Create logic class. Logic implements all computations that should be possible to run
         # in batch mode, without a graphical user interface.
         self.logic = SammBaseLogic()
-        self.logic._connections = UtilConnections()
-        self.logic._connections.setup()
+        self.logic._connections = UtilConnections("127.0.0.1", 8799)
 
     def cleanup(self):
         """

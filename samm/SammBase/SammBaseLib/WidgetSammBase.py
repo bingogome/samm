@@ -140,7 +140,7 @@ class SammBaseWidget(SammWidgetBase):
             self._parameterNode.SetParameter("sammDataOptions", "YELLOW")
 
     def onPushComputePredictor(self):
-        self.logic.processComputePredictor()
+        self.logic.processComputeEmbeddings()
 
     def onPushStartMaskSync(self):
         self.logic._flag_prompt_sync = True

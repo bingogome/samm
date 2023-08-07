@@ -40,3 +40,6 @@ class UtilConnections():
         feedback = sock.recv()
         sock.close()
         return feedback
+
+    def clear(self):
+        pass

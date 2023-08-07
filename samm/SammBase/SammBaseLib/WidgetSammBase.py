@@ -45,6 +45,9 @@ class SammBaseWidget(SammWidgetBase):
         self.ui.radioDataVolume.connect("toggled(bool)", self.onRadioDataOptions)
         self.ui.radioData2D.connect("toggled(bool)", self.onRadioDataOptions)
 
+        self.ui.checkSaveToLocal.connect("toggled(bool)", self.updateParameterNodeFromGUI)
+
+        self.ui.pushUseLocalEmb.connect("clicked(bool)", self.onPushUseLocalEmb)
         self.ui.pushComputePredictor.connect('clicked(bool)', self.onPushComputePredictor)
         self.ui.pushStartMaskSync.connect('clicked(bool)', self.onPushStartMaskSync)
         self.ui.pushStopMaskSync.connect('clicked(bool)', self.onPushStopMaskSync)
@@ -99,6 +102,7 @@ class SammBaseWidget(SammWidgetBase):
                 self.ui.comboSegmentNode.addItem(segmentationNode.GetSegmentation().GetNthSegmentID(i))
 
         self.ui.comboSegmentNode.setCurrentText(self._parameterNode.GetParameter("sammCurrentSegment"))
+        self.ui.checkSaveToLocal.checked = (self._parameterNode.GetParameter("sammSaveEmbToLocal") == "true")
         
         # All the GUI updates are done
         self._updatingGUIFromParameterNode = False
@@ -122,6 +126,7 @@ class SammBaseWidget(SammWidgetBase):
         self._parameterNode.GetNodeReference("sammSegmentation").SetReferenceImageGeometryParameterFromVolumeNode(
             self._parameterNode.GetNodeReference("sammInputVolume"))
         self._parameterNode.SetParameter("sammCurrentSegment", self.ui.comboSegmentNode.currentText)
+        self._parameterNode.SetParameter("sammSaveEmbToLocal", "true" if self.ui.checkSaveToLocal.checked else "false")
         self.onRadioWorkOnOptions()
         self.onRadioDataOptions()
 
@@ -155,6 +160,10 @@ class SammBaseWidget(SammWidgetBase):
 
     def onPushComputePredictor(self):
         self.logic.processComputeEmbeddings()
+
+    def onPushUseLocalEmb(self):
+        print("test")
+        self.logic.processLoadEmbeddings()
 
     def onPushStartMaskSync(self):
         self.logic._flag_prompt_sync = True

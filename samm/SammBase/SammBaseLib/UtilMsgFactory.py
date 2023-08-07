@@ -92,11 +92,19 @@ class SammMsgType_SET_NTH_IMAGE(SammMsgTypeCommandTemplate):
 
 class SammMsgType_CALCULATE_EMBEDDINGS(SammMsgTypeCommandTemplate):
     def getEncodedData(self):
-        return b''
+        saveToLocal = self.msg["saveToLocal"]
+        loadLocal = self.msg["loadLocal"]
+        msg = b''
+        msg += np.array([saveToLocal], dtype='int32').tobytes()
+        msg += np.array([loadLocal], dtype='int32').tobytes()
+        return msg
 
     @staticmethod
     def getDecodedData(msgbyte):
-        return {}
+        msg = {}
+        msg["saveToLocal"] = np.frombuffer(msgbyte[0:4], dtype="int32").reshape([1])[0]
+        msg["loadLocal"] = np.frombuffer(msgbyte[4:8], dtype="int32").reshape([1])[0]
+        return msg
 
 '''
 n : int

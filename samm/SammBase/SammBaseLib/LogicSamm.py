@@ -90,6 +90,13 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         self._parameterNode._volMetaData = metadata
         return 
 
+    def processSelectModel(self):
+        # send sizes to server
+        if self._parameterNode.GetParameter("sammModelSelection"):
+            self._connections.pushRequest(SammMsgType.MODEL_SELECTION, {
+                "model" : self._parameterNode.GetParameter("sammModelSelection")
+            })
+            print(f'[SAMM INFO] Model switched to: "{self._parameterNode.GetParameter("sammModelSelection")}"')
                 
     def processSlicePreProcess(self):
         """

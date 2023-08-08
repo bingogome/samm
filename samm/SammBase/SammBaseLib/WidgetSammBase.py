@@ -59,6 +59,11 @@ class SammBaseWidget(SammWidgetBase):
         self.ui.comboVolumeNode.connect("currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
         self.ui.comboSegmentationNode.connect("currentNodeChanged(vtkMRMLNode*)", self.updateParameterNodeFromGUI)
         self.ui.comboSegmentNode.connect("currentIndexChanged(int)", self.updateParameterNodeFromGUI)
+        self.ui.comboModel.connect("currentIndexChanged(int)", self.updateParameterNodeFromGUI)
+        self.ui.comboModel.connect("currentIndexChanged(int)", self.onUpdateComboModel)
+        comboModelItems = ['vit_b', 'vit_l', 'vit_h']
+        for item in comboModelItems:
+            self.ui.comboModel.addItem(item)
 
         self.ui.markupsAdd.connect("markupsNodeChanged()", self.updateParameterNodeFromGUI)
         self.ui.markupsRemove.connect("markupsNodeChanged()", self.updateParameterNodeFromGUI)
@@ -101,6 +106,8 @@ class SammBaseWidget(SammWidgetBase):
             for i in range(nOfSegments):
                 self.ui.comboSegmentNode.addItem(segmentationNode.GetSegmentation().GetNthSegmentID(i))
 
+        self.ui.comboModel.setCurrentText(self._parameterNode.GetParameter("sammModelSelection"))
+
         self.ui.comboSegmentNode.setCurrentText(self._parameterNode.GetParameter("sammCurrentSegment"))
         self.ui.checkSaveToLocal.checked = (self._parameterNode.GetParameter("sammSaveEmbToLocal") == "true")
         
@@ -125,6 +132,7 @@ class SammBaseWidget(SammWidgetBase):
         self._parameterNode.SetNodeReferenceID("sammSegmentation", self.ui.comboSegmentationNode.currentNodeID)
         self._parameterNode.GetNodeReference("sammSegmentation").SetReferenceImageGeometryParameterFromVolumeNode(
             self._parameterNode.GetNodeReference("sammInputVolume"))
+        self._parameterNode.SetParameter("sammModelSelection", self.ui.comboModel.currentText)
         self._parameterNode.SetParameter("sammCurrentSegment", self.ui.comboSegmentNode.currentText)
         self._parameterNode.SetParameter("sammSaveEmbToLocal", "true" if self.ui.checkSaveToLocal.checked else "false")
         self.onRadioWorkOnOptions()
@@ -157,6 +165,9 @@ class SammBaseWidget(SammWidgetBase):
                 slicer.app.layoutManager().sliceWidget('Yellow').sliceController().sliceOffsetSlider()
             self.logic._viewController = \
                 slicer.app.layoutManager().sliceWidget('Yellow').sliceController().mrmlSliceNode()
+
+    def onUpdateComboModel(self):
+        self.logic.processSelectModel()
 
     def onPushComputePredictor(self):
         self.logic.processComputeEmbeddings()

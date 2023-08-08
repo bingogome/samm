@@ -29,9 +29,9 @@ class SammParameterNode:
         
         ## pred
         self.samPredictor = {"R": None, "G": None, "Y": None}
-        self.initNetWork()
+        self.initNetwork()
     
-    def initNetWork(self):
+    def initNetwork(self, model = "vit_b"):
 
         # Load the segmentation model
         if torch.cuda.is_available():
@@ -46,15 +46,28 @@ class SammParameterNode:
         if not os.path.exists(workspace):
             os.makedirs(workspace)
         self.workspace = workspace
-        self.sam_checkpoint = self.workspace + "/sam_vit_h_4b8939.pth" 
+
+        if model.startswith('vit_'):
+            self.initNetworkSam(model)
+
+    def initNetworkSam(self, model):
+        dictpath = {
+            "vit_h" : "sam_vit_h_4b8939.pth",
+            "vit_l" : "sam_vit_l_0b3195.pth",
+            "vit_b" : "sam_vit_b_01ec64.pth"
+        }
+        self.sam_checkpoint = self.workspace + "/" +  dictpath[model]
         if not os.path.isfile(self.sam_checkpoint):
             raise Exception("[SAMM ERROR] SAM model file is not in " + self.sam_checkpoint)
-        model_type = "vit_h"
+        model_type = model
         sam = sam_model_registry[model_type](checkpoint=self.sam_checkpoint)
         sam.to(device=self.device)
+
         self.samPredictor["R"] = SamPredictor(sam)
         self.samPredictor["G"] = SamPredictor(sam)
         self.samPredictor["Y"] = SamPredictor(sam)
+        print(f'[SAMM INFO] Model initialzed to: "{model}"')
+
 
 def sammProcessingCallBack_SET_IMAGE_SIZE(msg):
     dataNode = SammParameterNode()
@@ -171,16 +184,25 @@ def sammProcessingCallBack_CALCULATE_EMBEDDINGS(msg):
     print("[SAMM INFO] Received Embeddings Request.")
     return np.array([1],dtype=np.uint8).tobytes(), functools.partial(CalculateEmbeddings, msg)
 
+def SwitchModel(msg):
+    dataNode = SammParameterNode()
+    dataNode.initNetwork(msg["model"])
+
+def sammProcessingCallBack_MODEL_SELECTION(msg):
+    print(f'[SAMM INFO] Model switched to: "{msg["model"]}"')
+    return np.array([1],dtype = np.uint8).tobytes(), functools.partial(SwitchModel, msg) 
+
 callBackList = {
     SammMsgType.SET_IMAGE_SIZE : sammProcessingCallBack_SET_IMAGE_SIZE,
     SammMsgType.SET_NTH_IMAGE : sammProcessingCallBack_SET_NTH_IMAGE,
     SammMsgType.INFERENCE : sammProcessingCallBack_INFERENCE,
-    SammMsgType.CALCULATE_EMBEDDINGS : sammProcessingCallBack_CALCULATE_EMBEDDINGS
+    SammMsgType.CALCULATE_EMBEDDINGS : sammProcessingCallBack_CALCULATE_EMBEDDINGS,
+    SammMsgType.MODEL_SELECTION : sammProcessingCallBack_MODEL_SELECTION
 }
 
 def sammProcessingCallBack(cmd, msg):
     cmdType = SammMsgType(np.frombuffer(cmd,dtype="int32").reshape([1])[0])
     solverType = SammMsgSolverMapper[cmdType]
-    msgDeserializaed = solverType.getDecodedData(msg)
-    msgBack, lateUpdate = callBackList[cmdType](msgDeserializaed)
+    msgDeserialized = solverType.getDecodedData(msg)
+    msgBack, lateUpdate = callBackList[cmdType](msgDeserialized)
     return msgBack, lateUpdate

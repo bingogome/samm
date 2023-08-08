@@ -206,5 +206,6 @@ SammModelMapper = {
     "vit_b" : 0,
     "vit_l" : 1,
     "vit_h" : 2,
-    "DICT" : ["vit_b", "vit_l", "vit_h"]
+    "mobile_vit_t" : 3,
+    "DICT" : ["vit_b", "vit_l", "vit_h", "mobile_vit_t"]
 }

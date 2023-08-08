@@ -3,7 +3,10 @@ import numpy as np
 from tqdm import tqdm
 import sys,os, cv2, matplotlib.pyplot as plt
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"#
-from segment_anything import sam_model_registry, SamPredictor
+from segment_anything import sam_model_registry as sam_model_registry_sam
+from segment_anything import SamPredictor as SamPredictor_sam
+from mobile_sam import sam_model_registry as sam_model_registry_mobile
+from mobile_sam import SamPredictor as SamPredictor_mobile
 import torch, functools, pickle
 
 def singleton(cls):
@@ -49,6 +52,8 @@ class SammParameterNode:
 
         if model.startswith('vit_'):
             self.initNetworkSam(model)
+        if model.startswith('mobile_'):
+            self.initNetworkMobile(model)
 
     def initNetworkSam(self, model):
         dictpath = {
@@ -60,12 +65,28 @@ class SammParameterNode:
         if not os.path.isfile(self.sam_checkpoint):
             raise Exception("[SAMM ERROR] SAM model file is not in " + self.sam_checkpoint)
         model_type = model
-        sam = sam_model_registry[model_type](checkpoint=self.sam_checkpoint)
+        sam = sam_model_registry_sam[model_type](checkpoint=self.sam_checkpoint)
         sam.to(device=self.device)
 
-        self.samPredictor["R"] = SamPredictor(sam)
-        self.samPredictor["G"] = SamPredictor(sam)
-        self.samPredictor["Y"] = SamPredictor(sam)
+        self.samPredictor["R"] = SamPredictor_sam(sam)
+        self.samPredictor["G"] = SamPredictor_sam(sam)
+        self.samPredictor["Y"] = SamPredictor_sam(sam)
+        print(f'[SAMM INFO] Model initialzed to: "{model}"')
+    
+    def initNetworkMobile(self, model):
+        dictpath = {
+            "mobile_vit_t" : "mobile_sam.pt"
+        }
+        self.sam_checkpoint = self.workspace + "/" +  dictpath[model]
+        if not os.path.isfile(self.sam_checkpoint):
+            raise Exception("[SAMM ERROR] SAM model file is not in " + self.sam_checkpoint)
+        model_type = model[7:]
+        sam = sam_model_registry_mobile[model_type](checkpoint=self.sam_checkpoint)
+        sam.to(device=self.device)
+
+        self.samPredictor["R"] = SamPredictor_mobile(sam)
+        self.samPredictor["G"] = SamPredictor_mobile(sam)
+        self.samPredictor["Y"] = SamPredictor_mobile(sam)
         print(f'[SAMM INFO] Model initialzed to: "{model}"')
 
 

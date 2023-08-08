@@ -68,10 +68,10 @@ class SamServer:
                 self.cleanup()
             except zmq.error.Again:
                 continue
-            except Exception as e:
-                logging.error(traceback.format_exc())
-                time.sleep(self.interv)
-                continue
+            # except Exception as e:
+            #     logging.error(traceback.format_exc())
+            #     time.sleep(self.interv)
+            #     continue
 
             time.sleep(self.interv)
 

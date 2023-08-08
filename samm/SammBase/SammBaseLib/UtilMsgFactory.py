@@ -109,6 +109,8 @@ class SammMsgType_CALCULATE_EMBEDDINGS(SammMsgTypeCommandTemplate):
 
 '''
 n : int
+view : char
+bbox : int 32, 4
 positivePrompts, int 32, n * 2
 negativePrompts, int 32
 '''
@@ -118,12 +120,14 @@ class SammMsgType_INFERENCE(SammMsgTypeCommandTemplate):
         
         n = self.msg["n"]
         view = SammViewMapper[self.msg["view"]]
+        bbox2D = self.msg["bbox2D"]
         positivePoints = self.msg["positivePrompts"]
         negativePoints = self.msg["negativePrompts"]
         
         msg = b''
         msg += np.array([n], dtype='int32').tobytes()
         msg += np.array([view], dtype='int32').tobytes()
+        msg += bbox2D.astype("int32").tobytes()
 
         if positivePoints is not None and positivePoints.shape[0] > 0:
             msg += np.array([positivePoints.shape[0]], dtype='int32').tobytes()
@@ -150,6 +154,9 @@ class SammMsgType_INFERENCE(SammMsgTypeCommandTemplate):
         msg["view"] = SammViewMapper["DICT"][np.frombuffer(msgbyte[pt:pt+4], dtype="int32").reshape([1])[0]]
         pt += 4
 
+        msg["bbox2D"] = np.frombuffer(msgbyte[pt:pt+4*4], dtype="int32").reshape([1,4])[0]
+        pt += 4*4
+
         positivePromptNum = np.frombuffer(msgbyte[pt:pt+4], dtype="int32").reshape([1])[0]
         pt += 4
 
@@ -164,7 +171,7 @@ class SammMsgType_INFERENCE(SammMsgTypeCommandTemplate):
         pt += 4
 
         if negativePromptNum > 0:
-            negativePrompt = np.frombuffer(msgbyte[pt:pt+4*2*negativePromptNum], dtype="int32").reshape([positivePromptNum, 2])
+            negativePrompt = np.frombuffer(msgbyte[pt:pt+4*2*negativePromptNum], dtype="int32").reshape([negativePromptNum, 2])
             pt += 4 * 2 * negativePromptNum
             msg["negativePrompts"] = negativePrompt
         else:

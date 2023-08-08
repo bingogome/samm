@@ -205,6 +205,7 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         # Init
         self._prompt_add    = self._parameterNode.GetNodeReference("sammPromptAdd")
         self._prompt_remove = self._parameterNode.GetNodeReference("sammPromptRemove")
+        self._prompt_2dbox = self._parameterNode.GetNodeReference("sammPrompt2DBox")
 
         if self._parameterNode.GetParameter("sammViewOptions") == "RED":
             self._slider = \
@@ -250,7 +251,9 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
             imshape = (self._parameterNode._volMetaData[0][0], self._parameterNode._volMetaData[0][1])
         return curslc, view, imshape
     
-    def utilGetPositionOnSlicer(self, temp, view):
+    def utilGetPositionOnSlice(self, ras, view):
+        temp = self._volumeRasToIjk.MultiplyPoint([ras[0],ras[1],ras[2],1])
+        temp = np.array([temp[0], temp[1], temp[2]])[self._parameterNode.RGYNpArrOrder]
         if view == "RED":
             return [round(temp[1]),round(temp[2])]
         if view == "GREEN":
@@ -268,7 +271,7 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         if self._flag_prompt_sync:
 
             curslc, view, imshape = self.utilGetCurrentSliceIndex()
-            curslc = int(curslc)
+            curslc = round(curslc)
 
             mask = None
 
@@ -278,21 +281,34 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
                 for i in range(numControlPoints):
                     ras = vtk.vtkVector3d(0.0, 0.0, 0.0)
                     self._prompt_add.GetNthControlPointPosition(i,ras)
-                    temp = self._volumeRasToIjk.MultiplyPoint([ras[0],ras[1],ras[2],1])
-                    temp = np.array([temp[0], temp[1], temp[2]])[self._parameterNode.RGYNpArrOrder]
-                    prompt_add_point.append(self.utilGetPositionOnSlicer(temp, view))
+                    prompt_add_point.append(self.utilGetPositionOnSlice(ras, view))
 
                 numControlPoints = self._prompt_remove.GetNumberOfControlPoints()
                 for i in range(numControlPoints):
                     ras = vtk.vtkVector3d(0.0, 0.0, 0.0)
                     self._prompt_remove.GetNthControlPointPosition(i,ras)
-                    temp = self._volumeRasToIjk.MultiplyPoint([ras[0],ras[1],ras[2],1])
-                    temp = np.array([temp[0], temp[1], temp[2]])[self._parameterNode.RGYNpArrOrder]
-                    prompt_remove_point.append(self.utilGetPositionOnSlicer(temp, view))
+                    prompt_remove_point.append(self.utilGetPositionOnSlice(ras, view))
+
+                plane = self._parameterNode.GetNodeReference("sammPrompt2DBox")
+
+                if plane:
+                    points = vtk.vtkPoints() 
+                    plane.GetPlaneCornerPoints(points)
+                    ras = [points.GetPoint(0)[0],points.GetPoint(0)[1],points.GetPoint(0)[2]]
+                    bboxmin = self.utilGetPositionOnSlice(ras, view)
+                    ras = [points.GetPoint(2)[0],points.GetPoint(2)[1],points.GetPoint(2)[2]]
+                    bboxmax = self.utilGetPositionOnSlice(ras, view)
+                    if bboxmin[0] > bboxmax[0]:
+                        bboxmin_ = [bboxmin[0], bboxmin[1]]
+                        bboxmin = [bboxmax[0], bboxmax[1]]
+                        bboxmax = [bboxmin_[0], bboxmin_[1]]
+                else:
+                    bboxmin, bboxmax = [-404,-404], [-404,-404]
 
                 mask = self._connections.pushRequest(SammMsgType.INFERENCE, {
                     "n" : curslc,
                     "view" : self._parameterNode.GetParameter("sammViewOptions")[0],
+                    "bbox2D" : np.array([bboxmin[0], bboxmin[1], bboxmax[0], bboxmax[1]]),
                     "positivePrompts" : np.array(prompt_add_point),
                     "negativePrompts" : np.array(prompt_remove_point)
                 })

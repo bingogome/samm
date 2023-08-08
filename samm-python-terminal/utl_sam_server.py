@@ -158,10 +158,21 @@ def CalculateEmbeddings(msg):
 
     print("[SAMM INFO] Embeddings Cached.")
 
+def helperPredict(dataNode, msg, points, labels, bbox2d):
+    dataNode.samPredictor[msg["view"]].features = dataNode.features[msg["view"]][msg["n"]].to("cuda")
+    seg, _, _ = dataNode.samPredictor[msg["view"]].predict(
+        point_coords = points,
+        point_labels = labels,
+        box = bbox2d,
+        multimask_output = False,)
+    seg = seg[0]
+    return seg
+
 def sammProcessingCallBack_INFERENCE(msg):
     dataNode = SammParameterNode()
     positivePoints = msg["positivePrompts"]
     negativePoints = msg["negativePrompts"]
+    bbox2d = msg["bbox2D"]
 
     points = []
     labels = []
@@ -176,20 +187,26 @@ def sammProcessingCallBack_INFERENCE(msg):
             labels.append(0)
 
     seg = None
-    if len(points) > 0:
-        if msg["view"] == "R":
-            tempsize = [dataNode.imageSize[1], dataNode.imageSize[2]]
-        if msg["view"] == "G":
-            tempsize = [dataNode.imageSize[0], dataNode.imageSize[2]]
-        if msg["view"] == "Y":
-            tempsize = [dataNode.imageSize[0], dataNode.imageSize[1]]
+    if len(points) > 0 and (bbox2d[0]!=-404):
+
+        points = np.array(points)
+        point_labels = np.array(labels)
+        bbox2d = np.array(bbox2d)
+        seg = helperPredict(dataNode, msg, points, point_labels, bbox2d)
+    
+    elif len(points) == 0 and (bbox2d[0]!=-404):
         
-        dataNode.samPredictor[msg["view"]].features = dataNode.features[msg["view"]][msg["n"]].to("cuda")
-        seg, _, _ = dataNode.samPredictor[msg["view"]].predict(
-            point_coords = np.array(points),
-            point_labels = np.array(labels),
-            multimask_output = False,)
-        seg = seg[0]
+        points = None
+        point_labels = None
+        bbox2d = np.array(bbox2d)
+        seg = helperPredict(dataNode, msg, points, point_labels, bbox2d)
+
+    elif len(points) > 0 and (bbox2d[0]==-404):
+        
+        points = np.array(points)
+        point_labels = np.array(labels)
+        bbox2d = None
+        seg = helperPredict(dataNode, msg, points, point_labels, bbox2d)
         
     else:
         if msg["view"] == "R":

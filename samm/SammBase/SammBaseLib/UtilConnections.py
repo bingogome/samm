@@ -34,7 +34,7 @@ class UtilConnections():
         msgByte = SammMsgSolverMapper[requireType](MSG).getEncodedData()
         sock = self.context.socket(zmq.REQ)
         # if no receiption, try extending the wait time. The first setup time takes longer
-        sock.setsockopt(zmq.RCVTIMEO, 20000) 
+        sock.setsockopt(zmq.RCVTIMEO, 10000) 
         sock.connect("tcp://%s:%s" % (self.ip, self.portControl))
         sock.send_multipart([commandByte, msgByte])
         feedback = sock.recv()

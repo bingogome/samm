@@ -67,6 +67,8 @@ class SammBaseWidget(SammWidgetBase):
 
         self.ui.markupsAdd.connect("markupsNodeChanged()", self.updateParameterNodeFromGUI)
         self.ui.markupsRemove.connect("markupsNodeChanged()", self.updateParameterNodeFromGUI)
+        self.ui.markups2DBox.connect("markupsNodeChanged()", self.updateParameterNodeFromGUI)
+        self.ui.pushMarkups2DBox.connect("clicked(bool)", self.onPushMarkups2DBox)
         self.ui.markupsAdd.markupsPlaceWidget().setPlaceModePersistency(True)
         self.ui.markupsRemove.markupsPlaceWidget().setPlaceModePersistency(True)
 
@@ -92,6 +94,7 @@ class SammBaseWidget(SammWidgetBase):
         self.ui.comboVolumeNode.setCurrentNode(self._parameterNode.GetNodeReference("sammInputVolume"))
         self.ui.markupsAdd.setCurrentNode(self._parameterNode.GetNodeReference("sammPromptAdd"))
         self.ui.markupsRemove.setCurrentNode(self._parameterNode.GetNodeReference("sammPromptRemove"))
+        self.ui.markups2DBox.setCurrentNode(self._parameterNode.GetNodeReference("sammPrompt2DBox"))
 
         self.ui.comboSegmentationNode.setCurrentNode(self._parameterNode.GetNodeReference("sammSegmentation"))
 
@@ -128,6 +131,8 @@ class SammBaseWidget(SammWidgetBase):
         self._parameterNode.SetNodeReferenceID("sammInputVolume", self.ui.comboVolumeNode.currentNodeID)
         self._parameterNode.SetNodeReferenceID("sammPromptAdd", self.ui.markupsAdd.currentNode().GetID())
         self._parameterNode.SetNodeReferenceID("sammPromptRemove", self.ui.markupsRemove.currentNode().GetID())
+        if self.ui.markups2DBox.currentNode():
+            self._parameterNode.SetNodeReferenceID("sammPrompt2DBox", self.ui.markups2DBox.currentNode().GetID())
         self._parameterNode._workspace = os.path.dirname(os.path.abspath(self.ui.pathWorkSpace.currentPath.strip()))
         self._parameterNode.SetNodeReferenceID("sammSegmentation", self.ui.comboSegmentationNode.currentNodeID)
         self._parameterNode.GetNodeReference("sammSegmentation").SetReferenceImageGeometryParameterFromVolumeNode(
@@ -204,3 +209,15 @@ class SammBaseWidget(SammWidgetBase):
 
     def onPushModuleSegEditor(self):
         slicer.util.selectModule("SegmentEditor")
+
+    def onPushMarkups2DBox(self):
+        planeNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsPlaneNode').GetID()
+        selectionNode = slicer.mrmlScene.GetNodeByID("vtkMRMLSelectionNodeSingleton")
+        selectionNode.SetReferenceActivePlaceNodeID(planeNode)
+        interactionNode = slicer.mrmlScene.GetNodeByID("vtkMRMLInteractionNodeSingleton")
+        placeModePersistence = 0
+        interactionNode.SetPlaceModePersistence(placeModePersistence)
+        # mode 1 is Place, can also be accessed via slicer.vtkMRMLInteractionNode().Place
+        interactionNode.SetCurrentInteractionMode(1)
+
+        self._parameterNode.SetNodeReferenceID("sammPrompt2DBox", planeNode)

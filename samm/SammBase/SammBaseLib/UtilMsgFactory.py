@@ -7,6 +7,7 @@ class SammMsgType(Enum):
     SET_NTH_IMAGE = 1
     CALCULATE_EMBEDDINGS = 2
     INFERENCE = 3
+    MODEL_SELECTION = 4
 
 class SammMsgTypeCommandTemplate:
     def __init__(self, msg):
@@ -171,11 +172,27 @@ class SammMsgType_INFERENCE(SammMsgTypeCommandTemplate):
 
         return msg
 
+class SammMsgType_MODEL_SELECTION(SammMsgTypeCommandTemplate):
+    def getEncodedData(self):
+        model = SammModelMapper[self.msg["model"]]
+        msg = np.array([model], dtype='int32').tobytes()
+        
+        return msg
+    
+    @staticmethod
+    def getDecodedData(msgbyte):
+        msgDecode = {
+            "model" : SammModelMapper["DICT"][np.frombuffer(msgbyte[0:4], dtype="int32").reshape([1])[0]]
+        }
+
+        return msgDecode
+
 SammMsgSolverMapper = {
     SammMsgType.SET_IMAGE_SIZE : SammMsgType_SET_IMAGE_SIZE,
     SammMsgType.SET_NTH_IMAGE : SammMsgType_SET_NTH_IMAGE,
     SammMsgType.CALCULATE_EMBEDDINGS : SammMsgType_CALCULATE_EMBEDDINGS,
-    SammMsgType.INFERENCE : SammMsgType_INFERENCE
+    SammMsgType.INFERENCE : SammMsgType_INFERENCE,
+    SammMsgType.MODEL_SELECTION : SammMsgType_MODEL_SELECTION
 }
 
 SammViewMapper = {
@@ -183,4 +200,11 @@ SammViewMapper = {
     "G" : 1,
     "Y" : 2,
     "DICT" : "RGY"
+}
+
+SammModelMapper = {
+    "vit_b" : 0,
+    "vit_l" : 1,
+    "vit_h" : 2,
+    "DICT" : ["vit_b", "vit_l", "vit_h"]
 }

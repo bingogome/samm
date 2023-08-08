@@ -145,6 +145,9 @@ class SammWidgetBase(ScriptedLoadableModuleWidget, VTKObservationMixin):
         if not self._parameterNode.GetParameter("sammDataOptions"):
             self._parameterNode.SetParameter("sammDataOptions", "Volume")
 
+        if not self._parameterNode.GetParameter("sammModelSelection"):
+            self._parameterNode.SetParameter("sammModelSelection", "vit_b")
+
             
     def setParameterNode(self, inputParameterNode):
         """

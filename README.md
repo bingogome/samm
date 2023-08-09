@@ -16,6 +16,7 @@
   - vit_h
   - vit_l
   - vit_t - [MobileSAM](https://github.com/ChaoningZhang/MobileSAM)
+  - vit_b - [MedSAM](https://github.com/bowang-lab/MedSAM)
 - interactions
   - positive and negative points
   - 2D bounding box

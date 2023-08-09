@@ -116,7 +116,14 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         imageMin = level - window / 2
         imageMax = level + window / 2
 
-        imageNormalized = (((copy.deepcopy(volumeNodeDataPointer) - imageMin).astype("float32") / (imageMax - imageMin)) * 256).astype(numpy.uint8)
+        # imageMin = np.amin(volumeNodeDataPointer)
+        # imageMax = np.amax(volumeNodeDataPointer)
+
+        imageNormalized = (((copy.deepcopy(volumeNodeDataPointer) - imageMin).astype("float32") / (imageMax - imageMin)) * 256)
+        imageNormalized[imageNormalized<0] = 0
+        imageNormalized[imageNormalized>255] = 255
+        imageNormalized = imageNormalized.astype(numpy.uint8)
+        
         imageNormalized = imageNormalized.transpose(2-np.array(self._parameterNode.RGYNpArrOrder))
 
         self._parameterNode._volMetaData[0] = imageNormalized.shape
@@ -124,6 +131,7 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         return imageNormalized
     
     def processPreEmbeddings(self):
+
         # get image slices
         imageNormalized = self.processSlicePreProcess()
 

@@ -61,7 +61,7 @@ class SammBaseWidget(SammWidgetBase):
         self.ui.comboSegmentNode.connect("currentIndexChanged(int)", self.updateParameterNodeFromGUI)
         self.ui.comboModel.connect("currentIndexChanged(int)", self.updateParameterNodeFromGUI)
         self.ui.comboModel.connect("currentIndexChanged(int)", self.onUpdateComboModel)
-        comboModelItems = ['vit_b', 'vit_l', 'vit_h', 'mobile_vit_t']
+        comboModelItems = ['vit_b', 'vit_l', 'vit_h', 'mobile_vit_t', 'medsam_vit_b']
         for item in comboModelItems:
             self.ui.comboModel.addItem(item)
 

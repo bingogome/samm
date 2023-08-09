@@ -21,12 +21,12 @@ SOFTWARE.
 from datetime import datetime
 import pickle
 
-class LatencyLogger():
+class LatencyLogger:
 
     def __init__(self):
         # Latency logging
         # log latency?
-        self.flag_loglat            = False
+        self.flag_loglat            = True
         if self.flag_loglat:
             now                     = datetime.now()
             self.logctrmax          = 300

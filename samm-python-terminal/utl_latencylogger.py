@@ -21,14 +21,25 @@ SOFTWARE.
 from datetime import datetime
 import pickle
 
-class latency_logger():
+def singleton(cls):
+    instances = {}
+
+    def get_instance(*args, **kwargs):
+        if cls not in instances:
+            instances[cls] = cls(*args, **kwargs)
+        return instances[cls]
+
+    return get_instance
+
+@singleton
+class latency_logger:
 
     def __init__(self, workspace):
 
         # Latency logging
         # log latency?
         self.workspace              = workspace
-        self.flag_loglat            = False
+        self.flag_loglat            = True
         if self.flag_loglat:
             now = datetime.now()
             self.logctrmax          = 300
@@ -45,10 +56,10 @@ class latency_logger():
     def event_complete_computeembedding(self):
         if self.flag_loglat:
             self.timearr_EMB[1] = datetime.now()
-            file_name = self.workspace + "timearr_EMB.pkl"
+            file_name = self.workspace + "/timearr_EMB.pkl"
             with open(file_name, 'wb') as file:
                 pickle.dump(self.timearr_EMB, file)
-                print("[SAMM INFO] Time for embedding computing is saved.")
+                print(f'[SAMM INFO] Time for embedding computing is saved: "{file_name}"')
 
     def event_receive_inferencerequest(self):
         if self.flag_loglat:
@@ -67,4 +78,5 @@ class latency_logger():
                 with open(file_name, 'wb') as file:
                     pickle.dump(self.timearr_CPL_INF, file)
                 print("[SAMM INFO] Time for inference is saved.")
+                self.flag_loglat = False
                 

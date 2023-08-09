@@ -2,12 +2,15 @@ from utl_sam_msg import *
 import numpy as np
 from tqdm import tqdm
 import sys,os, cv2, matplotlib.pyplot as plt
+import torch, functools, pickle
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"#
+
 from segment_anything import sam_model_registry as sam_model_registry_sam
 from segment_anything import SamPredictor as SamPredictor_sam
 from mobile_sam import sam_model_registry as sam_model_registry_mobile
 from mobile_sam import SamPredictor as SamPredictor_mobile
-import torch, functools, pickle
+
+from utl_latencylogger import latency_logger
 
 def singleton(cls):
     instances = {}
@@ -54,6 +57,8 @@ class SammParameterNode:
             self.initNetworkSam(model)
         if model.startswith('mobile_'):
             self.initNetworkMobile(model)
+        if model.startswith('medsam_'):
+            self.initNetworkMedSam(model)
 
     def initNetworkSam(self, model):
         dictpath = {
@@ -89,6 +94,21 @@ class SammParameterNode:
         self.samPredictor["Y"] = SamPredictor_mobile(sam)
         print(f'[SAMM INFO] Model initialzed to: "{model}"')
 
+    def initNetworkMedSam(self, model):
+        dictpath = {
+            "medsam_vit_b" : "medsam_vit_b.pth"
+        }
+        self.sam_checkpoint = self.workspace + "/" +  dictpath[model]
+        if not os.path.isfile(self.sam_checkpoint):
+            raise Exception("[SAMM ERROR] SAM model file is not in " + self.sam_checkpoint)
+        model_type = model[7:]
+        sam = sam_model_registry_sam[model_type](checkpoint=self.sam_checkpoint)
+        sam.to(device=self.device)
+
+        self.samPredictor["R"] = SamPredictor_sam(sam)
+        self.samPredictor["G"] = SamPredictor_sam(sam)
+        self.samPredictor["Y"] = SamPredictor_sam(sam)
+        print(f'[SAMM INFO] Model initialzed to: "{model}"')
 
 def sammProcessingCallBack_SET_IMAGE_SIZE(msg):
     dataNode = SammParameterNode()
@@ -104,17 +124,21 @@ def sammProcessingCallBack_SET_NTH_IMAGE(msg):
     
 def CalculateEmbeddings(msg):
     dataNode = SammParameterNode()
+    laglog = latency_logger(dataNode.workspace)
+
     dataNode.features = {
         "R": [None for i in range(dataNode.N["R"])], 
         "G": [None for i in range(dataNode.N["G"])], 
         "Y": [None for i in range(dataNode.N["Y"])]
     }
-    workspace = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'samm-workspace')
-    output_folder = os.path.join(workspace, 'emb')
+
+    laglog.event_start_computeembedding()
+    
+    output_folder = os.path.join(dataNode.workspace, 'emb')
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
     pkl_file = os.path.join(output_folder, "emb" + ".pkl")
-    
+
     if msg["loadLocal"]:
         dataNode.samPredictor["R"].input_size = (dataNode.imageSize[1], dataNode.imageSize[2])
         dataNode.samPredictor["R"].original_size = (dataNode.imageSize[1], dataNode.imageSize[2])
@@ -141,6 +165,8 @@ def CalculateEmbeddings(msg):
         print("[SAMM INFO] Red View Progress:")
         for i in tqdm(range(dataNode.N["R"])):
             dataNode.samPredictor["R"].set_image(cv2.cvtColor(dataNode.mainVolume[i,:,:],cv2.COLOR_GRAY2RGB))
+            if i == 127:
+                testImage(dataNode, 127, np.array([[50,50]]), "R")
             dataNode.features["R"][i] = dataNode.samPredictor["R"].features.to('cpu')
         print("[SAMM INFO] Green View Progress:")
         for i in tqdm(range(dataNode.N["G"])):
@@ -157,19 +183,49 @@ def CalculateEmbeddings(msg):
                 print(f'[SAMM INFO] Predictor successfully saved to "{f}"')
 
     print("[SAMM INFO] Embeddings Cached.")
+    laglog.event_complete_computeembedding()
 
+def testImage(dataNode, n, points, view):
+    from PIL import Image
+    img = dataNode.mainVolume[n,:,:]
+    for i in range(5):
+        for j in range(5):
+            img[points[0][0]+i][points[0][1]+j] = 0
+            img[points[0][0]+i][points[0][1]-j] = 0
+            img[points[0][0]-i][points[0][1]-j] = 0
+            img[points[0][0]-i][points[0][1]+j] = 0
+    img = Image.fromarray(img)
+    img.save("testimg.png")
+
+    seg, _, _ = dataNode.samPredictor[view].predict(
+            point_coords = points,
+            point_labels = [1],
+            multimask_output = True)
+    img = Image.fromarray(seg[0])
+    img.save("testseg.png")
+    
 def helperPredict(dataNode, msg, points, labels, bbox2d):
+
     dataNode.samPredictor[msg["view"]].features = dataNode.features[msg["view"]][msg["n"]].to("cuda")
-    seg, _, _ = dataNode.samPredictor[msg["view"]].predict(
-        point_coords = points,
-        point_labels = labels,
-        box = bbox2d,
-        multimask_output = False,)
+    if isinstance(bbox2d, (np.ndarray, np.generic)):
+        seg, _, _ = dataNode.samPredictor[msg["view"]].predict(
+            point_coords = points,
+            point_labels = labels,
+            box = bbox2d,
+            multimask_output = True)
+    else:
+        seg, _, _ = dataNode.samPredictor[msg["view"]].predict(
+            point_coords = points,
+            point_labels = labels,
+            multimask_output = True)
     seg = seg[0]
     return seg
 
 def sammProcessingCallBack_INFERENCE(msg):
     dataNode = SammParameterNode()
+    laglog = latency_logger(dataNode.workspace)
+
+    laglog.event_receive_inferencerequest()
     positivePoints = msg["positivePrompts"]
     negativePoints = msg["negativePrompts"]
     bbox2d = msg["bbox2D"]
@@ -192,6 +248,7 @@ def sammProcessingCallBack_INFERENCE(msg):
         points = np.array(points)
         point_labels = np.array(labels)
         bbox2d = np.array(bbox2d)
+        bbox2d[bbox2d<1] = 1
         seg = helperPredict(dataNode, msg, points, point_labels, bbox2d)
     
     elif len(points) == 0 and (bbox2d[0]!=-404):
@@ -199,6 +256,7 @@ def sammProcessingCallBack_INFERENCE(msg):
         points = None
         point_labels = None
         bbox2d = np.array(bbox2d)
+        bbox2d[bbox2d<1] = 1
         seg = helperPredict(dataNode, msg, points, point_labels, bbox2d)
 
     elif len(points) > 0 and (bbox2d[0]==-404):
@@ -215,6 +273,8 @@ def sammProcessingCallBack_INFERENCE(msg):
             seg = np.zeros([dataNode.imageSize[0], dataNode.imageSize[2]],dtype=np.uint8)
         if msg["view"] == "Y":
             seg = np.zeros([dataNode.imageSize[0], dataNode.imageSize[1]],dtype=np.uint8)
+
+    laglog.event_complete_inference()
 
     return seg[:].astype(np.uint8).tobytes(), None
 

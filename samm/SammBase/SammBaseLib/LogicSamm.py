@@ -289,13 +289,15 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
                 for i in range(numControlPoints):
                     ras = vtk.vtkVector3d(0.0, 0.0, 0.0)
                     self._prompt_add.GetNthControlPointPosition(i,ras)
-                    prompt_add_point.append(self.utilGetPositionOnSlice(ras, view))
+                    coord = self.utilGetPositionOnSlice(ras, view)
+                    prompt_add_point.append([coord[1],coord[0]])
 
                 numControlPoints = self._prompt_remove.GetNumberOfControlPoints()
                 for i in range(numControlPoints):
                     ras = vtk.vtkVector3d(0.0, 0.0, 0.0)
                     self._prompt_remove.GetNthControlPointPosition(i,ras)
-                    prompt_remove_point.append(self.utilGetPositionOnSlice(ras, view))
+                    coord = self.utilGetPositionOnSlice(ras, view)
+                    prompt_remove_point.append([coord[1],coord[0]])
 
                 plane = self._parameterNode.GetNodeReference("sammPrompt2DBox")
 
@@ -303,13 +305,12 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
                     points = vtk.vtkPoints() 
                     plane.GetPlaneCornerPoints(points)
                     ras = [points.GetPoint(0)[0],points.GetPoint(0)[1],points.GetPoint(0)[2]]
-                    bboxmin = self.utilGetPositionOnSlice(ras, view)
+                    bbox1 = self.utilGetPositionOnSlice(ras, view)
                     ras = [points.GetPoint(2)[0],points.GetPoint(2)[1],points.GetPoint(2)[2]]
-                    bboxmax = self.utilGetPositionOnSlice(ras, view)
-                    if bboxmin[0] > bboxmax[0]:
-                        bboxmin_ = [bboxmin[0], bboxmin[1]]
-                        bboxmin = [bboxmax[0], bboxmax[1]]
-                        bboxmax = [bboxmin_[0], bboxmin_[1]]
+                    bbox2 = self.utilGetPositionOnSlice(ras, view)
+                    bboxmin = [min(bbox1[1], bbox2[1]), min(bbox1[0], bbox2[0])]
+                    bboxmax = [max(bbox1[1], bbox2[1]), max(bbox1[0], bbox2[0])]
+
                 else:
                     bboxmin, bboxmax = [-404,-404], [-404,-404]
 

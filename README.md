@@ -20,7 +20,7 @@
 - interactions
   - positive and negative points
   - 2D bounding box
-  - 3D bounding box (WIP)
+  - 3D bounding box 
   - combination
   - automatic segmentation
 - training (WIP)

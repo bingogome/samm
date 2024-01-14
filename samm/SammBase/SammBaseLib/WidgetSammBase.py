@@ -114,6 +114,11 @@ class SammBaseWidget(SammWidgetBase):
         self.ui.comboSegmentNode.setCurrentText(self._parameterNode.GetParameter("sammCurrentSegment"))
         self.ui.checkSaveToLocal.checked = (self._parameterNode.GetParameter("sammSaveEmbToLocal") == "true")
         
+        if self._parameterNode.GetNodeReference("sammPromptAdd"):
+            self._parameterNode.GetNodeReference("sammPromptAdd").GetDisplayNode().SetGlyphScale(1)
+        if self._parameterNode.GetNodeReference("sammPromptRemove"):
+            self._parameterNode.GetNodeReference("sammPromptRemove").GetDisplayNode().SetGlyphScale(1)
+
         # All the GUI updates are done
         self._updatingGUIFromParameterNode = False
 
@@ -221,3 +226,5 @@ class SammBaseWidget(SammWidgetBase):
         interactionNode.SetCurrentInteractionMode(1)
 
         self._parameterNode.SetNodeReferenceID("sammPrompt2DBox", planeNode)
+        slicer.mrmlScene.GetNodeByID(planeNode).GetDisplayNode().SetGlyphScale(0.5)
+        slicer.mrmlScene.GetNodeByID(planeNode).GetDisplayNode().SetInteractionHandleScale(1)

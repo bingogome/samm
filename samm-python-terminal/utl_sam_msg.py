@@ -8,6 +8,7 @@ class SammMsgType(Enum):
     CALCULATE_EMBEDDINGS = 2
     INFERENCE = 3
     MODEL_SELECTION = 4
+    AUTO_SEG = 5
 
 class SammMsgTypeCommandTemplate:
     def __init__(self, msg):
@@ -194,12 +195,32 @@ class SammMsgType_MODEL_SELECTION(SammMsgTypeCommandTemplate):
 
         return msgDecode
 
+class SammMsgType_AUTO_SEG(SammMsgTypeCommandTemplate):
+    def getEncodedData(self):
+        segRangeMin = self.msg["segRangeMin"]
+        segRangeMax = self.msg["segRangeMax"]
+        segSlice = self.msg["segSlice"]
+        msg = b''
+        msg += np.array([segRangeMin], dtype='int32').tobytes()
+        msg += np.array([segRangeMax], dtype='int32').tobytes()
+        msg += np.array([segSlice], dtype='int32').tobytes()
+        return msg
+
+    @staticmethod
+    def getDecodedData(msgbyte):
+        msg = {}
+        msg["segRangeMin"] = np.frombuffer(msgbyte[0:8], dtype="int32").reshape([1,2])[0]
+        msg["segRangeMax"] = np.frombuffer(msgbyte[8:16], dtype="int32").reshape([1,2])[0]
+        msg["segSlice"] = np.frombuffer(msgbyte[16:20], dtype="int32").reshape([1])[0]
+        return msg
+
 SammMsgSolverMapper = {
     SammMsgType.SET_IMAGE_SIZE : SammMsgType_SET_IMAGE_SIZE,
     SammMsgType.SET_NTH_IMAGE : SammMsgType_SET_NTH_IMAGE,
     SammMsgType.CALCULATE_EMBEDDINGS : SammMsgType_CALCULATE_EMBEDDINGS,
     SammMsgType.INFERENCE : SammMsgType_INFERENCE,
-    SammMsgType.MODEL_SELECTION : SammMsgType_MODEL_SELECTION
+    SammMsgType.MODEL_SELECTION : SammMsgType_MODEL_SELECTION,
+    SammMsgType.AUTO_SEG : SammMsgType_AUTO_SEG
 }
 
 SammViewMapper = {

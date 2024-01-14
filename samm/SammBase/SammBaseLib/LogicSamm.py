@@ -368,3 +368,44 @@ class SammBaseLogic(ScriptedLoadableModuleLogic):
         #         self._prompt_remove.SetNthControlPointPosition(i,ras[0],ras[1],ras[2])
                 
         #     qt.QTimer.singleShot(60, self.processPromptPointsSync)
+
+    def processAutoSeg3D(self):
+
+        self.processGetVolumeMetaData()
+        self.processInitPromptSync()
+        _ = self.processSlicePreProcess()
+
+        bounds = [0, 0, 0, 0, 0, 0]
+        slicer.mrmlScene.GetNodeByID(
+            self._parameterNode.GetNodeReferenceID("sammPrompt3DBox")
+        ).GetBounds(bounds)
+
+        ras = [bounds[0],bounds[2],bounds[4]]
+        bbox1 = self.utilGetPositionOnSlice(ras, "RED")
+        ras = [bounds[1],bounds[3],bounds[5]]
+        bbox2 = self.utilGetPositionOnSlice(ras, "RED")
+        bboxmin_r = [min(bbox1[1], bbox2[1]), min(bbox1[0], bbox2[0])]
+        bboxmax_r = [max(bbox1[1], bbox2[1]), max(bbox1[0], bbox2[0])]
+
+        ras = [bounds[0],bounds[2],bounds[4]]
+        bbox1 = self.utilGetPositionOnSlice(ras, "GREEN")
+        ras = [bounds[1],bounds[3],bounds[5]]
+        bbox2 = self.utilGetPositionOnSlice(ras, "GREEN")
+        bboxmin_g = [min(bbox1[1], bbox2[1]), min(bbox1[0], bbox2[0])]
+        bboxmax_g = [max(bbox1[1], bbox2[1]), max(bbox1[0], bbox2[0])]
+
+        bboxmin = [bboxmin_r[0], bboxmin_r[1], bboxmin_g[1]]
+        bboxmax = [bboxmax_r[0], bboxmax_r[1], bboxmax_g[1]]
+
+        print(bboxmin, bboxmax)
+        imshape = (self._parameterNode._volMetaData[0][1], self._parameterNode._volMetaData[0][2])
+
+        # send inf request    
+        for i in range(bboxmin_g[1], bboxmax_g[1]+1):
+            mask = self._connections.pushRequest(SammMsgType.AUTO_SEG, {
+                "segRangeMin" : bboxmin_r,
+                "segRangeMax" : bboxmax_r,
+                "segSlice" : i
+            })
+            print("[SAMM INFO] Sent Auto Segmentation Command.")
+            self.processMaskSync(i, mask, "RED", imshape)

@@ -69,6 +69,9 @@ class SammBaseWidget(SammWidgetBase):
         self.ui.markupsRemove.connect("markupsNodeChanged()", self.updateParameterNodeFromGUI)
         self.ui.markups2DBox.connect("markupsNodeChanged()", self.updateParameterNodeFromGUI)
         self.ui.pushMarkups2DBox.connect("clicked(bool)", self.onPushMarkups2DBox)
+        self.ui.markups3DBox.connect("markupsNodeChanged()", self.updateParameterNodeFromGUI)
+        self.ui.pushAutoSeg3D.connect("clicked(bool)", self.onPushAutoSeg3D)
+        self.ui.pushMarkups3DBox.connect("clicked(bool)", self.onPushMarkups3DBox)
         self.ui.markupsAdd.markupsPlaceWidget().setPlaceModePersistency(True)
         self.ui.markupsRemove.markupsPlaceWidget().setPlaceModePersistency(True)
 
@@ -95,6 +98,7 @@ class SammBaseWidget(SammWidgetBase):
         self.ui.markupsAdd.setCurrentNode(self._parameterNode.GetNodeReference("sammPromptAdd"))
         self.ui.markupsRemove.setCurrentNode(self._parameterNode.GetNodeReference("sammPromptRemove"))
         self.ui.markups2DBox.setCurrentNode(self._parameterNode.GetNodeReference("sammPrompt2DBox"))
+        self.ui.markups3DBox.setCurrentNode(self._parameterNode.GetNodeReference("sammPrompt3DBox"))
 
         self.ui.comboSegmentationNode.setCurrentNode(self._parameterNode.GetNodeReference("sammSegmentation"))
 
@@ -138,6 +142,8 @@ class SammBaseWidget(SammWidgetBase):
         self._parameterNode.SetNodeReferenceID("sammPromptRemove", self.ui.markupsRemove.currentNode().GetID())
         if self.ui.markups2DBox.currentNode():
             self._parameterNode.SetNodeReferenceID("sammPrompt2DBox", self.ui.markups2DBox.currentNode().GetID())
+        if self.ui.markups3DBox.currentNode():
+            self._parameterNode.SetNodeReferenceID("sammPrompt3DBox", self.ui.markups3DBox.currentNode().GetID())
         self._parameterNode._workspace = os.path.dirname(os.path.abspath(self.ui.pathWorkSpace.currentPath.strip()))
         self._parameterNode.SetNodeReferenceID("sammSegmentation", self.ui.comboSegmentationNode.currentNodeID)
         self._parameterNode.GetNodeReference("sammSegmentation").SetReferenceImageGeometryParameterFromVolumeNode(
@@ -228,3 +234,20 @@ class SammBaseWidget(SammWidgetBase):
         self._parameterNode.SetNodeReferenceID("sammPrompt2DBox", planeNode)
         slicer.mrmlScene.GetNodeByID(planeNode).GetDisplayNode().SetGlyphScale(0.5)
         slicer.mrmlScene.GetNodeByID(planeNode).GetDisplayNode().SetInteractionHandleScale(1)
+
+    def onPushMarkups3DBox(self):
+        planeNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsROINode').GetID()
+        selectionNode = slicer.mrmlScene.GetNodeByID("vtkMRMLSelectionNodeSingleton")
+        selectionNode.SetReferenceActivePlaceNodeID(planeNode)
+        interactionNode = slicer.mrmlScene.GetNodeByID("vtkMRMLInteractionNodeSingleton")
+        placeModePersistence = 0
+        interactionNode.SetPlaceModePersistence(placeModePersistence)
+        # mode 1 is Place, can also be accessed via slicer.vtkMRMLInteractionNode().Place
+        interactionNode.SetCurrentInteractionMode(1)
+
+        self._parameterNode.SetNodeReferenceID("sammPrompt3DBox", planeNode)
+        slicer.mrmlScene.GetNodeByID(planeNode).GetDisplayNode().SetGlyphScale(0.5)
+        slicer.mrmlScene.GetNodeByID(planeNode).GetDisplayNode().SetInteractionHandleScale(1)
+
+    def onPushAutoSeg3D(self):
+        self.logic.processAutoSeg3D()

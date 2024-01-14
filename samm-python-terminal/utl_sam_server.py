@@ -293,12 +293,42 @@ def sammProcessingCallBack_MODEL_SELECTION(msg):
     print(f'[SAMM INFO] Model switched to: "{msg["model"]}"')
     return np.array([1],dtype = np.uint8).tobytes(), functools.partial(SwitchModel, msg) 
 
+def sammProcessingCallBack_AUTO_SEG(msg):
+    dataNode = SammParameterNode()
+    print("[SAMM INFO] Received Auto_seg command.")
+
+    print(msg["segRangeMin"], msg["segRangeMax"], msg["segSlice"])
+
+    W, H = dataNode.imageSize[1], dataNode.imageSize[2]
+
+    seg = None
+    
+    points = None
+    point_labels = None
+    bbox2d = [
+        msg["segRangeMin"][0], msg["segRangeMin"][1], 
+        msg["segRangeMax"][0], msg["segRangeMax"][1]
+    ]
+    bbox2d = np.array(bbox2d)
+    bbox2d[bbox2d<1] = 1
+
+    seg = helperPredict(
+        dataNode, 
+        {"view" : "R", "n" : msg["segSlice"]}, 
+        points, point_labels, 
+        bbox2d
+    )
+
+
+    return seg[:].astype(np.uint8).tobytes(), None
+
 callBackList = {
     SammMsgType.SET_IMAGE_SIZE : sammProcessingCallBack_SET_IMAGE_SIZE,
     SammMsgType.SET_NTH_IMAGE : sammProcessingCallBack_SET_NTH_IMAGE,
     SammMsgType.INFERENCE : sammProcessingCallBack_INFERENCE,
     SammMsgType.CALCULATE_EMBEDDINGS : sammProcessingCallBack_CALCULATE_EMBEDDINGS,
-    SammMsgType.MODEL_SELECTION : sammProcessingCallBack_MODEL_SELECTION
+    SammMsgType.MODEL_SELECTION : sammProcessingCallBack_MODEL_SELECTION,
+    SammMsgType.AUTO_SEG : sammProcessingCallBack_AUTO_SEG
 }
 
 def sammProcessingCallBack(cmd, msg):

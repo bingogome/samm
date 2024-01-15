@@ -5,7 +5,7 @@
 [Laboratory of Biomechanical and Image Guided Surgical Systems](https://bigss.lcsr.jhu.edu/), [Johns Hopkins University](https://www.jhu.edu/)
 \
 [![The Video](https://github.com/bingogome/samm/blob/main/thumbnail.png)](https://youtu.be/tZRG7JljEBU)
-[![The Video](https://github.com/bingogome/samm/blob/main/thumbnail2.png)](https://youtu.be/tZRG7JljEBU =x800)
+[![The Video](https://github.com/bingogome/samm/blob/main/thumbnail2.png =x800)](https://youtu.be/tZRG7JljEBU)
 
 # Table of contents
 - [Segment Any Medical-Model (SAMM): A 3D Slicer integration to Meta's SAM.](#segment-any-medical-model-samm-a-3d-slicer-integration-to-metas-sam)

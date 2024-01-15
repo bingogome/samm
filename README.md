@@ -5,17 +5,20 @@
 [Laboratory of Biomechanical and Image Guided Surgical Systems](https://bigss.lcsr.jhu.edu/), [Johns Hopkins University](https://www.jhu.edu/)
 \
 [![The Video](https://github.com/bingogome/samm/blob/main/thumbnail.png)](https://youtu.be/tZRG7JljEBU)
+[![The Video](https://github.com/bingogome/samm/blob/main/thumbnail2.png)](https://youtu.be/tZRG7JljEBU =x800)
 
 # Table of contents
-1. [Introduction](#introduction)
-2. [Before You Try](#before-you-try)
-3. [How to Use](#how-to-use)
-    1. [Features](#features)
-    2. [Add Your Own SAM Vriant](#add-your-own-sam-variant)
-5. [Installation Guide](#installation-guide)
-    1. [Prerequisite](#Prerequisite)
-6. [Citation](#citation) 
-\
+- [Segment Any Medical-Model (SAMM): A 3D Slicer integration to Meta's SAM.](#segment-any-medical-model-samm-a-3d-slicer-integration-to-metas-sam)
+- [Table of contents](#table-of-contents)
+  - [Introduction ](#introduction-)
+  - [Before You Try ](#before-you-try-)
+  - [How to Use ](#how-to-use-)
+    - [Features ](#features-)
+    - [Add Your Own SAM Vriant ](#add-your-own-sam-vriant-)
+  - [Installation Guide ](#installation-guide-)
+    - [Prerequisite ](#prerequisite-)
+    - [TLDR version](#tldr-version)
+  - [Citation ](#citation-)
 
 ## Introduction <a name="introduction"></a>
 What are SAM, SAMM and SAMME?

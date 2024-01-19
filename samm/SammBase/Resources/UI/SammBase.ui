@@ -11,7 +11,7 @@
    </rect>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="4" column="0" colspan="2">
+   <item row="5" column="0" colspan="3">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
       <number>0</number>
@@ -21,33 +21,79 @@
        <string>Initialization</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_4">
-       <item row="5" column="1">
+       <item row="8" column="1">
         <widget class="QPushButton" name="pushComputePredictor">
          <property name="text">
           <string>Compute Embedding</string>
          </property>
         </widget>
        </item>
-       <item row="6" column="1">
-        <spacer name="verticalSpacer_2">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
+       <item row="2" column="1">
+        <widget class="QLabel" name="label_15">
+         <property name="text">
+          <string>Level</string>
          </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
+        </widget>
        </item>
-       <item row="5" column="0">
+       <item row="8" column="0">
         <widget class="QPushButton" name="pushUseLocalEmb">
          <property name="enabled">
           <bool>false</bool>
          </property>
          <property name="text">
           <string>Use Local Emb</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0" colspan="2">
+        <widget class="QLabel" name="label_5">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Embedding</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="0" colspan="2">
+        <widget class="QCheckBox" name="checkSaveToLocal">
+         <property name="text">
+          <string>Save To Local</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0" colspan="2">
+        <widget class="qMRMLNodeComboBox" name="comboVolumeNode">
+         <property name="nodeTypes">
+          <stringlist notr="true">
+           <string>vtkMRMLVolumeNode</string>
+          </stringlist>
+         </property>
+         <property name="hideChildNodeTypes">
+          <stringlist notr="true"/>
+         </property>
+         <property name="interactionNodeSingletonTag">
+          <string notr="true"/>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_14">
+         <property name="text">
+          <string>Window</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QPlainTextEdit" name="txtLevel">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>30</height>
+          </size>
          </property>
         </widget>
        </item>
@@ -70,38 +116,33 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="0" colspan="2">
-        <widget class="qMRMLNodeComboBox" name="comboVolumeNode">
-         <property name="nodeTypes">
-          <stringlist notr="true">
-           <string>vtkMRMLVolumeNode</string>
-          </stringlist>
+       <item row="9" column="1">
+        <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
          </property>
-         <property name="hideChildNodeTypes">
-          <stringlist notr="true"/>
-         </property>
-         <property name="interactionNodeSingletonTag">
-          <string notr="true"/>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0" colspan="2">
-        <widget class="QLabel" name="label_5">
-         <property name="minimumSize">
+         <property name="sizeHint" stdset="0">
           <size>
-           <width>0</width>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="3" column="0">
+        <widget class="QPlainTextEdit" name="txtWindow">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
            <height>30</height>
           </size>
          </property>
-         <property name="text">
-          <string>Embedding</string>
-         </property>
         </widget>
        </item>
-       <item row="3" column="0" colspan="2">
-        <widget class="QCheckBox" name="checkSaveToLocal">
+       <item row="4" column="0" colspan="2">
+        <widget class="QPushButton" name="pushApplyWL">
          <property name="text">
-          <string>Save To Local</string>
+          <string>Apply Window Level</string>
          </property>
         </widget>
        </item>
@@ -357,31 +398,27 @@
      </widget>
     </widget>
    </item>
-   <item row="1" column="0">
-    <widget class="QTabWidget" name="tabWidget_3">
-     <property name="currentIndex">
-      <number>0</number>
+   <item row="7" column="0">
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
      </property>
-     <widget class="QWidget" name="tab_4">
-      <attribute name="title">
-       <string>SAM and Variants</string>
-      </attribute>
-      <layout class="QGridLayout" name="gridLayout_5">
-       <item row="1" column="0">
-        <widget class="QComboBox" name="comboModel"/>
-       </item>
-       <item row="0" column="0">
-        <widget class="QLabel" name="label_11">
-         <property name="text">
-          <string>Model Selection</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="3" column="1">
+    <widget class="QPushButton" name="pushScreenShotG">
+     <property name="text">
+      <string>Green</string>
+     </property>
     </widget>
    </item>
-   <item row="0" column="0" colspan="2">
+   <item row="0" column="0" colspan="3">
     <widget class="QTabWidget" name="tabWidget_2">
      <property name="currentIndex">
       <number>0</number>
@@ -507,18 +544,50 @@
      </widget>
     </widget>
    </item>
-   <item row="6" column="0">
-    <spacer name="verticalSpacer">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
+   <item row="1" column="0" colspan="3">
+    <widget class="QTabWidget" name="tabWidget_3">
+     <property name="currentIndex">
+      <number>0</number>
      </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>40</height>
-      </size>
+     <widget class="QWidget" name="tab_4">
+      <attribute name="title">
+       <string>SAM and Variants</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_5">
+       <item row="1" column="0">
+        <widget class="QComboBox" name="comboModel"/>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_11">
+         <property name="text">
+          <string>Model Selection</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QPushButton" name="pushScreenShotR">
+     <property name="text">
+      <string>Red</string>
      </property>
-    </spacer>
+    </widget>
+   </item>
+   <item row="3" column="2">
+    <widget class="QPushButton" name="pushScreenShotY">
+     <property name="text">
+      <string>Yellow</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="QLabel" name="label_16">
+     <property name="text">
+      <string>Screen Shots</string>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>
@@ -651,7 +720,7 @@
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="buttonGroupDataType"/>
   <buttongroup name="buttonGroupWorkOn"/>
+  <buttongroup name="buttonGroupDataType"/>
  </buttongroups>
 </ui>

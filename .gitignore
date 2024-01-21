@@ -4,3 +4,21 @@
 samm-workspace/
 *sam_vit_h_4b8939.pth
 *.ipynb_checkpoints/
+
+# Python cache
+*.pyc
+**/__pycache__/
+.cache/
+.pytest_cache/
+
+# Other SAM
+MobileSAM/**
+MedSAM/
+
+# checkpoint 
+checkpoint/
+data/
+
+
+
+

@@ -1,0 +1,16 @@
+tr_npy_path: data/npy/CT_Abd
+task_name: MedSAM-ViT-B
+model_type: vit_b
+checkpoint: checkpoint/sam_vit_b_01ec64.pth
+load_pretrain: True
+pretrain_model_path: 
+work_dir: /checkpoint
+num_epochs: 1000
+batch_size: 2
+num_workers: 0
+weight_decay: 0.01
+lr: 0.0001
+use_wandb: False
+use_amp: False
+resume: 
+device: "cuda:0"

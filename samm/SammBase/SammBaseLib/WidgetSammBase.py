@@ -69,8 +69,16 @@ class SammBaseWidget(SammWidgetBase):
         self.ui.markupsRemove.connect("markupsNodeChanged()", self.updateParameterNodeFromGUI)
         self.ui.markups2DBox.connect("markupsNodeChanged()", self.updateParameterNodeFromGUI)
         self.ui.pushMarkups2DBox.connect("clicked(bool)", self.onPushMarkups2DBox)
+        self.ui.markups3DBox.connect("markupsNodeChanged()", self.updateParameterNodeFromGUI)
+        self.ui.pushAutoSeg3D.connect("clicked(bool)", self.onPushAutoSeg3D)
+        self.ui.pushMarkups3DBox.connect("clicked(bool)", self.onPushMarkups3DBox)
         self.ui.markupsAdd.markupsPlaceWidget().setPlaceModePersistency(True)
         self.ui.markupsRemove.markupsPlaceWidget().setPlaceModePersistency(True)
+
+        self.ui.pushApplyWL.connect("clicked(bool)", self.onPushApplyWL)
+        self.ui.pushScreenShotR.connect("clicked(bool)", self.onPushScreenShotR)
+        self.ui.pushScreenShotG.connect("clicked(bool)", self.onPushScreenShotG)
+        self.ui.pushScreenShotY.connect("clicked(bool)", self.onPushScreenShotY)
 
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
@@ -95,6 +103,7 @@ class SammBaseWidget(SammWidgetBase):
         self.ui.markupsAdd.setCurrentNode(self._parameterNode.GetNodeReference("sammPromptAdd"))
         self.ui.markupsRemove.setCurrentNode(self._parameterNode.GetNodeReference("sammPromptRemove"))
         self.ui.markups2DBox.setCurrentNode(self._parameterNode.GetNodeReference("sammPrompt2DBox"))
+        self.ui.markups3DBox.setCurrentNode(self._parameterNode.GetNodeReference("sammPrompt3DBox"))
 
         self.ui.comboSegmentationNode.setCurrentNode(self._parameterNode.GetNodeReference("sammSegmentation"))
 
@@ -114,6 +123,11 @@ class SammBaseWidget(SammWidgetBase):
         self.ui.comboSegmentNode.setCurrentText(self._parameterNode.GetParameter("sammCurrentSegment"))
         self.ui.checkSaveToLocal.checked = (self._parameterNode.GetParameter("sammSaveEmbToLocal") == "true")
         
+        if self._parameterNode.GetNodeReference("sammPromptAdd"):
+            self._parameterNode.GetNodeReference("sammPromptAdd").GetDisplayNode().SetGlyphScale(1)
+        if self._parameterNode.GetNodeReference("sammPromptRemove"):
+            self._parameterNode.GetNodeReference("sammPromptRemove").GetDisplayNode().SetGlyphScale(1)
+
         # All the GUI updates are done
         self._updatingGUIFromParameterNode = False
 
@@ -133,6 +147,8 @@ class SammBaseWidget(SammWidgetBase):
         self._parameterNode.SetNodeReferenceID("sammPromptRemove", self.ui.markupsRemove.currentNode().GetID())
         if self.ui.markups2DBox.currentNode():
             self._parameterNode.SetNodeReferenceID("sammPrompt2DBox", self.ui.markups2DBox.currentNode().GetID())
+        if self.ui.markups3DBox.currentNode():
+            self._parameterNode.SetNodeReferenceID("sammPrompt3DBox", self.ui.markups3DBox.currentNode().GetID())
         self._parameterNode._workspace = os.path.dirname(os.path.abspath(self.ui.pathWorkSpace.currentPath.strip()))
         self._parameterNode.SetNodeReferenceID("sammSegmentation", self.ui.comboSegmentationNode.currentNodeID)
         self._parameterNode.GetNodeReference("sammSegmentation").SetReferenceImageGeometryParameterFromVolumeNode(
@@ -221,3 +237,67 @@ class SammBaseWidget(SammWidgetBase):
         interactionNode.SetCurrentInteractionMode(1)
 
         self._parameterNode.SetNodeReferenceID("sammPrompt2DBox", planeNode)
+        slicer.mrmlScene.GetNodeByID(planeNode).GetDisplayNode().SetGlyphScale(0.5)
+        slicer.mrmlScene.GetNodeByID(planeNode).GetDisplayNode().SetInteractionHandleScale(1)
+
+    def onPushMarkups3DBox(self):
+        planeNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLMarkupsROINode').GetID()
+        selectionNode = slicer.mrmlScene.GetNodeByID("vtkMRMLSelectionNodeSingleton")
+        selectionNode.SetReferenceActivePlaceNodeID(planeNode)
+        interactionNode = slicer.mrmlScene.GetNodeByID("vtkMRMLInteractionNodeSingleton")
+        placeModePersistence = 0
+        interactionNode.SetPlaceModePersistence(placeModePersistence)
+        # mode 1 is Place, can also be accessed via slicer.vtkMRMLInteractionNode().Place
+        interactionNode.SetCurrentInteractionMode(1)
+
+        self._parameterNode.SetNodeReferenceID("sammPrompt3DBox", planeNode)
+        slicer.mrmlScene.GetNodeByID(planeNode).GetDisplayNode().SetGlyphScale(0.5)
+        slicer.mrmlScene.GetNodeByID(planeNode).GetDisplayNode().SetInteractionHandleScale(1)
+
+    def onPushAutoSeg3D(self):
+        self.logic.processAutoSeg3D()
+
+    def onPushApplyWL(self):
+        window = float(self.ui.txtWindow.toPlainText())
+        level = float(self.ui.txtLevel.toPlainText())
+        print(window, level)
+
+        display_node = self._parameterNode.GetNodeReference(
+            "sammInputVolume"
+        ).GetScalarVolumeDisplayNode()
+
+        # Set the window and level values
+        display_node.AutoWindowLevelOff()
+        display_node.SetWindow(window)
+        display_node.SetLevel(level)
+
+        # If you want to force a re-render of the view
+        slicer.app.processEvents()
+
+    def onPushScreenShotR(self):
+        self.onScreenShot("Red")
+
+    def onPushScreenShotG(self):
+        self.onScreenShot("Green")
+
+    def onPushScreenShotY(self):
+        self.onScreenShot("Yellow")
+
+    def onScreenShot(self, sliceViewName):
+        display_node = self._parameterNode.GetNodeReference(
+            "sammInputVolume"
+        ).GetScalarVolumeDisplayNode()
+        
+        filename = self._parameterNode._workspace \
+            + "/" + sliceViewName \
+            + "W" + str(display_node.GetWindow()) \
+            + "L" + str(display_node.GetLevel()) + "s.png"
+
+        view = slicer.app.layoutManager().sliceWidget(sliceViewName).sliceView()
+        # view.setBackgroundColor(qt.QColor.fromRgbF(1,1,1))
+        # view.forceRender()
+
+        # Capture a screenshot
+        import ScreenCapture
+        cap = ScreenCapture.ScreenCaptureLogic()
+        cap.captureImageFromView(view, filename)

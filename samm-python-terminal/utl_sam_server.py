@@ -165,8 +165,8 @@ def CalculateEmbeddings(msg):
         print("[SAMM INFO] Red View Progress:")
         for i in tqdm(range(dataNode.N["R"])):
             dataNode.samPredictor["R"].set_image(cv2.cvtColor(dataNode.mainVolume[i,:,:],cv2.COLOR_GRAY2RGB))
-            if i == 127:
-                testImage(dataNode, 127, np.array([[50,50]]), "R")
+            # if i == 127:
+            #     testImage(dataNode, 127, np.array([[70,140]]), "R")
             dataNode.features["R"][i] = dataNode.samPredictor["R"].features.to('cpu')
         print("[SAMM INFO] Green View Progress:")
         for i in tqdm(range(dataNode.N["G"])):
@@ -190,34 +190,34 @@ def testImage(dataNode, n, points, view):
     img = dataNode.mainVolume[n,:,:]
     for i in range(5):
         for j in range(5):
-            img[points[0][0]+i][points[0][1]+j] = 0
-            img[points[0][0]+i][points[0][1]-j] = 0
-            img[points[0][0]-i][points[0][1]-j] = 0
-            img[points[0][0]-i][points[0][1]+j] = 0
+            img[points[0][1]+j][points[0][0]+i] = 0
+            img[points[0][1]-j][points[0][0]+i] = 0
+            img[points[0][1]-j][points[0][0]-i] = 0
+            img[points[0][1]+j][points[0][0]-i] = 0
     img = Image.fromarray(img)
     img.save("testimg.png")
 
     seg, _, _ = dataNode.samPredictor[view].predict(
             point_coords = points,
-            point_labels = [1],
-            multimask_output = True)
+            point_labels = np.array([1]),
+            multimask_output = False)
     img = Image.fromarray(seg[0])
     img.save("testseg.png")
     
 def helperPredict(dataNode, msg, points, labels, bbox2d):
 
-    dataNode.samPredictor[msg["view"]].features = dataNode.features[msg["view"]][msg["n"]].to("cuda")
+    dataNode.samPredictor[msg["view"]].features = dataNode.features[msg["view"]][msg["n"]].to(dataNode.device)
     if isinstance(bbox2d, (np.ndarray, np.generic)):
         seg, _, _ = dataNode.samPredictor[msg["view"]].predict(
             point_coords = points,
             point_labels = labels,
             box = bbox2d,
-            multimask_output = True)
+            multimask_output = False)
     else:
         seg, _, _ = dataNode.samPredictor[msg["view"]].predict(
             point_coords = points,
             point_labels = labels,
-            multimask_output = True)
+            multimask_output = False)
     seg = seg[0]
     return seg
 
@@ -232,6 +232,14 @@ def sammProcessingCallBack_INFERENCE(msg):
 
     points = []
     labels = []
+
+    if msg["view"] == "R":
+        W, H = dataNode.imageSize[1], dataNode.imageSize[2]
+    if msg["view"] == "G":
+        W, H = dataNode.imageSize[0], dataNode.imageSize[2]
+    if msg["view"] == "Y":
+        W, H = dataNode.imageSize[0], dataNode.imageSize[1]
+
     if positivePoints is not None:
         for i in range(positivePoints.shape[0]):
             points.append([positivePoints[i,0], positivePoints[i,1]])
@@ -267,12 +275,7 @@ def sammProcessingCallBack_INFERENCE(msg):
         seg = helperPredict(dataNode, msg, points, point_labels, bbox2d)
         
     else:
-        if msg["view"] == "R":
-            seg = np.zeros([dataNode.imageSize[1], dataNode.imageSize[2]],dtype=np.uint8)
-        if msg["view"] == "G":
-            seg = np.zeros([dataNode.imageSize[0], dataNode.imageSize[2]],dtype=np.uint8)
-        if msg["view"] == "Y":
-            seg = np.zeros([dataNode.imageSize[0], dataNode.imageSize[1]],dtype=np.uint8)
+        seg = np.zeros([W, H],dtype=np.uint8)
 
     laglog.event_complete_inference()
 
@@ -290,12 +293,42 @@ def sammProcessingCallBack_MODEL_SELECTION(msg):
     print(f'[SAMM INFO] Model switched to: "{msg["model"]}"')
     return np.array([1],dtype = np.uint8).tobytes(), functools.partial(SwitchModel, msg) 
 
+def sammProcessingCallBack_AUTO_SEG(msg):
+    dataNode = SammParameterNode()
+    print("[SAMM INFO] Received Auto_seg command.")
+
+    print(msg["segRangeMin"], msg["segRangeMax"], msg["segSlice"])
+
+    W, H = dataNode.imageSize[1], dataNode.imageSize[2]
+
+    seg = None
+    
+    points = None
+    point_labels = None
+    bbox2d = [
+        msg["segRangeMin"][0], msg["segRangeMin"][1], 
+        msg["segRangeMax"][0], msg["segRangeMax"][1]
+    ]
+    bbox2d = np.array(bbox2d)
+    bbox2d[bbox2d<1] = 1
+
+    seg = helperPredict(
+        dataNode, 
+        {"view" : "R", "n" : msg["segSlice"]}, 
+        points, point_labels, 
+        bbox2d
+    )
+
+
+    return seg[:].astype(np.uint8).tobytes(), None
+
 callBackList = {
     SammMsgType.SET_IMAGE_SIZE : sammProcessingCallBack_SET_IMAGE_SIZE,
     SammMsgType.SET_NTH_IMAGE : sammProcessingCallBack_SET_NTH_IMAGE,
     SammMsgType.INFERENCE : sammProcessingCallBack_INFERENCE,
     SammMsgType.CALCULATE_EMBEDDINGS : sammProcessingCallBack_CALCULATE_EMBEDDINGS,
-    SammMsgType.MODEL_SELECTION : sammProcessingCallBack_MODEL_SELECTION
+    SammMsgType.MODEL_SELECTION : sammProcessingCallBack_MODEL_SELECTION,
+    SammMsgType.AUTO_SEG : sammProcessingCallBack_AUTO_SEG
 }
 
 def sammProcessingCallBack(cmd, msg):

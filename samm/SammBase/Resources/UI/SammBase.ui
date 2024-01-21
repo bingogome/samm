@@ -7,48 +7,11 @@
     <x>0</x>
     <y>0</y>
     <width>416</width>
-    <height>1055</height>
+    <height>1314</height>
    </rect>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="1" column="0">
-    <widget class="QTabWidget" name="tabWidget_3">
-     <property name="currentIndex">
-      <number>0</number>
-     </property>
-     <widget class="QWidget" name="tab_4">
-      <attribute name="title">
-       <string>SAM and Variants</string>
-      </attribute>
-      <layout class="QGridLayout" name="gridLayout_5">
-       <item row="1" column="0">
-        <widget class="QComboBox" name="comboModel"/>
-       </item>
-       <item row="0" column="0">
-        <widget class="QLabel" name="label_11">
-         <property name="text">
-          <string>Model Selection</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-    </widget>
-   </item>
-   <item row="5" column="0">
-    <spacer name="verticalSpacer">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>40</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="4" column="0" colspan="2">
+   <item row="5" column="0" colspan="3">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
       <number>0</number>
@@ -58,33 +21,79 @@
        <string>Initialization</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_4">
-       <item row="5" column="1">
+       <item row="8" column="1">
         <widget class="QPushButton" name="pushComputePredictor">
          <property name="text">
           <string>Compute Embedding</string>
          </property>
         </widget>
        </item>
-       <item row="6" column="1">
-        <spacer name="verticalSpacer_2">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
+       <item row="2" column="1">
+        <widget class="QLabel" name="label_15">
+         <property name="text">
+          <string>Level</string>
          </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
+        </widget>
        </item>
-       <item row="5" column="0">
+       <item row="8" column="0">
         <widget class="QPushButton" name="pushUseLocalEmb">
          <property name="enabled">
           <bool>false</bool>
          </property>
          <property name="text">
           <string>Use Local Emb</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0" colspan="2">
+        <widget class="QLabel" name="label_5">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Embedding</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="0" colspan="2">
+        <widget class="QCheckBox" name="checkSaveToLocal">
+         <property name="text">
+          <string>Save To Local</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0" colspan="2">
+        <widget class="qMRMLNodeComboBox" name="comboVolumeNode">
+         <property name="nodeTypes">
+          <stringlist notr="true">
+           <string>vtkMRMLVolumeNode</string>
+          </stringlist>
+         </property>
+         <property name="hideChildNodeTypes">
+          <stringlist notr="true"/>
+         </property>
+         <property name="interactionNodeSingletonTag">
+          <string notr="true"/>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_14">
+         <property name="text">
+          <string>Window</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QPlainTextEdit" name="txtLevel">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>30</height>
+          </size>
          </property>
         </widget>
        </item>
@@ -107,38 +116,33 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="0" colspan="2">
-        <widget class="qMRMLNodeComboBox" name="comboVolumeNode">
-         <property name="nodeTypes">
-          <stringlist notr="true">
-           <string>vtkMRMLVolumeNode</string>
-          </stringlist>
+       <item row="9" column="1">
+        <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
          </property>
-         <property name="hideChildNodeTypes">
-          <stringlist notr="true"/>
-         </property>
-         <property name="interactionNodeSingletonTag">
-          <string notr="true"/>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0" colspan="2">
-        <widget class="QLabel" name="label_5">
-         <property name="minimumSize">
+         <property name="sizeHint" stdset="0">
           <size>
-           <width>0</width>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="3" column="0">
+        <widget class="QPlainTextEdit" name="txtWindow">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
            <height>30</height>
           </size>
          </property>
-         <property name="text">
-          <string>Embedding</string>
-         </property>
         </widget>
        </item>
-       <item row="3" column="0" colspan="2">
-        <widget class="QCheckBox" name="checkSaveToLocal">
+       <item row="4" column="0" colspan="2">
+        <widget class="QPushButton" name="pushApplyWL">
          <property name="text">
-          <string>Save To Local</string>
+          <string>Apply Window Level</string>
          </property>
         </widget>
        </item>
@@ -149,50 +153,51 @@
        <string>Prompts</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_3">
-       <item row="1" column="0">
-        <widget class="QRadioButton" name="radioWorkOnRed">
+       <item row="0" column="0" colspan="2">
+        <widget class="QLabel" name="label_6">
          <property name="text">
-          <string>Red</string>
+          <string>Work on 
+(stop syncing first before changing view)</string>
          </property>
-         <property name="checked">
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QRadioButton" name="radioWorkOnGreen">
+         <property name="enabled">
           <bool>true</bool>
+         </property>
+         <property name="text">
+          <string>Green</string>
          </property>
          <attribute name="buttonGroup">
           <string notr="true">buttonGroupWorkOn</string>
          </attribute>
         </widget>
        </item>
-       <item row="4" column="1">
-        <widget class="QPushButton" name="pushUnfreezeSlice">
-         <property name="text">
-          <string>Unfreeze Slice</string>
+       <item row="1" column="2">
+        <widget class="QRadioButton" name="radioWorkOnYellow">
+         <property name="enabled">
+          <bool>true</bool>
          </property>
+         <property name="text">
+          <string>Yellow</string>
+         </property>
+         <attribute name="buttonGroup">
+          <string notr="true">buttonGroupWorkOn</string>
+         </attribute>
         </widget>
        </item>
-       <item row="5" column="0" colspan="2">
+       <item row="2" column="0" colspan="3">
         <widget class="QTabWidget" name="tabWidget_4">
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="tab_5">
           <attribute name="title">
-           <string>Points</string>
+           <string>Points and 2D Box</string>
           </attribute>
           <layout class="QGridLayout" name="gridLayout_6">
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_3">
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>30</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Add</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
+           <item row="5" column="0" colspan="2">
             <widget class="qSlicerSimpleMarkupsWidget" name="markupsAdd">
              <property name="enterPlaceModeOnNodeChange">
               <bool>false</bool>
@@ -213,20 +218,7 @@
              </property>
             </widget>
            </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="label_4">
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>30</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Remove</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="0">
+           <item row="7" column="0" colspan="2">
             <widget class="qSlicerSimpleMarkupsWidget" name="markupsRemove">
              <property name="enterPlaceModeOnNodeChange">
               <bool>false</bool>
@@ -240,34 +232,7 @@
              </property>
             </widget>
            </item>
-          </layout>
-         </widget>
-         <widget class="QWidget" name="tab_6">
-          <attribute name="title">
-           <string>2D Box</string>
-          </attribute>
-          <layout class="QGridLayout" name="gridLayout_7">
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_12">
-             <property name="text">
-              <string>Bounding Box</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <spacer name="verticalSpacer_3">
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>20</width>
-               <height>40</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-           <item row="1" column="0">
+           <item row="3" column="0">
             <widget class="qMRMLNodeComboBox" name="markups2DBox">
              <property name="enabled">
               <bool>true</bool>
@@ -285,29 +250,83 @@
              </property>
             </widget>
            </item>
-           <item row="1" column="1">
+           <item row="6" column="0">
+            <widget class="QLabel" name="label_4">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>30</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Remove</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="label_12">
+             <property name="text">
+              <string>Bounding Box</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QPushButton" name="pushStopMaskSync">
+             <property name="text">
+              <string>Stop Mask Sync</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
             <widget class="QPushButton" name="pushMarkups2DBox">
              <property name="text">
               <string>Add a BBox</string>
              </property>
             </widget>
            </item>
-          </layout>
-         </widget>
-         <widget class="QWidget" name="tab_7">
-          <attribute name="title">
-           <string>3D Box</string>
-          </attribute>
-          <layout class="QGridLayout" name="gridLayout_8">
            <item row="0" column="0">
-            <widget class="QLabel" name="label_13">
+            <widget class="QPushButton" name="pushStartMaskSync">
              <property name="text">
-              <string>Bounding Box</string>
+              <string>Start Mask Sync</string>
              </property>
             </widget>
            </item>
-           <item row="2" column="0">
-            <spacer name="verticalSpacer_4">
+           <item row="4" column="0">
+            <widget class="QLabel" name="label_3">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>30</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Add</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QPushButton" name="pushFreezeSlice">
+             <property name="text">
+              <string>Freeze Slice</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QPushButton" name="pushUnfreezeSlice">
+             <property name="text">
+              <string>Unfreeze Slice</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="tab_6">
+          <attribute name="title">
+           <string>3D Box</string>
+          </attribute>
+          <layout class="QGridLayout" name="gridLayout_7">
+           <item row="3" column="1">
+            <spacer name="verticalSpacer_3">
              <property name="orientation">
               <enum>Qt::Vertical</enum>
              </property>
@@ -319,7 +338,21 @@
              </property>
             </spacer>
            </item>
-           <item row="1" column="0">
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_13">
+             <property name="text">
+              <string>Bounding Box</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0" colspan="2">
+            <widget class="QPushButton" name="pushAutoSeg3D">
+             <property name="text">
+              <string>Segment</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
             <widget class="qMRMLNodeComboBox" name="markups3DBox">
              <property name="enabled">
               <bool>false</bool>
@@ -337,70 +370,55 @@
              </property>
             </widget>
            </item>
+           <item row="1" column="0" colspan="2">
+            <widget class="QPushButton" name="pushMarkups3DBox">
+             <property name="text">
+              <string>Add Box</string>
+             </property>
+            </widget>
+           </item>
           </layout>
          </widget>
         </widget>
        </item>
-       <item row="3" column="1">
-        <widget class="QPushButton" name="pushStopMaskSync">
+       <item row="1" column="0">
+        <widget class="QRadioButton" name="radioWorkOnRed">
          <property name="text">
-          <string>Stop Mask Sync</string>
+          <string>Red</string>
          </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QRadioButton" name="radioWorkOnYellow">
-         <property name="enabled">
+         <property name="checked">
           <bool>true</bool>
-         </property>
-         <property name="text">
-          <string>Yellow</string>
          </property>
          <attribute name="buttonGroup">
           <string notr="true">buttonGroupWorkOn</string>
          </attribute>
-        </widget>
-       </item>
-       <item row="4" column="0">
-        <widget class="QPushButton" name="pushFreezeSlice">
-         <property name="text">
-          <string>Freeze Slice</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QRadioButton" name="radioWorkOnGreen">
-         <property name="enabled">
-          <bool>true</bool>
-         </property>
-         <property name="text">
-          <string>Green</string>
-         </property>
-         <attribute name="buttonGroup">
-          <string notr="true">buttonGroupWorkOn</string>
-         </attribute>
-        </widget>
-       </item>
-       <item row="3" column="0">
-        <widget class="QPushButton" name="pushStartMaskSync">
-         <property name="text">
-          <string>Start Mask Sync</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0" colspan="2">
-        <widget class="QLabel" name="label_6">
-         <property name="text">
-          <string>Work on 
-(stop syncing first before changing view)</string>
-         </property>
         </widget>
        </item>
       </layout>
      </widget>
     </widget>
    </item>
-   <item row="0" column="0" colspan="2">
+   <item row="7" column="0">
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="3" column="1">
+    <widget class="QPushButton" name="pushScreenShotG">
+     <property name="text">
+      <string>Green</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="0" colspan="3">
     <widget class="QTabWidget" name="tabWidget_2">
      <property name="currentIndex">
       <number>0</number>
@@ -524,6 +542,51 @@
        </item>
       </layout>
      </widget>
+    </widget>
+   </item>
+   <item row="1" column="0" colspan="3">
+    <widget class="QTabWidget" name="tabWidget_3">
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="QWidget" name="tab_4">
+      <attribute name="title">
+       <string>SAM and Variants</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_5">
+       <item row="1" column="0">
+        <widget class="QComboBox" name="comboModel"/>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_11">
+         <property name="text">
+          <string>Model Selection</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QPushButton" name="pushScreenShotR">
+     <property name="text">
+      <string>Red</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="2">
+    <widget class="QPushButton" name="pushScreenShotY">
+     <property name="text">
+      <string>Yellow</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="QLabel" name="label_16">
+     <property name="text">
+      <string>Screen Shots</string>
+     </property>
     </widget>
    </item>
   </layout>
@@ -657,7 +720,7 @@
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="buttonGroupDataType"/>
   <buttongroup name="buttonGroupWorkOn"/>
+  <buttongroup name="buttonGroupDataType"/>
  </buttongroups>
 </ui>

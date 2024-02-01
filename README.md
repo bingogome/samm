@@ -2,6 +2,8 @@
 
 [paper](https://arxiv.org/abs/2304.05622)
 \
+[demo](https://www.youtube.com/watch?v=tZRG7JljEBU)
+\
 [Laboratory of Biomechanical and Image Guided Surgical Systems](https://bigss.lcsr.jhu.edu/), [Johns Hopkins University](https://www.jhu.edu/)
 \
 [![The Video](https://github.com/bingogome/samm/blob/main/thumbnail.png)](https://youtu.be/tZRG7JljEBU)

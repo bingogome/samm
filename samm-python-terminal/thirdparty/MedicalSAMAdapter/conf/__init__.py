@@ -2,7 +2,8 @@
 
 author baiyu
 """
-import conf.global_settings as settings
+
+from .global_settings import *
 
 
 class Settings:
@@ -12,4 +13,5 @@ class Settings:
             if attr.isupper():
                 setattr(self, attr, getattr(settings, attr))
 
-settings = Settings(settings)
+
+settings = Settings(global_settings)

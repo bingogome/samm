@@ -23,7 +23,6 @@ import matplotlib.pyplot as plt
 import numpy
 import numpy as np
 import PIL
-import seaborn as sns
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -32,22 +31,37 @@ import torchvision
 import torchvision.transforms as transforms
 import torchvision.utils as vutils
 from monai.config import print_config
-from monai.data import (CacheDataset, ThreadDataLoader, decollate_batch,
-                        load_decathlon_datalist, set_track_meta)
+from monai.data import (
+    CacheDataset,
+    ThreadDataLoader,
+    decollate_batch,
+    load_decathlon_datalist,
+    set_track_meta,
+)
 from monai.inferers import sliding_window_inference
 from monai.losses import DiceCELoss
 from monai.metrics import DiceMetric
 from monai.networks.nets import SwinUNETR
-from monai.transforms import (AsDiscrete, Compose, CropForegroundd,
-                              EnsureTyped, LoadImaged, Orientationd,
-                              RandCropByPosNegLabeld, RandFlipd, RandRotate90d,
-                              RandShiftIntensityd, ScaleIntensityRanged,
-                              Spacingd)
+from monai.transforms import (
+    AsDiscrete,
+    Compose,
+    CropForegroundd,
+    EnsureTyped,
+    LoadImaged,
+    Orientationd,
+    RandCropByPosNegLabeld,
+    RandFlipd,
+    RandRotate90d,
+    RandShiftIntensityd,
+    ScaleIntensityRanged,
+    Spacingd,
+)
 from PIL import Image, ImageColor, ImageDraw, ImageFont
 from torch import autograd
 from torch.autograd import Function, Variable
 from torch.optim.lr_scheduler import _LRScheduler
 from torch.utils.data import DataLoader
+
 # from lucent.optvis.param.spatial import pixel_image, fft_image, init_image
 # from lucent.optvis.param.color import to_valid_rgb
 # from lucent.optvis import objectives, transform, param
@@ -55,16 +69,17 @@ from torch.utils.data import DataLoader
 from torchvision.models import vgg19
 from tqdm import tqdm
 
-import cfg
+from .load_yaml import get_argparse_config
+
 # from precpt import run_precpt
-from models.discriminator import Discriminator
+from .models.discriminator import Discriminator
 
 # from siren_pytorch import SirenNet, SirenWrapper
 
-args = cfg.parse_args()
-device = torch.device('cuda', args.gpu_device)
+args = get_argparse_config()
+device = torch.device("cuda", args.gpu_device)
 
-'''preparation of domain loss'''
+"""preparation of domain loss"""
 # cnn = vgg19(pretrained=True).features.to(device).eval()
 # cnn_normalization_mean = torch.tensor([0.485, 0.456, 0.406]).to(device)
 # cnn_normalization_std = torch.tensor([0.229, 0.224, 0.225]).to(device)
@@ -74,45 +89,67 @@ device = torch.device('cuda', args.gpu_device)
 # beta1 = 0.5
 # dis_lr = 0.0002
 # optimizerD = optim.Adam(netD.parameters(), lr=dis_lr, betas=(beta1, 0.999))
-'''end'''
+"""end"""
 
-def get_network(args, net, use_gpu=True, gpu_device = 0, distribution = True):
-    """ return given network
-    """
 
-    if net == 'sam':
-        from models.sam import SamPredictor, sam_model_registry
-        from models.sam.utils.transforms import ResizeLongestSide
-        options = ['default','vit_b','vit_l','vit_h']
+def get_network(args, net, use_gpu=True, gpu_device=0, distribution=True):
+    """return given network"""
+
+    if net == "sam":
+        from .models.sam import SamPredictor, sam_model_registry
+        from .models.sam.utils.transforms import ResizeLongestSide
+
+        options = ["default", "vit_b", "vit_l", "vit_h"]
         if args.encoder not in options:
-            raise ValueError("Invalid encoder option. Please choose from: {}".format(options))
+            raise ValueError(
+                "Invalid encoder option. Please choose from: {}".format(options)
+            )
         else:
-            net = sam_model_registry[args.encoder](args,checkpoint=args.sam_ckpt).to(device)
+            net = sam_model_registry[args.encoder](args, checkpoint=args.sam_ckpt).to(
+                device
+            )
 
-    elif net == 'efficient_sam':
-        from models.efficient_sam import sam_model_registry
-        options = ['default','vit_s','vit_t']
+    elif net == "efficient_sam":
+        from .models.efficient_sam import sam_model_registry
+
+        options = ["default", "vit_s", "vit_t"]
         if args.encoder not in options:
-            raise ValueError("Invalid encoder option. Please choose from: {}".format(options))
+            raise ValueError(
+                "Invalid encoder option. Please choose from: {}".format(options)
+            )
         else:
             net = sam_model_registry[args.encoder](args)
 
-    elif net == 'mobile_sam':
-        from models.MobileSAMv2.mobilesamv2 import sam_model_registry
-        options = ['default','vit_h','vit_l','vit_b','tiny_vit','efficientvit_l2','PromptGuidedDecoder','sam_vit_h']
+    elif net == "mobile_sam":
+        from .models.MobileSAMv2.mobilesamv2 import sam_model_registry
+
+        options = [
+            "default",
+            "vit_h",
+            "vit_l",
+            "vit_b",
+            "tiny_vit",
+            "efficientvit_l2",
+            "PromptGuidedDecoder",
+            "sam_vit_h",
+        ]
         if args.encoder not in options:
-            raise ValueError("Invalid encoder option. Please choose from: {}".format(options))
+            raise ValueError(
+                "Invalid encoder option. Please choose from: {}".format(options)
+            )
         else:
-            net = sam_model_registry[args.encoder](args,checkpoint=args.sam_ckpt)
+            net = sam_model_registry[args.encoder](args, checkpoint=args.sam_ckpt)
 
     else:
-        print('the network name you have entered is not supported yet')
+        print("the network name you have entered is not supported yet")
         sys.exit()
 
     if use_gpu:
-        #net = net.cuda(device = gpu_device)
-        if distribution != 'none':
-            net = torch.nn.DataParallel(net,device_ids=[int(id) for id in args.distributed.split(',')])
+        # net = net.cuda(device = gpu_device)
+        if distribution != "none":
+            net = torch.nn.DataParallel(
+                net, device_ids=[int(id) for id in args.distributed.split(",")]
+            )
             net = net.to(device=gpu_device)
         else:
             net = net.to(device=gpu_device)
@@ -123,7 +160,7 @@ def get_network(args, net, use_gpu=True, gpu_device = 0, distribution = True):
 def get_decath_loader(args):
 
     train_transforms = Compose(
-        [   
+        [
             LoadImaged(keys=["image", "label"], ensure_channel_first=True),
             ScaleIntensityRanged(
                 keys=["image"],
@@ -195,8 +232,6 @@ def get_decath_loader(args):
         ]
     )
 
-
-
     data_dir = args.data_path
     split_JSON = "dataset_0.json"
 
@@ -210,20 +245,33 @@ def get_decath_loader(args):
         cache_rate=1.0,
         num_workers=8,
     )
-    train_loader = ThreadDataLoader(train_ds, num_workers=0, batch_size=args.b, shuffle=True)
+    train_loader = ThreadDataLoader(
+        train_ds, num_workers=0, batch_size=args.b, shuffle=True
+    )
     val_ds = CacheDataset(
-        data=val_files, transform=val_transforms, cache_num=2, cache_rate=1.0, num_workers=0
+        data=val_files,
+        transform=val_transforms,
+        cache_num=2,
+        cache_rate=1.0,
+        num_workers=0,
     )
     val_loader = ThreadDataLoader(val_ds, num_workers=0, batch_size=1)
 
     set_track_meta(False)
 
-    return train_loader, val_loader, train_transforms, val_transforms, datalist, val_files
+    return (
+        train_loader,
+        val_loader,
+        train_transforms,
+        val_transforms,
+        datalist,
+        val_files,
+    )
 
 
 def cka_loss(gram_featureA, gram_featureB):
 
-    scaled_hsic = torch.dot(torch.flatten(gram_featureA),torch.flatten(gram_featureB))
+    scaled_hsic = torch.dot(torch.flatten(gram_featureA), torch.flatten(gram_featureB))
     normalization_x = gram_featureA.norm()
     normalization_y = gram_featureB.norm()
     return scaled_hsic / (normalization_x * normalization_y)
@@ -235,6 +283,7 @@ class WarmUpLR(_LRScheduler):
         optimizer: optimzier(e.g. SGD)
         total_iters: totoal_iters of warmup phase
     """
+
     def __init__(self, optimizer, total_iters, last_epoch=-1):
 
         self.total_iters = total_iters
@@ -244,7 +293,11 @@ class WarmUpLR(_LRScheduler):
         """we will use the first m batches, and set the learning
         rate to base_lr * m / total_iters
         """
-        return [base_lr * self.last_epoch / (self.total_iters + 1e-8) for base_lr in self.base_lrs]
+        return [
+            base_lr * self.last_epoch / (self.total_iters + 1e-8)
+            for base_lr in self.base_lrs
+        ]
+
 
 def gram_matrix(input):
     a, b, c, d = input.size()  # a=batch size(=1)
@@ -260,7 +313,6 @@ def gram_matrix(input):
     return G.div(a * b * c * d)
 
 
-
 @torch.no_grad()
 def make_grid(
     tensor: Union[torch.Tensor, List[torch.Tensor]],
@@ -270,11 +322,13 @@ def make_grid(
     value_range: Optional[Tuple[int, int]] = None,
     scale_each: bool = False,
     pad_value: int = 0,
-    **kwargs
+    **kwargs,
 ) -> torch.Tensor:
-    if not (torch.is_tensor(tensor) or
-            (isinstance(tensor, list) and all(torch.is_tensor(t) for t in tensor))):
-        raise TypeError(f'tensor or list of tensors expected, got {type(tensor)}')
+    if not (
+        torch.is_tensor(tensor)
+        or (isinstance(tensor, list) and all(torch.is_tensor(t) for t in tensor))
+    ):
+        raise TypeError(f"tensor or list of tensors expected, got {type(tensor)}")
 
     if "range" in kwargs.keys():
         warning = "range will be deprecated, please use value_range instead."
@@ -298,8 +352,9 @@ def make_grid(
     if normalize is True:
         tensor = tensor.clone()  # avoid modifying tensor in-place
         if value_range is not None:
-            assert isinstance(value_range, tuple), \
-                "value_range has to be a tuple (min, max) if specified. min and max are numbers"
+            assert isinstance(
+                value_range, tuple
+            ), "value_range has to be a tuple (min, max) if specified. min and max are numbers"
 
         def norm_ip(img, low, high):
             img.clamp(min=low, max=high)
@@ -326,7 +381,9 @@ def make_grid(
     ymaps = int(math.ceil(float(nmaps) / xmaps))
     height, width = int(tensor.size(2) + padding), int(tensor.size(3) + padding)
     num_channels = tensor.size(1)
-    grid = tensor.new_full((num_channels, height * ymaps + padding, width * xmaps + padding), pad_value)
+    grid = tensor.new_full(
+        (num_channels, height * ymaps + padding, width * xmaps + padding), pad_value
+    )
     k = 0
     for y in range(ymaps):
         for x in range(xmaps):
@@ -336,7 +393,9 @@ def make_grid(
             # https://pytorch.org/docs/stable/tensors.html#torch.Tensor.copy_
             grid.narrow(1, y * height + padding, height - padding).narrow(  # type: ignore[attr-defined]
                 2, x * width + padding, width - padding
-            ).copy_(tensor[k])
+            ).copy_(
+                tensor[k]
+            )
             k = k + 1
     return grid
 
@@ -346,7 +405,7 @@ def save_image(
     tensor: Union[torch.Tensor, List[torch.Tensor]],
     fp: Union[Text, pathlib.Path, BinaryIO],
     format: Optional[str] = None,
-    **kwargs
+    **kwargs,
 ) -> None:
     """
     Save a given Tensor into an image file.
@@ -361,22 +420,28 @@ def save_image(
 
     grid = make_grid(tensor, **kwargs)
     # Add 0.5 after unnormalizing to [0, 255] to round to nearest integer
-    ndarr = grid.mul(255).add_(0.5).clamp_(0, 255).permute(1, 2, 0).to('cpu', torch.uint8).numpy()
+    ndarr = (
+        grid.mul(255)
+        .add_(0.5)
+        .clamp_(0, 255)
+        .permute(1, 2, 0)
+        .to("cpu", torch.uint8)
+        .numpy()
+    )
     im = Image.fromarray(ndarr)
     im.save(fp, format=format)
-    
 
-def create_logger(log_dir, phase='train'):
-    time_str = time.strftime('%Y-%m-%d-%H-%M')
-    log_file = '{}_{}.log'.format(time_str, phase)
+
+def create_logger(log_dir, phase="train"):
+    time_str = time.strftime("%Y-%m-%d-%H-%M")
+    log_file = "{}_{}.log".format(time_str, phase)
     final_log_file = os.path.join(log_dir, log_file)
-    head = '%(asctime)-15s %(message)s'
-    logging.basicConfig(filename=str(final_log_file),
-                        format=head)
+    head = "%(asctime)-15s %(message)s"
+    logging.basicConfig(filename=str(final_log_file), format=head)
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
     console = logging.StreamHandler()
-    logging.getLogger('').addHandler(console)
+    logging.getLogger("").addHandler(console)
 
     return logger
 
@@ -388,33 +453,32 @@ def set_log_dir(root_dir, exp_name):
     # set log path
     exp_path = os.path.join(root_dir, exp_name)
     now = datetime.now(dateutil.tz.tzlocal())
-    timestamp = now.strftime('%Y_%m_%d_%H_%M_%S')
-    prefix = exp_path + '_' + timestamp
+    timestamp = now.strftime("%Y_%m_%d_%H_%M_%S")
+    prefix = exp_path + "_" + timestamp
     os.makedirs(prefix)
-    path_dict['prefix'] = prefix
+    path_dict["prefix"] = prefix
 
     # set checkpoint path
-    ckpt_path = os.path.join(prefix, 'Model')
+    ckpt_path = os.path.join(prefix, "Model")
     os.makedirs(ckpt_path)
-    path_dict['ckpt_path'] = ckpt_path
+    path_dict["ckpt_path"] = ckpt_path
 
-    log_path = os.path.join(prefix, 'Log')
+    log_path = os.path.join(prefix, "Log")
     os.makedirs(log_path)
-    path_dict['log_path'] = log_path
+    path_dict["log_path"] = log_path
 
     # set sample image path for fid calculation
-    sample_path = os.path.join(prefix, 'Samples')
+    sample_path = os.path.join(prefix, "Samples")
     os.makedirs(sample_path)
-    path_dict['sample_path'] = sample_path
+    path_dict["sample_path"] = sample_path
 
     return path_dict
 
 
-def save_checkpoint(states, is_best, output_dir,
-                    filename='checkpoint.pth'):
+def save_checkpoint(states, is_best, output_dir, filename="checkpoint.pth"):
     torch.save(states, os.path.join(output_dir, filename))
     if is_best:
-        torch.save(states, os.path.join(output_dir, 'checkpoint_best.pth'))
+        torch.save(states, os.path.join(output_dir, "checkpoint_best.pth"))
 
 
 class RunningStats:
@@ -464,16 +528,17 @@ class RunningStats:
     def __str__(self):
         return "Current window values: {}".format(list(self.window))
 
+
 def iou(outputs: np.array, labels: np.array):
-    
+
     SMOOTH = 1e-6
     intersection = (outputs & labels).sum((1, 2))
     union = (outputs | labels).sum((1, 2))
 
     iou = (intersection + SMOOTH) / (union + SMOOTH)
 
-
     return iou.mean()
+
 
 class DiceCoeff(Function):
     """Dice coeff for individual examples"""
@@ -494,8 +559,12 @@ class DiceCoeff(Function):
         grad_input = grad_target = None
 
         if self.needs_input_grad[0]:
-            grad_input = grad_output * 2 * (target * self.union - self.inter) \
-                         / (self.union * self.union)
+            grad_input = (
+                grad_output
+                * 2
+                * (target * self.union - self.inter)
+                / (self.union * self.union)
+            )
         if self.needs_input_grad[1]:
             grad_target = None
 
@@ -505,7 +574,7 @@ class DiceCoeff(Function):
 def dice_coeff(input, target):
     """Dice coeff for batches"""
     if input.is_cuda:
-        s = torch.FloatTensor(1).to(device = input.device).zero_()
+        s = torch.FloatTensor(1).to(device=input.device).zero_()
     else:
         s = torch.FloatTensor(1).zero_()
 
@@ -514,9 +583,22 @@ def dice_coeff(input, target):
 
     return s / (i + 1)
 
-'''parameter'''
-def para_image(w, h=None, img = None, mode = 'multi', seg = None, sd=None, batch=None,
-          fft = False, channels=None, init = None):
+
+"""parameter"""
+
+
+def para_image(
+    w,
+    h=None,
+    img=None,
+    mode="multi",
+    seg=None,
+    sd=None,
+    batch=None,
+    fft=False,
+    channels=None,
+    init=None,
+):
     h = h or w
     batch = batch or 1
     ch = channels or 3
@@ -527,114 +609,174 @@ def para_image(w, h=None, img = None, mode = 'multi', seg = None, sd=None, batch
         params, maps_f = param_f(init)
     else:
         params, maps_f = param_f(shape, sd=sd)
-    if mode == 'multi':
-        output = to_valid_out(maps_f,img,seg)
-    elif mode == 'seg':
-        output = gene_out(maps_f,img)
-    elif mode == 'raw':
-        output = raw_out(maps_f,img)
+    if mode == "multi":
+        output = to_valid_out(maps_f, img, seg)
+    elif mode == "seg":
+        output = gene_out(maps_f, img)
+    elif mode == "raw":
+        output = raw_out(maps_f, img)
     return params, output
 
-def to_valid_out(maps_f,img,seg): #multi-rater
+
+def to_valid_out(maps_f, img, seg):  # multi-rater
     def inner():
         maps = maps_f()
-        maps = maps.to(device = img.device)
-        maps = torch.nn.Softmax(dim = 1)(maps)
-        final_seg = torch.multiply(seg,maps).sum(dim = 1, keepdim = True)
-        return torch.cat((img,final_seg),1)
+        maps = maps.to(device=img.device)
+        maps = torch.nn.Softmax(dim=1)(maps)
+        final_seg = torch.multiply(seg, maps).sum(dim=1, keepdim=True)
+        return torch.cat((img, final_seg), 1)
         # return torch.cat((img,maps),1)
+
     return inner
 
-def gene_out(maps_f,img): #pure seg
+
+def gene_out(maps_f, img):  # pure seg
     def inner():
         maps = maps_f()
-        maps = maps.to(device = img.device)
+        maps = maps.to(device=img.device)
         # maps = torch.nn.Sigmoid()(maps)
-        return torch.cat((img,maps),1)
+        return torch.cat((img, maps), 1)
         # return torch.cat((img,maps),1)
+
     return inner
 
-def raw_out(maps_f,img): #raw
+
+def raw_out(maps_f, img):  # raw
     def inner():
         maps = maps_f()
-        maps = maps.to(device = img.device)
+        maps = maps.to(device=img.device)
         # maps = torch.nn.Sigmoid()(maps)
         return maps
         # return torch.cat((img,maps),1)
-    return inner    
+
+    return inner
 
 
 class CompositeActivation(torch.nn.Module):
 
     def forward(self, x):
         x = torch.atan(x)
-        return torch.cat([x/0.67, (x*x)/0.6], 1)
+        return torch.cat([x / 0.67, (x * x) / 0.6], 1)
         # return x
 
 
-def cppn(args, size, img = None, seg = None, batch=None, num_output_channels=1, num_hidden_channels=128, num_layers=8,
-         activation_fn=CompositeActivation, normalize=False, device = "cuda:0"):
+def cppn(
+    args,
+    size,
+    img=None,
+    seg=None,
+    batch=None,
+    num_output_channels=1,
+    num_hidden_channels=128,
+    num_layers=8,
+    activation_fn=CompositeActivation,
+    normalize=False,
+    device="cuda:0",
+):
 
-    r = 3 ** 0.5
+    r = 3**0.5
 
     coord_range = torch.linspace(-r, r, size)
     x = coord_range.view(-1, 1).repeat(1, coord_range.size(0))
     y = coord_range.view(1, -1).repeat(coord_range.size(0), 1)
 
-    input_tensor = torch.stack([x, y], dim=0).unsqueeze(0).repeat(batch,1,1,1).to(device)
+    input_tensor = (
+        torch.stack([x, y], dim=0).unsqueeze(0).repeat(batch, 1, 1, 1).to(device)
+    )
 
     layers = []
     kernel_size = 1
     for i in range(num_layers):
         out_c = num_hidden_channels
-        in_c = out_c * 2 # * 2 for composite activation
+        in_c = out_c * 2  # * 2 for composite activation
         if i == 0:
             in_c = 2
         if i == num_layers - 1:
             out_c = num_output_channels
-        layers.append(('conv{}'.format(i), torch.nn.Conv2d(in_c, out_c, kernel_size)))
+        layers.append(("conv{}".format(i), torch.nn.Conv2d(in_c, out_c, kernel_size)))
         if normalize:
-            layers.append(('norm{}'.format(i), torch.nn.InstanceNorm2d(out_c)))
+            layers.append(("norm{}".format(i), torch.nn.InstanceNorm2d(out_c)))
         if i < num_layers - 1:
-            layers.append(('actv{}'.format(i), activation_fn()))
+            layers.append(("actv{}".format(i), activation_fn()))
         else:
-            layers.append(('output', torch.nn.Sigmoid()))
+            layers.append(("output", torch.nn.Sigmoid()))
 
     # Initialize model
     net = torch.nn.Sequential(OrderedDict(layers)).to(device)
+
     # Initialize weights
     def weights_init(module):
         if isinstance(module, torch.nn.Conv2d):
-            torch.nn.init.normal_(module.weight, 0, np.sqrt(1/module.in_channels))
+            torch.nn.init.normal_(module.weight, 0, np.sqrt(1 / module.in_channels))
             if module.bias is not None:
                 torch.nn.init.zeros_(module.bias)
+
     net.apply(weights_init)
     # Set last conv2d layer's weights to 0
-    torch.nn.init.zeros_(dict(net.named_children())['conv{}'.format(num_layers - 1)].weight)
-    outimg = raw_out(lambda: net(input_tensor),img) if args.netype == 'raw' else to_valid_out(lambda: net(input_tensor),img,seg)
+    torch.nn.init.zeros_(
+        dict(net.named_children())["conv{}".format(num_layers - 1)].weight
+    )
+    outimg = (
+        raw_out(lambda: net(input_tensor), img)
+        if args.netype == "raw"
+        else to_valid_out(lambda: net(input_tensor), img, seg)
+    )
     return net.parameters(), outimg
 
-def get_siren(args):
-    wrapper = get_network(args, 'siren', use_gpu=args.gpu, gpu_device=torch.device('cuda', args.gpu_device), distribution = args.distributed)
-    '''load init weights'''
-    checkpoint = torch.load('./logs/siren_train_init_2022_08_19_21_00_16/Model/checkpoint_best.pth')
-    wrapper.load_state_dict(checkpoint['state_dict'],strict=False)
-    '''end'''
 
-    '''load prompt'''
-    checkpoint = torch.load('./logs/vae_standard_refuge1_2022_08_21_17_56_49/Model/checkpoint500')
-    vae = get_network(args, 'vae', use_gpu=args.gpu, gpu_device=torch.device('cuda', args.gpu_device), distribution = args.distributed)
-    vae.load_state_dict(checkpoint['state_dict'],strict=False)
-    '''end'''
+def get_siren(args):
+    wrapper = get_network(
+        args,
+        "siren",
+        use_gpu=args.gpu,
+        gpu_device=torch.device("cuda", args.gpu_device),
+        distribution=args.distributed,
+    )
+    """load init weights"""
+    checkpoint = torch.load(
+        "./logs/siren_train_init_2022_08_19_21_00_16/Model/checkpoint_best.pth"
+    )
+    wrapper.load_state_dict(checkpoint["state_dict"], strict=False)
+    """end"""
+
+    """load prompt"""
+    checkpoint = torch.load(
+        "./logs/vae_standard_refuge1_2022_08_21_17_56_49/Model/checkpoint500"
+    )
+    vae = get_network(
+        args,
+        "vae",
+        use_gpu=args.gpu,
+        gpu_device=torch.device("cuda", args.gpu_device),
+        distribution=args.distributed,
+    )
+    vae.load_state_dict(checkpoint["state_dict"], strict=False)
+    """end"""
 
     return wrapper, vae
 
 
-def siren(args, wrapper, vae, img = None, seg = None, batch=None, num_output_channels=1, num_hidden_channels=128, num_layers=8,
-         activation_fn=CompositeActivation, normalize=False, device = "cuda:0"):
+def siren(
+    args,
+    wrapper,
+    vae,
+    img=None,
+    seg=None,
+    batch=None,
+    num_output_channels=1,
+    num_hidden_channels=128,
+    num_layers=8,
+    activation_fn=CompositeActivation,
+    normalize=False,
+    device="cuda:0",
+):
     vae_img = torchvision.transforms.Resize(64)(img)
     latent = vae.encoder(vae_img).view(-1).detach()
-    outimg = raw_out(lambda: wrapper(latent = latent),img) if args.netype == 'raw' else to_valid_out(lambda: wrapper(latent = latent),img,seg)
+    outimg = (
+        raw_out(lambda: wrapper(latent=latent), img)
+        if args.netype == "raw"
+        else to_valid_out(lambda: wrapper(latent=latent), img, seg)
+    )
     # img = torch.randn(1, 3, 256, 256)
     # loss = wrapper(img)
     # loss.backward()
@@ -644,9 +786,11 @@ def siren(args, wrapper, vae, img = None, seg = None, batch=None, num_output_cha
 
     # pred_img = wrapper() # (1, 3, 256, 256)
     return wrapper.parameters(), outimg
-        
 
-'''adversary'''
+
+"""adversary"""
+
+
 def render_vis(
     args,
     model,
@@ -664,27 +808,27 @@ def render_vis(
     image_name=None,
     show_inline=False,
     fixed_image_size=None,
-    label = 1,
-    raw_img = None,
-    prompt = None
+    label=1,
+    raw_img=None,
+    prompt=None,
 ):
     if label == 1:
         sign = 1
     elif label == 0:
         sign = -1
     else:
-        print('label is wrong, label is',label)
+        print("label is wrong, label is", label)
     if args.reverse:
         sign = -sign
     if args.multilayer:
         sign = 1
 
-    '''prepare'''
+    """prepare"""
     now = datetime.now()
     date_time = now.strftime("%m-%d-%Y, %H:%M:%S")
 
     netD, optD = pre_d()
-    '''end'''
+    """end"""
 
     if param_f is None:
         param_f = lambda: param.image(128)
@@ -692,7 +836,7 @@ def render_vis(
     # params - parameters to update, which we pass to the optimizer
     # image_f - a function that returns an image as a tensor
     params, image_f = param_f()
-    
+
     if optimizer is None:
         optimizer = lambda params: torch.optim.Adam(params, lr=5e-1)
     optimizer = optimizer(params)
@@ -742,7 +886,7 @@ def render_vis(
                         f"(exception details: '{ex}')"
                     )
             if args.disc:
-                '''dom loss part'''
+                """dom loss part"""
                 # content_img = raw_img
                 # style_img = raw_img
                 # precpt_loss = run_precpt(cnn, cnn_normalization_mean, cnn_normalization_std, content_img, style_img, transform_f(image_f()))
@@ -775,9 +919,10 @@ def render_vis(
                     d_loss_fake.backward(one)
 
                     # Train with gradient penalty
-                    gradient_penalty = calculate_gradient_penalty(netD, real.data, fake.data)
+                    gradient_penalty = calculate_gradient_penalty(
+                        netD, real.data, fake.data
+                    )
                     gradient_penalty.backward()
-
 
                     d_loss = d_loss_fake - d_loss_real + gradient_penalty
                     Wasserstein_D = d_loss_real - d_loss_fake
@@ -793,16 +938,14 @@ def render_vis(
                 dom_loss = g_loss
                 g_cost = -g_loss
 
-                if i% 5 == 0:
-                    print(f' loss_fake: {d_loss_fake}, loss_real: {d_loss_real}')
-                    print(f'Generator g_loss: {g_loss}')
-                '''end'''
+                if i % 5 == 0:
+                    print(f" loss_fake: {d_loss_fake}, loss_real: {d_loss_real}")
+                    print(f"Generator g_loss: {g_loss}")
+                """end"""
 
+            """ssim loss"""
 
-
-            '''ssim loss'''
-
-            '''end'''
+            """end"""
 
             if args.disc:
                 loss = sign * objective_f(hook) + args.pw * dom_loss
@@ -830,12 +973,21 @@ def render_vis(
                 # if verbose:
                 #     print("Loss at step {}: {:.3f}".format(i, objective_f(hook)))
                 if save_image:
-                    na = image_name[0].split('\\')[-1].split('.')[0] + '_' + str(i) + '.png'
+                    na = (
+                        image_name[0].split("\\")[-1].split(".")[0]
+                        + "_"
+                        + str(i)
+                        + ".png"
+                    )
                     na = date_time + na
-                    outpath = args.quickcheck if args.quickcheck else args.path_helper['sample_path']
+                    outpath = (
+                        args.quickcheck
+                        if args.quickcheck
+                        else args.path_helper["sample_path"]
+                    )
                     img_path = os.path.join(outpath, str(na))
                     export(image_f(), img_path)
-                
+
                 images.append(image)
     except KeyboardInterrupt:
         print("Interrupted optimization at step {:d}.".format(i))
@@ -844,9 +996,11 @@ def render_vis(
         images.append(tensor_to_img_array(image_f()))
 
     if save_image:
-        na = image_name[0].split('\\')[-1].split('.')[0] + '.png'
+        na = image_name[0].split("\\")[-1].split(".")[0] + ".png"
         na = date_time + na
-        outpath = args.quickcheck if args.quickcheck else args.path_helper['sample_path']
+        outpath = (
+            args.quickcheck if args.quickcheck else args.path_helper["sample_path"]
+        )
         img_path = os.path.join(outpath, str(na))
         export(image_f(), img_path)
     if show_inline:
@@ -885,27 +1039,29 @@ def export(tensor, img_path=None):
     #         w_map = (w_map * 255).astype(np.uint8)
     #         image_name = image_name[0].split('/')[-1].split('.')[0] + str(i)+ '.png'
     #         wheat = sns.heatmap(w_map,cmap='coolwarm')
-    #         figure = wheat.get_figure()    
+    #         figure = wheat.get_figure()
     #         figure.savefig ('./fft_maps/weightheatmap/'+str(image_name), dpi=400)
     #         figure = 0
     # else:
     if c == 3:
-        vutils.save_image(tensor, fp = img_path)
+        vutils.save_image(tensor, fp=img_path)
     else:
-        image = tensor[:,0:3,:,:]
-        w_map = tensor[:,-1,:,:].unsqueeze(1)
+        image = tensor[:, 0:3, :, :]
+        w_map = tensor[:, -1, :, :].unsqueeze(1)
         image = tensor_to_img_array(image)
         w_map = 1 - tensor_to_img_array(w_map).squeeze()
         # w_map[w_map==1] = 0
         assert len(image.shape) in [
             3,
             4,
-        ], "Image should have 3 or 4 dimensions, invalid image shape {}".format(image.shape)
+        ], "Image should have 3 or 4 dimensions, invalid image shape {}".format(
+            image.shape
+        )
         # Change dtype for PIL.Image
         image = (image * 255).astype(np.uint8)
         w_map = (w_map * 255).astype(np.uint8)
 
-        Image.fromarray(w_map,'L').save(img_path)
+        Image.fromarray(w_map, "L").save(img_path)
 
 
 class ModuleHook:
@@ -914,11 +1070,9 @@ class ModuleHook:
         self.module = None
         self.features = None
 
-
     def hook_fn(self, module, input, output):
         self.module = module
         self.features = output
-
 
     def close(self):
         self.hook.remove()
@@ -926,6 +1080,7 @@ class ModuleHook:
 
 def hook_model(model, image_f):
     features = OrderedDict()
+
     # recursive hooking function
     def hook_layers(net, prefix=[]):
         if hasattr(net, "_modules"):
@@ -944,16 +1099,21 @@ def hook_model(model, image_f):
         elif layer == "labels":
             out = list(features.values())[-1].features
         else:
-            assert layer in features, f"Invalid layer {layer}. Retrieve the list of layers with `lucent.modelzoo.util.get_model_layers(model)`."
+            assert (
+                layer in features
+            ), f"Invalid layer {layer}. Retrieve the list of layers with `lucent.modelzoo.util.get_model_layers(model)`."
             out = features[layer].features
-        assert out is not None, "There are no saved feature maps. Make sure to put the model in eval mode, like so: `model.to(device).eval()`. See README for example."
+        assert (
+            out is not None
+        ), "There are no saved feature maps. Make sure to put the model in eval mode, like so: `model.to(device).eval()`. See README for example."
         return out
 
     return hook
 
-def vis_image(imgs, pred_masks, gt_masks, save_path, reverse = False, points = None):
-    
-    b,c,h,w = pred_masks.size()
+
+def vis_image(imgs, pred_masks, gt_masks, save_path, reverse=False, points=None):
+
+    b, c, h, w = pred_masks.size()
     dev = pred_masks.get_device()
     row_num = min(b, 4)
 
@@ -964,99 +1124,141 @@ def vis_image(imgs, pred_masks, gt_masks, save_path, reverse = False, points = N
         pred_masks = 1 - pred_masks
         gt_masks = 1 - gt_masks
     if c == 2:
-        pred_disc, pred_cup = pred_masks[:,0,:,:].unsqueeze(1).expand(b,3,h,w), pred_masks[:,1,:,:].unsqueeze(1).expand(b,3,h,w)
-        gt_disc, gt_cup = gt_masks[:,0,:,:].unsqueeze(1).expand(b,3,h,w), gt_masks[:,1,:,:].unsqueeze(1).expand(b,3,h,w)
-        tup = (imgs[:row_num,:,:,:],pred_disc[:row_num,:,:,:], pred_cup[:row_num,:,:,:], gt_disc[:row_num,:,:,:], gt_cup[:row_num,:,:,:])
+        pred_disc, pred_cup = pred_masks[:, 0, :, :].unsqueeze(1).expand(
+            b, 3, h, w
+        ), pred_masks[:, 1, :, :].unsqueeze(1).expand(b, 3, h, w)
+        gt_disc, gt_cup = gt_masks[:, 0, :, :].unsqueeze(1).expand(
+            b, 3, h, w
+        ), gt_masks[:, 1, :, :].unsqueeze(1).expand(b, 3, h, w)
+        tup = (
+            imgs[:row_num, :, :, :],
+            pred_disc[:row_num, :, :, :],
+            pred_cup[:row_num, :, :, :],
+            gt_disc[:row_num, :, :, :],
+            gt_cup[:row_num, :, :, :],
+        )
         # compose = torch.cat((imgs[:row_num,:,:,:],pred_disc[:row_num,:,:,:], pred_cup[:row_num,:,:,:], gt_disc[:row_num,:,:,:], gt_cup[:row_num,:,:,:]),0)
-        compose = torch.cat((pred_disc[:row_num,:,:,:], pred_cup[:row_num,:,:,:], gt_disc[:row_num,:,:,:], gt_cup[:row_num,:,:,:]),0)
-        vutils.save_image(compose, fp = save_path, nrow = row_num, padding = 10)
+        compose = torch.cat(
+            (
+                pred_disc[:row_num, :, :, :],
+                pred_cup[:row_num, :, :, :],
+                gt_disc[:row_num, :, :, :],
+                gt_cup[:row_num, :, :, :],
+            ),
+            0,
+        )
+        vutils.save_image(compose, fp=save_path, nrow=row_num, padding=10)
     else:
-        imgs = torchvision.transforms.Resize((h,w))(imgs)
+        imgs = torchvision.transforms.Resize((h, w))(imgs)
         if imgs.size(1) == 1:
-            imgs = imgs[:,0,:,:].unsqueeze(1).expand(b,3,h,w)
-        pred_masks = pred_masks[:,0,:,:].unsqueeze(1).expand(b,3,h,w)
-        gt_masks = gt_masks[:,0,:,:].unsqueeze(1).expand(b,3,h,w)
+            imgs = imgs[:, 0, :, :].unsqueeze(1).expand(b, 3, h, w)
+        pred_masks = pred_masks[:, 0, :, :].unsqueeze(1).expand(b, 3, h, w)
+        gt_masks = gt_masks[:, 0, :, :].unsqueeze(1).expand(b, 3, h, w)
         if points != None:
             for i in range(b):
                 if args.thd:
-                    p = np.round(points.cpu()/args.roi_size * args.out_size).to(dtype = torch.int)
+                    p = np.round(points.cpu() / args.roi_size * args.out_size).to(
+                        dtype=torch.int
+                    )
                 else:
-                    p = np.round(points.cpu()/args.image_size * args.out_size).to(dtype = torch.int)
+                    p = np.round(points.cpu() / args.image_size * args.out_size).to(
+                        dtype=torch.int
+                    )
                 # gt_masks[i,:,points[i,0]-5:points[i,0]+5,points[i,1]-5:points[i,1]+5] = torch.Tensor([255, 0, 0]).to(dtype = torch.float32, device = torch.device('cuda:' + str(dev)))
-                gt_masks[i,0,p[i,0]-5:p[i,0]+5,p[i,1]-5:p[i,1]+5] = 0.5
-                gt_masks[i,1,p[i,0]-5:p[i,0]+5,p[i,1]-5:p[i,1]+5] = 0.1
-                gt_masks[i,2,p[i,0]-5:p[i,0]+5,p[i,1]-5:p[i,1]+5] = 0.4
-        tup = (imgs[:row_num,:,:,:],pred_masks[:row_num,:,:,:], gt_masks[:row_num,:,:,:])
+                gt_masks[i, 0, p[i, 0] - 5 : p[i, 0] + 5, p[i, 1] - 5 : p[i, 1] + 5] = (
+                    0.5
+                )
+                gt_masks[i, 1, p[i, 0] - 5 : p[i, 0] + 5, p[i, 1] - 5 : p[i, 1] + 5] = (
+                    0.1
+                )
+                gt_masks[i, 2, p[i, 0] - 5 : p[i, 0] + 5, p[i, 1] - 5 : p[i, 1] + 5] = (
+                    0.4
+                )
+        tup = (
+            imgs[:row_num, :, :, :],
+            pred_masks[:row_num, :, :, :],
+            gt_masks[:row_num, :, :, :],
+        )
         # compose = torch.cat((imgs[:row_num,:,:,:],pred_disc[:row_num,:,:,:], pred_cup[:row_num,:,:,:], gt_disc[:row_num,:,:,:], gt_cup[:row_num,:,:,:]),0)
-        compose = torch.cat(tup,0)
-        vutils.save_image(compose, fp = save_path, nrow = row_num, padding = 10)
+        compose = torch.cat(tup, 0)
+        vutils.save_image(compose, fp=save_path, nrow=row_num, padding=10)
 
     return
 
-def eval_seg(pred,true_mask_p,threshold):
-    '''
+
+def eval_seg(pred, true_mask_p, threshold):
+    """
     threshold: a int or a tuple of int
     masks: [b,2,h,w]
     pred: [b,2,h,w]
-    '''
+    """
     b, c, h, w = pred.size()
     if c == 2:
-        iou_d, iou_c, disc_dice, cup_dice = 0,0,0,0
+        iou_d, iou_c, disc_dice, cup_dice = 0, 0, 0, 0
         for th in threshold:
 
             gt_vmask_p = (true_mask_p > th).float()
             vpred = (pred > th).float()
             vpred_cpu = vpred.cpu()
-            disc_pred = vpred_cpu[:,0,:,:].numpy().astype('int32')
-            cup_pred = vpred_cpu[:,1,:,:].numpy().astype('int32')
+            disc_pred = vpred_cpu[:, 0, :, :].numpy().astype("int32")
+            cup_pred = vpred_cpu[:, 1, :, :].numpy().astype("int32")
 
-            disc_mask = gt_vmask_p [:,0,:,:].squeeze(1).cpu().numpy().astype('int32')
-            cup_mask = gt_vmask_p [:, 1, :, :].squeeze(1).cpu().numpy().astype('int32')
-    
-            '''iou for numpy'''
-            iou_d += iou(disc_pred,disc_mask)
-            iou_c += iou(cup_pred,cup_mask)
+            disc_mask = gt_vmask_p[:, 0, :, :].squeeze(1).cpu().numpy().astype("int32")
+            cup_mask = gt_vmask_p[:, 1, :, :].squeeze(1).cpu().numpy().astype("int32")
 
-            '''dice for torch'''
-            disc_dice += dice_coeff(vpred[:,0,:,:], gt_vmask_p[:,0,:,:]).item()
-            cup_dice += dice_coeff(vpred[:,1,:,:], gt_vmask_p[:,1,:,:]).item()
-            
-        return iou_d / len(threshold), iou_c / len(threshold), disc_dice / len(threshold), cup_dice / len(threshold)
+            """iou for numpy"""
+            iou_d += iou(disc_pred, disc_mask)
+            iou_c += iou(cup_pred, cup_mask)
+
+            """dice for torch"""
+            disc_dice += dice_coeff(vpred[:, 0, :, :], gt_vmask_p[:, 0, :, :]).item()
+            cup_dice += dice_coeff(vpred[:, 1, :, :], gt_vmask_p[:, 1, :, :]).item()
+
+        return (
+            iou_d / len(threshold),
+            iou_c / len(threshold),
+            disc_dice / len(threshold),
+            cup_dice / len(threshold),
+        )
     else:
-        eiou, edice = 0,0
+        eiou, edice = 0, 0
         for th in threshold:
 
             gt_vmask_p = (true_mask_p > th).float()
             vpred = (pred > th).float()
             vpred_cpu = vpred.cpu()
-            disc_pred = vpred_cpu[:,0,:,:].numpy().astype('int32')
+            disc_pred = vpred_cpu[:, 0, :, :].numpy().astype("int32")
 
-            disc_mask = gt_vmask_p [:,0,:,:].squeeze(1).cpu().numpy().astype('int32')
-    
-            '''iou for numpy'''
-            eiou += iou(disc_pred,disc_mask)
+            disc_mask = gt_vmask_p[:, 0, :, :].squeeze(1).cpu().numpy().astype("int32")
 
-            '''dice for torch'''
-            edice += dice_coeff(vpred[:,0,:,:], gt_vmask_p[:,0,:,:]).item()
-            
+            """iou for numpy"""
+            eiou += iou(disc_pred, disc_mask)
+
+            """dice for torch"""
+            edice += dice_coeff(vpred[:, 0, :, :], gt_vmask_p[:, 0, :, :]).item()
+
         return eiou / len(threshold), edice / len(threshold)
+
 
 # @objectives.wrap_objective()
 def dot_compare(layer, batch=1, cossim_pow=0):
-  def inner(T):
-    dot = (T(layer)[batch] * T(layer)[0]).sum()
-    mag = torch.sqrt(torch.sum(T(layer)[0]**2))
-    cossim = dot/(1e-6 + mag)
-    return -dot * cossim ** cossim_pow
-  return inner
+    def inner(T):
+        dot = (T(layer)[batch] * T(layer)[0]).sum()
+        mag = torch.sqrt(torch.sum(T(layer)[0] ** 2))
+        cossim = dot / (1e-6 + mag)
+        return -dot * cossim**cossim_pow
+
+    return inner
+
 
 def init_D(m):
     classname = m.__class__.__name__
-    if classname.find('Conv') != -1:
+    if classname.find("Conv") != -1:
         nn.init.normal_(m.weight.data, 0.0, 0.02)
-    elif classname.find('BatchNorm') != -1:
+    elif classname.find("BatchNorm") != -1:
         nn.init.normal_(m.weight.data, 1.0, 0.02)
         nn.init.constant_(m.bias.data, 0)
+
 
 def pre_d():
     netD = Discriminator(3).to(device)
@@ -1066,10 +1268,11 @@ def pre_d():
     optimizerD = optim.Adam(netD.parameters(), lr=dis_lr, betas=(beta1, 0.999))
     return netD, optimizerD
 
+
 def update_d(args, netD, optimizerD, real, fake):
     criterion = nn.BCELoss()
 
-    label = torch.full((args.b,), 1., dtype=torch.float, device=device)
+    label = torch.full((args.b,), 1.0, dtype=torch.float, device=device)
     output = netD(real).view(-1)
     # Calculate loss on all-real batch
     errD_real = criterion(output, label)
@@ -1077,7 +1280,7 @@ def update_d(args, netD, optimizerD, real, fake):
     errD_real.backward()
     D_x = output.mean().item()
 
-    label.fill_(0.)
+    label.fill_(0.0)
     # Classify all fake batch with D
     output = netD(fake.detach()).view(-1)
     # Calculate D's loss on the all-fake batch
@@ -1092,11 +1295,14 @@ def update_d(args, netD, optimizerD, real, fake):
 
     return errD, D_x, D_G_z1
 
-def calculate_gradient_penalty(netD, real_images, fake_images):
-    eta = torch.FloatTensor(args.b,1,1,1).uniform_(0,1)
-    eta = eta.expand(args.b, real_images.size(1), real_images.size(2), real_images.size(3)).to(device = device)
 
-    interpolated = (eta * real_images + ((1 - eta) * fake_images)).to(device = device)
+def calculate_gradient_penalty(netD, real_images, fake_images):
+    eta = torch.FloatTensor(args.b, 1, 1, 1).uniform_(0, 1)
+    eta = eta.expand(
+        args.b, real_images.size(1), real_images.size(2), real_images.size(3)
+    ).to(device=device)
+
+    interpolated = (eta * real_images + ((1 - eta) * fake_images)).to(device=device)
 
     # define it to calculate gradient
     interpolated = Variable(interpolated, requires_grad=True)
@@ -1105,47 +1311,50 @@ def calculate_gradient_penalty(netD, real_images, fake_images):
     prob_interpolated = netD(interpolated)
 
     # calculate gradients of probabilities with respect to examples
-    gradients = autograd.grad(outputs=prob_interpolated, inputs=interpolated,
-                            grad_outputs=torch.ones(
-                                prob_interpolated.size()).to(device = device),
-                            create_graph=True, retain_graph=True)[0]
+    gradients = autograd.grad(
+        outputs=prob_interpolated,
+        inputs=interpolated,
+        grad_outputs=torch.ones(prob_interpolated.size()).to(device=device),
+        create_graph=True,
+        retain_graph=True,
+    )[0]
 
     grad_penalty = ((gradients.norm(2, dim=1) - 1) ** 2).mean() * 10
     return grad_penalty
 
 
-def random_click(mask, point_labels = 1):
+def random_click(mask, point_labels=1):
     # check if all masks are black
     max_label = max(set(mask.flatten()))
     if max_label == 0:
         point_labels = max_label
     # max agreement position
-    indices = np.argwhere(mask == max_label) 
+    indices = np.argwhere(mask == max_label)
     return point_labels, indices[np.random.randint(len(indices))]
 
 
-def generate_click_prompt(img, msk, pt_label = 1):
+def generate_click_prompt(img, msk, pt_label=1):
     # return: prompt, prompt mask
     pt_list = []
     msk_list = []
     b, c, h, w, d = msk.size()
-    msk = msk[:,0,:,:,:]
+    msk = msk[:, 0, :, :, :]
     for i in range(d):
         pt_list_s = []
         msk_list_s = []
         for j in range(b):
-            msk_s = msk[j,:,:,i]
+            msk_s = msk[j, :, :, i]
             indices = torch.nonzero(msk_s)
             if indices.size(0) == 0:
                 # generate a random array between [0-h, 0-h]:
-                random_index = torch.randint(0, h, (2,)).to(device = msk.device)
+                random_index = torch.randint(0, h, (2,)).to(device=msk.device)
                 new_s = msk_s
             else:
                 random_index = random.choice(indices)
                 label = msk_s[random_index[0], random_index[1]]
                 new_s = torch.zeros_like(msk_s)
                 # convert bool tensor to int
-                new_s = (msk_s == label).to(dtype = torch.float)
+                new_s = (msk_s == label).to(dtype=torch.float)
                 # new_s[msk_s == label] = 1
             pt_list_s.append(random_index)
             msk_list_s.append(new_s)
@@ -1158,7 +1367,4 @@ def generate_click_prompt(img, msk, pt_label = 1):
 
     msk = msk.unsqueeze(1)
 
-    return img, pt, msk #[b, 2, d], [b, c, h, w, d]
-
-
-
+    return img, pt, msk  # [b, 2, d], [b, c, h, w, d]

@@ -16,6 +16,9 @@ import monai
 from segment_anything import sam_model_registry
 import torch.nn.functional as F
 
+from .thirdparty import MedicalSAMAdapter
+from .thirdparty import MedSAM
+
 
 # A example for training SAM,
 # user can specify the model name and the data root
@@ -135,6 +138,12 @@ class SammTraining:
         self.model_name = model_name
         self.join = os.path.join
 
+        if model_name == "MedSAM":
+            self.train_medsam()
+
+        if model_name == "MedicalSAMAdapter":
+            self.train_medical_sam_adapter()
+
         pass
 
     def pre_processing(self):
@@ -143,7 +152,18 @@ class SammTraining:
     def load_pretrained_model(self):
         pass
 
-    def train(self):
+    def train_medical_sam_adapter(self):
+        # load the config file
+        config_path = self.join(os.path.dirname(__file__), "config/training.yaml")
+        with open(config_path) as f:
+            config = yaml.load(f, Loader=yaml.FullLoader)
+
+        config_struct = namedtuple("Struct", config.keys())(*config.values())
+
+        # call the model training function and pass the config
+        MedicalSAMAdapter.train(config_struct)
+
+    def train_medsam(self):
         # define cuda device and torch basics
         torch.manual_seed(2023)
         torch.cuda.empty_cache()
@@ -323,7 +343,7 @@ class SammTraining:
         pass
 
 
-def main():
+def main(model_name: str = "MedSAM"):
     join = os.path.join
 
     # load config file
@@ -334,9 +354,9 @@ def main():
     config_struct = namedtuple("Struct", config.keys())(*config.values())
 
     # define training object
-    training_obj = SammTraining(config_struct, model_name="MedSAM")
+    training_obj = SammTraining(config_struct, model_name)
     training_obj.train()
 
 
 if __name__ == "__main__":
-    main()
+    main("MedSAM")

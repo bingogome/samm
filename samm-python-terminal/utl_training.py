@@ -20,6 +20,7 @@ import torch.nn.functional as F
 # A example for training SAM,
 # user can specify the model name and the data root
 # the class will load the model and train it with the given data
+# Support training for MedSAM and Medical SAM Adapter
 
 
 class NpyDataset(Dataset):

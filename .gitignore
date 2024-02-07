@@ -2,5 +2,30 @@
 .vscode/
 .vs
 samm-workspace/
-*sam_vit_h_4b8939.pth
+**.pth
 *.ipynb_checkpoints/
+
+# Python cache
+*.pyc
+**/__pycache__/
+.cache/
+.pytest_cache/
+
+# Other SAM
+MobileSAM/**
+MedSAM/
+
+# checkpoint 
+checkpoint/
+
+FLARE22Train/
+npy/
+
+# Data
+ISBI**
+
+
+
+
+
+

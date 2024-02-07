@@ -1,0 +1,69 @@
+# MedSAM config
+
+# tr_npy_path: "data/npy/CT_Abd"          # Path to training npy files; two subfolders: gts and imgs
+# task_name: "MedSAM-ViT-B"               # Task name
+# model_type: "vit_b"                     # Model type
+# checkpoint: "work_dir/SAM/sam_vit_b_01ec64.pth"  # Checkpoint file path
+# load_pretrain: true                     # Load pretrain model
+# pretrain_model_path: ""                 # Pretrained model path
+# work_dir: "./work_dir"                  # Working directory
+# num_epochs: 1000                        # Number of epochs
+# batch_size: 2                           # Batch size
+# num_workers: 0                          # Number of workers
+# weight_decay: 0.01                      # Weight decay
+# lr: 0.0001                              # Learning rate
+# use_wandb: false                        # Use wandb for monitoring training
+# use_amp: false                          # Use AMP for mixed precision training
+# resume: ""                              # Resuming training from checkpoint
+# device: "cuda:0"                        # Device to use for training
+
+
+# Configuration for Medical SAM Adapter
+net: sam                          # Network type
+baseline: unet                    # Baseline network type
+encoder: default                  # Encoder type
+seg_net: transunet                # Segmentation network type
+mod: sam_adpt                     # Modification type: seg, cls, val_ad
+exp_name: msa_test_isic           # Experiment name
+
+# General settings
+type: map                         # Condition type: ave, rand, rand_map
+vis: null                         # Visualization (set a value or null)
+reverse: false                    # Adversary reverse
+pretrain: 'samm-python-terminal/thirdparty/MedicalSAMAdapter/checkpoint/sam_vit_b_01ec64.pth'             # Use pretraining
+val_freq: 5                       # Interval between each validation
+gpu: true                         # Use GPU (true/false)
+gpu_device: 0                     # GPU device to use
+sim_gpu: 0                        # GPU to split simulation
+epoch_ini: 1                      # Start epoch
+image_size: 256                   # Image size
+out_size: 256                     # Output size
+patch_size: 2                     # Patch size
+dim: 512                          # Dimension size
+depth: 1                          # Depth
+heads: 16                         # Number of heads
+mlp_dim: 1024                     # MLP dimension
+w: 4                              # Number of workers for dataloader
+b: 2                              # Batch size for dataloader
+s: true                           # Whether to shuffle the dataset
+warm: 1                           # Warm up training phase
+lr: 0.0001                        # Initial learning rate
+uinch: 1                          # Input channel of UNet
+imp_lr: 0.0003                    # Implicit learning rate
+weights: "0"                      # Weights file for testing
+base_weights: "0"                 # Baseline weights
+sim_weights: "0"                  # Simulation weights
+
+# Distributed and dataset settings
+distributed: none                 # Distributed setting (multi GPU ids to use)
+dataset: isic                     # Dataset name
+sam_ckpt: 'checkpoint/sam_vit_b_01ec64.pth'            # SAM checkpoint address
+thd: false                        # 3D or not
+chunk: 96                         # Crop volume depth
+num_sample: 4                     # Number of samples (pos and neg)
+roi_size: 96                      # Resolution of ROI
+evl_chunk: null                   # Evaluation chunk
+mid_dim: null                     # Middle dimension of adapter or rank of LoRA matrix
+
+# Path settings
+data_path: '/home/jeremy/Documents/samm/samm-python-terminal/thirdparty/MedicalSAMAdapter/data'              # Path of segmentation data

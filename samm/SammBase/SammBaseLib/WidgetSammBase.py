@@ -75,6 +75,11 @@ class SammBaseWidget(SammWidgetBase):
         self.ui.markupsAdd.markupsPlaceWidget().setPlaceModePersistency(True)
         self.ui.markupsRemove.markupsPlaceWidget().setPlaceModePersistency(True)
 
+        self.ui.pushApplyWL.connect("clicked(bool)", self.onPushApplyWL)
+        self.ui.pushScreenShotR.connect("clicked(bool)", self.onPushScreenShotR)
+        self.ui.pushScreenShotG.connect("clicked(bool)", self.onPushScreenShotG)
+        self.ui.pushScreenShotY.connect("clicked(bool)", self.onPushScreenShotY)
+
         # Make sure parameter node is initialized (needed for module reload)
         self.initializeParameterNode()
 
@@ -251,3 +256,48 @@ class SammBaseWidget(SammWidgetBase):
 
     def onPushAutoSeg3D(self):
         self.logic.processAutoSeg3D()
+
+    def onPushApplyWL(self):
+        window = float(self.ui.txtWindow.toPlainText())
+        level = float(self.ui.txtLevel.toPlainText())
+        print(window, level)
+
+        display_node = self._parameterNode.GetNodeReference(
+            "sammInputVolume"
+        ).GetScalarVolumeDisplayNode()
+
+        # Set the window and level values
+        display_node.AutoWindowLevelOff()
+        display_node.SetWindow(window)
+        display_node.SetLevel(level)
+
+        # If you want to force a re-render of the view
+        slicer.app.processEvents()
+
+    def onPushScreenShotR(self):
+        self.onScreenShot("Red")
+
+    def onPushScreenShotG(self):
+        self.onScreenShot("Green")
+
+    def onPushScreenShotY(self):
+        self.onScreenShot("Yellow")
+
+    def onScreenShot(self, sliceViewName):
+        display_node = self._parameterNode.GetNodeReference(
+            "sammInputVolume"
+        ).GetScalarVolumeDisplayNode()
+        
+        filename = self._parameterNode._workspace \
+            + "/" + sliceViewName \
+            + "W" + str(display_node.GetWindow()) \
+            + "L" + str(display_node.GetLevel()) + "s.png"
+
+        view = slicer.app.layoutManager().sliceWidget(sliceViewName).sliceView()
+        # view.setBackgroundColor(qt.QColor.fromRgbF(1,1,1))
+        # view.forceRender()
+
+        # Capture a screenshot
+        import ScreenCapture
+        cap = ScreenCapture.ScreenCaptureLogic()
+        cap.captureImageFromView(view, filename)

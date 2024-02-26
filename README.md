@@ -2,11 +2,13 @@
 
 [paper](https://arxiv.org/abs/2304.05622)
 \
+[demo](https://www.youtube.com/watch?v=tZRG7JljEBU)
+\
 [Laboratory of Biomechanical and Image Guided Surgical Systems](https://bigss.lcsr.jhu.edu/), [Johns Hopkins University](https://www.jhu.edu/)
 \
 ![Results](https://github.com/bingogome/samm/blob/main/3dbbox.png =x800)
 [![The Video](https://github.com/bingogome/samm/blob/main/thumbnail.png)](https://youtu.be/tZRG7JljEBU)
-[![The Video](https://github.com/bingogome/samm/blob/main/thumbnail2.png =x800)](https://youtu.be/tZRG7JljEBU)
+[![The Video](https://github.com/bingogome/samm/blob/main/thumbnail2.png)](https://youtu.be/tZRG7JljEBU)
 
 # Table of contents
 - [Segment Any Medical-Model (SAMM): A 3D Slicer integration to Meta's SAM.](#segment-any-medical-model-samm-a-3d-slicer-integration-to-metas-sam)
@@ -30,6 +32,7 @@ What are SAM, SAMM and SAMME?
 Why SAMM and SAMME?
 * SAMM was a side project for fun initially (you can tell from the name). Later we got some interests from people because hey it's a new model and it's cool. Accurate image segmentation is crucial for medical image analysis as it enables clinicians to extract meaningful information from the image. It also allows for the detection of subtle changes in the tissue or organ of interest, which is essential for monitoring disease progression and treatment response. 
 * This later became aiming to develop an integration for [Segment Anything Model (SAM)](https://github.com/facebookresearch/segment-anything) and [3D Slicer](https://www.slicer.org/) for future development and validation of the potentials of transferring Foundation Model to the medical image analysis field. [More and more variants](https://github.com/YichiZhang98/SAM4MIS) of SAM emerged, so we thought it's probably worth it to have a platform supporting the addition of new SAMs.
+* [YichiZhang98](https://github.com/YichiZhang98/SAM4MIS) has compiled a nice history of SAM for medical images.
 \
 
 ## Before You Try <a name="before-you-try"></a>

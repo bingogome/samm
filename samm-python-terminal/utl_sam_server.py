@@ -165,8 +165,8 @@ def CalculateEmbeddings(msg):
         print("[SAMM INFO] Red View Progress:")
         for i in tqdm(range(dataNode.N["R"])):
             dataNode.samPredictor["R"].set_image(cv2.cvtColor(dataNode.mainVolume[i,:,:],cv2.COLOR_GRAY2RGB))
-            if i == 127:
-                testImage(dataNode, 127, np.array([[70,140]]), "R")
+            # if i == 127:
+            #     testImage(dataNode, 127, np.array([[70,140]]), "R")
             dataNode.features["R"][i] = dataNode.samPredictor["R"].features.to('cpu')
         print("[SAMM INFO] Green View Progress:")
         for i in tqdm(range(dataNode.N["G"])):

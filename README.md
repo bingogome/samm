@@ -4,6 +4,7 @@
 \
 [Laboratory of Biomechanical and Image Guided Surgical Systems](https://bigss.lcsr.jhu.edu/), [Johns Hopkins University](https://www.jhu.edu/)
 \
+![Results](https://github.com/bingogome/samm/blob/main/3dbbox.png =x800)
 [![The Video](https://github.com/bingogome/samm/blob/main/thumbnail.png)](https://youtu.be/tZRG7JljEBU)
 [![The Video](https://github.com/bingogome/samm/blob/main/thumbnail2.png =x800)](https://youtu.be/tZRG7JljEBU)
 

@@ -128,6 +128,12 @@ Follow the [demo](https://www.youtube.com/watch?v=tZRG7JljEBU) and Segment Any M
 If you use SAMM in your research, please consider use the following BibTeX entry.
 
 ```bibtex
+@article{liu2024segment,
+  title={Segment Any Medical Model Extended},
+  author={Liu, Yihao and Zhang, Jiaming and Diaz-Pinto, Andres and Li, Haowei and Martin-Gomez, Alejandro and Kheradmand, Amir and Armand, Mehran},
+  journal={arXiv preprint arXiv:2403.18114},
+  year={2024}
+}
 @article{liu2023samm,
   title={SAMM (Segment Any Medical Model): A 3D Slicer Integration to SAM},
   author={Liu, Yihao and Zhang, Jiaming and She, Zhangcong and Kheradmand, Amir and Armand, Mehran},

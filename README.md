@@ -1,6 +1,6 @@
 # Segment Any Medical-Model (SAMM): A 3D Slicer integration to Meta's SAM.
 
-[paper](https://arxiv.org/abs/2304.05622)
+[paper](https://arxiv.org/abs/2304.05622) [paper](https://arxiv.org/abs/2403.18114)
 \
 [demo](https://www.youtube.com/watch?v=tZRG7JljEBU)
 \

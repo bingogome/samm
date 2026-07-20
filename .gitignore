@@ -1,31 +1,36 @@
-*__pycache__/
-.vscode/
-.vs
-samm-workspace/
-**.pth
-*.ipynb_checkpoints/
+logs/*
+!logs/.gitkeep
 
-# Python cache
-*.pyc
+embeddings/*
+!embeddings/.gitkeep
+
+segmentations/*
+!segmentations/.gitkeep
+
+autosave/*
+!autosave/.gitkeep
+
+checkpoints/*
+!checkpoints/.gitkeep
+
+raw_data/*
+segmented_volumes/*
+datasets/*
+finetuning_runs/*
+
+sam_variants/*
+!sam_variants/.gitkeep
+
+.pixi/
+.ci/
+.venv/
+venv/
+
+__pycache__/
 **/__pycache__/
-.cache/
+*.py[cod]
+*$py.class
 .pytest_cache/
-
-# Other SAM
-MobileSAM/**
-MedSAM/
-
-# checkpoint 
-checkpoint/
-
-FLARE22Train/
-npy/
-
-# Data
-ISBI**
-
-
-
-
-
-
+.mypy_cache/
+.ruff_cache/
+*.egg-info/

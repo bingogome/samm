@@ -1,0 +1,184 @@
+[workspace]
+name = "samm"
+version = "1.2.0"
+description = "Segment Any Medical Model"
+channels = ["conda-forge"]
+platforms = ["linux-64"]
+
+[dependencies]
+python = ">=3.11,<3.12"
+pip = "*"
+
+[pypi-dependencies]
+samm-server = { path = "service", editable = true }
+numpy = ">=1.26"
+
+[tasks]
+test-service = "python -m unittest discover -s service/tests"
+test-finetuning = "python -m unittest discover -s finetuning/tests"
+test = { depends-on = ["test-service", "test-finetuning"] }
+test-slicer = "python tools/test_slicer.py"
+check = { depends-on = ["test"] }
+export-finetune-dataset = "python -m finetuning export-dataset"
+setup-example-data = "pixi run -e medsam2 python -m finetuning setup-example-data"
+server = "python -m samm_server.app --host 127.0.0.1 --port 8799 --worker-port 8801 --model-dir checkpoints --device cuda"
+setup-sam1 = "python tools/setup_variant.py sam1"
+setup-sam2 = "python tools/setup_variant.py sam2"
+setup-mobile-sam = "python tools/setup_variant.py mobile-sam"
+setup-medsam = "python tools/setup_variant.py medsam"
+setup-medsam2 = "python tools/setup_variant.py medsam2"
+setup-sam3 = "python tools/setup_variant.py sam3"
+setup-medical-sam3 = "python tools/setup_variant.py medical-sam3"
+setup-fastsam = "python tools/setup_variant.py fastsam"
+setup-variants = "python tools/setup_variant.py all"
+
+[feature.sam1.pypi-dependencies]
+torch = ">=2.2"
+torchvision = ">=0.17"
+opencv-python = ">=4.8"
+
+[feature.sam1.tasks]
+worker-sam1 = "python -m samm_server.worker --host 127.0.0.1 --port 8801 --model-dir checkpoints --device cuda"
+
+[feature.sam2.pypi-dependencies]
+samm-server = { path = "service", editable = true }
+torch = ">=2.5.1"
+torchvision = ">=0.20.1"
+pillow = ">=9.4"
+hydra-core = ">=1.3.2"
+iopath = ">=0.1.10"
+tqdm = ">=4.66.1"
+
+[feature.sam2.tasks]
+worker-sam2 = "python -m samm_server.worker --host 127.0.0.1 --port 8801 --model-dir checkpoints --device cuda"
+
+[feature.mobile_sam.pypi-dependencies]
+torch = ">=2.2"
+torchvision = ">=0.17"
+opencv-python = ">=4.8"
+timm = ">=0.9"
+
+[feature.mobile_sam.tasks]
+worker-mobile-sam = "python -m samm_server.worker --host 127.0.0.1 --port 8801 --model-dir checkpoints --device cuda"
+
+[feature.medsam.pypi-dependencies]
+torch = ">=2.2"
+torchvision = ">=0.17"
+numpy = ">=1.26"
+transformers = ">=4.38"
+
+[feature.medsam.tasks]
+worker-medsam = "python -m samm_server.worker --host 127.0.0.1 --port 8801 --model-dir checkpoints --device cuda"
+
+[feature.medsam2.dependencies]
+python = ">=3.12,<3.13"
+pip = "*"
+
+[feature.medsam2.pypi-dependencies]
+samm-server = { path = "service", editable = true }
+torch = ">=2.5.1"
+torchvision = ">=0.20.1"
+numpy = ">=2.0.1"
+hydra-core = ">=1.3.2"
+iopath = ">=0.1.10"
+fvcore = ">=0.1.5"
+pillow = ">=10.4"
+simpleitk = ">=2.4"
+submitit = ">=1.5"
+tensorboard = ">=2.17"
+tensordict = ">=0.6"
+pandas = ">=2"
+pycocotools = ">=2.0"
+tqdm = ">=4.66"
+
+[feature.medsam2.tasks]
+worker-medsam2 = "python -m samm_server.worker --host 127.0.0.1 --port 8801 --model-dir checkpoints --device cuda"
+finetune-medsam2 = "python -m finetuning train-medsam2"
+eval-finetuned = "python -m finetuning eval-finetuned"
+finetune-report = "python -m finetuning report"
+
+[feature.sam3.dependencies]
+python = ">=3.12,<3.13"
+pip = "*"
+setuptools = "<81"
+
+[feature.sam3.pypi-dependencies]
+samm-server = { path = "service", editable = true }
+torch = ">=2.7"
+torchvision = ">=0.22"
+numpy = ">=1.26,<2"
+pillow = ">=10"
+timm = ">=1.0.17"
+einops = ">=0.7"
+pycocotools = ">=2.0"
+psutil = ">=5.9"
+huggingface-hub = ">=0.34"
+tqdm = "*"
+ftfy = "==6.1.1"
+regex = "*"
+iopath = ">=0.1.10"
+typing-extensions = "*"
+
+[feature.sam3.tasks]
+worker-sam3 = "python -m samm_server.worker --host 127.0.0.1 --port 8801 --model-dir checkpoints --device cuda"
+
+[feature.medical_sam3.dependencies]
+python = ">=3.12,<3.13"
+pip = "*"
+setuptools = "<81"
+
+[feature.medical_sam3.pypi-dependencies]
+samm-server = { path = "service", editable = true }
+torch = ">=2.7"
+torchvision = ">=0.22"
+numpy = "==1.26"
+pillow = ">=10"
+timm = ">=1.0.17"
+einops = ">=0.7"
+pycocotools = ">=2.0"
+psutil = ">=5.9"
+huggingface-hub = ">=0.34"
+tqdm = "*"
+ftfy = "==6.1.1"
+regex = "*"
+iopath = ">=0.1.10"
+typing-extensions = "*"
+
+[feature.medical_sam3.tasks]
+worker-medical-sam3 = "python -m samm_server.worker --host 127.0.0.1 --port 8801 --model-dir checkpoints --device cuda"
+
+[feature.fastsam.dependencies]
+setuptools = "<81"
+
+[feature.fastsam.pypi-dependencies]
+samm-server = { path = "service", editable = true }
+torch = ">=2.2"
+torchvision = ">=0.17"
+numpy = ">=1.26"
+opencv-python = ">=4.8"
+matplotlib = ">=3.8"
+pillow = ">=10"
+pyyaml = ">=6"
+requests = ">=2.31"
+scipy = ">=1.11"
+tqdm = ">=4.66"
+pandas = ">=2"
+seaborn = ">=0.13"
+psutil = ">=5.9"
+ftfy = ">=6.1"
+regex = ">=2023"
+openai-clip = ">=1.0.1"
+
+[feature.fastsam.tasks]
+worker-fastsam = "python -m samm_server.worker --host 127.0.0.1 --port 8801 --model-dir checkpoints --device cuda"
+
+[environments]
+default = []
+sam1 = ["sam1"]
+sam2 = ["sam2"]
+mobile-sam = ["mobile_sam"]
+medsam = ["medsam"]
+medsam2 = { features = ["medsam2"], no-default-feature = true }
+sam3 = { features = ["sam3"], no-default-feature = true }
+medical-sam3 = { features = ["medical_sam3"], no-default-feature = true }
+fastsam = ["fastsam"]

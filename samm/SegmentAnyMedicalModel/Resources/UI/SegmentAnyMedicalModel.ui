@@ -1,0 +1,1502 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SegmentAnyMedicalModel</class>
+ <widget class="qMRMLWidget" name="SegmentAnyMedicalModel">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>420</width>
+    <height>400</height>
+   </rect>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QHBoxLayout" name="connectionButtonLayout">
+     <item>
+      <widget class="QPushButton" name="startServerButton">
+       <property name="text">
+        <string>Start server</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="stopServerButton">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Stop</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="showServerLogButton">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Show log</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="ctkCollapsibleButton" name="dataCollapsibleButton">
+     <property name="text">
+      <string>Data</string>
+     </property>
+     <layout class="QFormLayout" name="dataFormLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="inputVolumeLabel">
+        <property name="text">
+         <string>Input volume</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="qMRMLNodeComboBox" name="inputVolumeSelector">
+        <property name="nodeTypes">
+         <stringlist notr="true">
+          <string>vtkMRMLScalarVolumeNode</string>
+         </stringlist>
+        </property>
+        <property name="showChildNodeTypes">
+         <bool>false</bool>
+        </property>
+        <property name="addEnabled">
+         <bool>false</bool>
+        </property>
+       <property name="removeEnabled">
+        <bool>false</bool>
+       </property>
+        <property name="SlicerParameterName" stdset="0">
+         <string>inputVolume</string>
+        </property>
+      </widget>
+     </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="segmentationLabel">
+        <property name="text">
+         <string>Segmentation</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <layout class="QHBoxLayout" name="segmentationLayout">
+        <item>
+         <widget class="qMRMLNodeComboBox" name="segmentationSelector">
+          <property name="nodeTypes">
+           <stringlist notr="true">
+            <string>vtkMRMLSegmentationNode</string>
+           </stringlist>
+          </property>
+          <property name="showChildNodeTypes">
+           <bool>false</bool>
+          </property>
+          <property name="noneEnabled">
+           <bool>true</bool>
+          </property>
+          <property name="addEnabled">
+           <bool>false</bool>
+          </property>
+          <property name="removeEnabled">
+           <bool>false</bool>
+          </property>
+          <property name="SlicerParameterName" stdset="0">
+           <string>segmentation</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="addSegmentationButton">
+          <property name="text">
+           <string>Add</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="removeSegmentationButton">
+          <property name="text">
+           <string>Remove</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="segmentationFileLabel">
+        <property name="text">
+         <string>File</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <layout class="QHBoxLayout" name="segmentationFileLayout">
+        <item>
+         <widget class="QPushButton" name="saveSegmentationButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Save segmentation</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="loadSegmentationButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Load segmentation</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="segmentLabel">
+        <property name="text">
+         <string>Segment</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <layout class="QHBoxLayout" name="segmentLayout">
+        <item>
+         <widget class="QComboBox" name="segmentComboBox"/>
+        </item>
+        <item>
+         <widget class="QPushButton" name="addSegmentButton">
+          <property name="text">
+           <string>Add</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="removeSegmentButton">
+          <property name="text">
+           <string>Remove</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="sliceViewLabel">
+        <property name="text">
+         <string>View</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QComboBox" name="sliceViewComboBox">
+        <property name="SlicerParameterName" stdset="0">
+         <string>sliceView</string>
+        </property>
+        <item>
+         <property name="text">
+          <string>Red</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Green</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Yellow</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="ctkCollapsibleButton" name="predictionCollapsibleButton">
+     <property name="text">
+      <string>Prediction</string>
+     </property>
+     <layout class="QFormLayout" name="predictionFormLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="predictionSliceViewLabel">
+        <property name="text">
+         <string>View</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="predictionSliceViewComboBox">
+        <item>
+         <property name="text">
+          <string>Red</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Green</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Yellow</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="prompt2dLabel">
+        <property name="text">
+         <string>2D prompts</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <layout class="QVBoxLayout" name="prompt2dLayout">
+        <item>
+         <widget class="QPushButton" name="positivePromptButton">
+          <property name="text">
+           <string>Positive point</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="negativePromptButton">
+          <property name="text">
+           <string>Negative point</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="boxPromptButton">
+          <property name="text">
+           <string>2D box</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="maskSourceLabel">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Input mask, not output mask</string>
+          </property>
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="qMRMLNodeComboBox" name="maskSegmentationSelector">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="nodeTypes">
+           <stringlist notr="true">
+            <string>vtkMRMLSegmentationNode</string>
+           </stringlist>
+          </property>
+          <property name="showChildNodeTypes">
+           <bool>false</bool>
+          </property>
+          <property name="noneEnabled">
+           <bool>true</bool>
+          </property>
+          <property name="addEnabled">
+           <bool>false</bool>
+          </property>
+          <property name="removeEnabled">
+           <bool>false</bool>
+          </property>
+          <property name="SlicerParameterName" stdset="0">
+           <string>maskSegmentation</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="maskSegmentComboBox">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="clear2dOptionsLabel">
+          <property name="text">
+           <string>Clear</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="clear2dOptionsLayout">
+          <item>
+           <widget class="QCheckBox" name="clearPointPromptsCheckBox">
+            <property name="text">
+             <string>Points</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+            <property name="SlicerParameterName" stdset="0">
+             <string>clearPointPrompts</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="clearBoxPromptCheckBox">
+            <property name="text">
+             <string>2D box</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+            <property name="SlicerParameterName" stdset="0">
+             <string>clearBoxPrompt</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="clearMaskPromptCheckBox">
+            <property name="text">
+             <string>Input mask</string>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+            <property name="SlicerParameterName" stdset="0">
+             <string>clearMaskPrompt</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QPushButton" name="clear2dPromptsButton">
+          <property name="text">
+           <string>Clear 2D</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="sendPromptLabel">
+          <property name="text">
+           <string>Send</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="sendPromptLayout">
+          <item>
+           <widget class="QCheckBox" name="sendPointPromptsCheckBox">
+            <property name="text">
+             <string>Points</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+            <property name="SlicerParameterName" stdset="0">
+             <string>sendPointPrompts</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="sendBoxPromptCheckBox">
+            <property name="text">
+             <string>2D box</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+            <property name="SlicerParameterName" stdset="0">
+             <string>sendBoxPrompt</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="sendMaskPromptCheckBox">
+            <property name="text">
+             <string>Input mask</string>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+            <property name="SlicerParameterName" stdset="0">
+             <string>sendMaskPrompt</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="sendTextPromptCheckBox">
+            <property name="text">
+             <string>Text</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+            <property name="SlicerParameterName" stdset="0">
+             <string>sendTextPrompt</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="textPromptLayout">
+          <item>
+           <widget class="QLabel" name="textPromptLabel">
+            <property name="text">
+             <string>Text</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="textPromptLineEdit">
+            <property name="placeholderText">
+             <string>Text prompt</string>
+            </property>
+            <property name="SlicerParameterName" stdset="0">
+             <string>textPrompt</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QPushButton" name="predictSliceButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Predict slice</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="debugPredictionLogCheckBox">
+          <property name="text">
+           <string>Debug log</string>
+          </property>
+          <property name="checked">
+           <bool>false</bool>
+          </property>
+          <property name="SlicerParameterName" stdset="0">
+           <string>debugPredictionLog</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="autoPredictCheckBox">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Auto predict (Embed view required except FastSAM)</string>
+          </property>
+          <property name="SlicerParameterName" stdset="0">
+           <string>autoPredict2d</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="predictAutoVideoButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Auto predict (Slices as video)</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="cancelAutoVideoButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Cancel auto video prediction</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="prompt3dLabel">
+        <property name="text">
+         <string>3D prompts</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <layout class="QVBoxLayout" name="prompt3dLayout">
+        <item>
+         <widget class="QPushButton" name="volumeBoxPromptButton">
+          <property name="text">
+           <string>3D box</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="clear3dPromptsButton">
+          <property name="text">
+           <string>Clear 3D</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="predictBoxVolumeButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Predict 3D box</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="predictBoxVolumeVideoButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Predict 3D box (Slices as video)</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="cancelBoxVolumeVideoButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Cancel video prediction</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="3" column="0">
+      <widget class="QLabel" name="boxVolumeProgressLabel">
+        <property name="text">
+         <string>Progress</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QProgressBar" name="boxVolumeProgressBar">
+        <property name="value">
+         <number>0</number>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+      <widget class="QLabel" name="boxVolumeStatusTitleLabel">
+        <property name="text">
+         <string>Status</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QLabel" name="boxVolumeStatusLabel">
+        <property name="text">
+         <string>Not running</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="ctkCollapsibleButton" name="embeddingCollapsibleButton">
+     <property name="text">
+      <string>Embedding</string>
+     </property>
+     <layout class="QFormLayout" name="embeddingFormLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="embeddingSliceViewLabel">
+        <property name="text">
+         <string>View</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="embeddingSliceViewComboBox">
+        <item>
+         <property name="text">
+          <string>Red</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Green</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Yellow</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="embeddingActionLabel">
+        <property name="text">
+         <string>Action</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <layout class="QHBoxLayout" name="embeddingActionLayout">
+        <item>
+         <widget class="QPushButton" name="embedAllButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Embed view</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="embedAllAxesButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Embed all axes</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="embeddingFileLabel">
+        <property name="text">
+         <string>File</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <layout class="QHBoxLayout" name="embeddingFileLayout">
+        <item>
+         <widget class="QPushButton" name="saveEmbeddingsButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Save embeddings</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="loadEmbeddingsButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Load embeddings</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="embeddingProgressLabel">
+        <property name="text">
+         <string>Progress</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QProgressBar" name="embeddingProgressBar">
+        <property name="value">
+         <number>0</number>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="embeddingStatusTitleLabel">
+        <property name="text">
+         <string>Status</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QLabel" name="embeddingStatusLabel">
+        <property name="text">
+         <string>Not embedded</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="embeddedSlicesLabel">
+        <property name="text">
+         <string>Slices</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QListWidget" name="embeddedSlicesListWidget">
+        <property name="maximumHeight">
+         <number>128</number>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="ctkCollapsibleButton" name="finetuneCollapsibleButton">
+     <property name="text">
+      <string>Finetune</string>
+     </property>
+     <layout class="QFormLayout" name="finetuneFormLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="finetuneDatasetLabel">
+        <property name="text">
+         <string>Dataset</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <layout class="QVBoxLayout" name="finetuneDatasetLayout">
+        <item>
+         <layout class="QHBoxLayout" name="finetuneDatasetNameLayout">
+          <item>
+           <widget class="QLineEdit" name="finetuneDatasetLineEdit">
+            <property name="text">
+             <string>my_task</string>
+            </property>
+            <property name="placeholderText">
+             <string>New or selected dataset</string>
+            </property>
+            <property name="SlicerParameterName" stdset="0">
+             <string>finetuneDatasetName</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="newFinetuneDatasetButton">
+            <property name="text">
+             <string>New dataset</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="finetuneDatasetPickerLayout">
+          <item>
+           <widget class="QComboBox" name="finetuneDatasetComboBox"/>
+          </item>
+          <item>
+           <widget class="QPushButton" name="refreshFinetuneDatasetsButton">
+            <property name="text">
+             <string>Refresh</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="finetuneVolumeLabel">
+        <property name="text">
+         <string>Volume</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="qMRMLNodeComboBox" name="finetuneVolumeSelector">
+        <property name="nodeTypes">
+         <stringlist notr="true">
+          <string>vtkMRMLScalarVolumeNode</string>
+         </stringlist>
+        </property>
+        <property name="showChildNodeTypes">
+         <bool>false</bool>
+        </property>
+        <property name="addEnabled">
+         <bool>false</bool>
+        </property>
+        <property name="removeEnabled">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="finetuneSegmentationLabel">
+        <property name="text">
+         <string>Segmentation</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="qMRMLNodeComboBox" name="finetuneSegmentationSelector">
+        <property name="nodeTypes">
+         <stringlist notr="true">
+          <string>vtkMRMLSegmentationNode</string>
+         </stringlist>
+        </property>
+        <property name="showChildNodeTypes">
+         <bool>false</bool>
+        </property>
+        <property name="noneEnabled">
+         <bool>true</bool>
+        </property>
+        <property name="addEnabled">
+         <bool>false</bool>
+        </property>
+        <property name="removeEnabled">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="finetuneAddLabel">
+        <property name="text">
+         <string>Add</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QPushButton" name="addSegmentedVolumeButton">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="text">
+         <string>Add segmented volume</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="finetuneDatasetStatusTitleLabel">
+        <property name="text">
+         <string>Status</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QLabel" name="finetuneDatasetStatusLabel">
+        <property name="text">
+         <string>No finetuning dataset built</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="finetuneBuildLabel">
+        <property name="text">
+         <string>Build</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <layout class="QVBoxLayout" name="finetuneBuildLayout">
+        <item>
+         <layout class="QGridLayout" name="finetuneBuildOptionsLayout">
+          <item row="0" column="0">
+           <widget class="QLabel" name="finetuneValCountLabel">
+            <property name="text">
+             <string>Val</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QSpinBox" name="finetuneValCountSpinBox">
+            <property name="minimum">
+             <number>0</number>
+            </property>
+            <property name="maximum">
+             <number>999</number>
+            </property>
+            <property name="value">
+             <number>1</number>
+            </property>
+            <property name="SlicerParameterName" stdset="0">
+             <string>finetuneValCount</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QCheckBox" name="finetuneAxis0CheckBox">
+            <property name="text">
+             <string>Axis 0</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+            <property name="SlicerParameterName" stdset="0">
+             <string>finetuneAxis0</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QCheckBox" name="finetuneAxis1CheckBox">
+            <property name="text">
+             <string>1</string>
+            </property>
+            <property name="SlicerParameterName" stdset="0">
+             <string>finetuneAxis1</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QCheckBox" name="finetuneAxis2CheckBox">
+            <property name="text">
+             <string>2</string>
+            </property>
+            <property name="SlicerParameterName" stdset="0">
+             <string>finetuneAxis2</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QGridLayout" name="finetuneWindowLayout">
+          <item row="0" column="0" colspan="2">
+           <widget class="QCheckBox" name="finetuneUseWindowCheckBox">
+            <property name="text">
+             <string>Window</string>
+            </property>
+            <property name="SlicerParameterName" stdset="0">
+             <string>finetuneUseWindow</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="finetuneWindowMinLabel">
+            <property name="text">
+             <string>Min</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QDoubleSpinBox" name="finetuneWindowMinSpinBox">
+            <property name="minimum">
+             <double>-100000.000000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>100000.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>-100.000000000000000</double>
+            </property>
+            <property name="SlicerParameterName" stdset="0">
+             <string>finetuneWindowMin</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="finetuneWindowMaxLabel">
+            <property name="text">
+             <string>Max</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QDoubleSpinBox" name="finetuneWindowMaxSpinBox">
+            <property name="minimum">
+             <double>-100000.000000000000000</double>
+            </property>
+            <property name="maximum">
+             <double>100000.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>300.000000000000000</double>
+            </property>
+            <property name="SlicerParameterName" stdset="0">
+             <string>finetuneWindowMax</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QPushButton" name="buildFinetuneDatasetButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Build dataset</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="6" column="0">
+       <widget class="QLabel" name="finetuneReportTitleLabel">
+        <property name="text">
+         <string>Report</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="1">
+       <layout class="QVBoxLayout" name="finetuneReportOuterLayout">
+        <item>
+         <layout class="QHBoxLayout" name="finetuneReportLayout">
+          <item>
+           <widget class="QLabel" name="finetuneRunLabel">
+            <property name="text">
+             <string>Run</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="finetuneRunLineEdit">
+            <property name="placeholderText">
+             <string>dataset_v1</string>
+            </property>
+            <property name="SlicerParameterName" stdset="0">
+             <string>finetuneRunName</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QPushButton" name="showFinetuneReportButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Show report</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="7" column="0">
+       <widget class="QLabel" name="finetuneTrainLabel">
+        <property name="text">
+         <string>Train</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="1">
+       <layout class="QVBoxLayout" name="finetuneTrainLayout">
+        <item>
+         <layout class="QHBoxLayout" name="finetuneCheckpointLayout">
+          <item>
+           <widget class="QLabel" name="finetuneCheckpointLabel">
+            <property name="text">
+             <string>Base</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="finetuneBaseModelComboBox">
+            <property name="SlicerParameterName" stdset="0">
+             <string>finetuneBaseModel</string>
+            </property>
+            <item>
+             <property name="text">
+              <string>SAM2.1 Hiera Tiny</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QGridLayout" name="finetuneTrainOptionsLayout">
+          <item row="0" column="0">
+           <widget class="QLabel" name="finetuneEpochsLabel">
+            <property name="text">
+             <string>Epochs</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QSpinBox" name="finetuneEpochsSpinBox">
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>999</number>
+            </property>
+            <property name="value">
+             <number>25</number>
+            </property>
+            <property name="SlicerParameterName" stdset="0">
+             <string>finetuneEpochs</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="finetuneBatchSizeLabel">
+            <property name="text">
+             <string>Batch</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QSpinBox" name="finetuneBatchSizeSpinBox">
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>64</number>
+            </property>
+            <property name="value">
+             <number>1</number>
+            </property>
+            <property name="SlicerParameterName" stdset="0">
+             <string>finetuneBatchSize</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="finetuneNumFramesLabel">
+            <property name="text">
+             <string>Frames</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QSpinBox" name="finetuneNumFramesSpinBox">
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>64</number>
+            </property>
+            <property name="value">
+             <number>4</number>
+            </property>
+            <property name="SlicerParameterName" stdset="0">
+             <string>finetuneNumFrames</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="finetuneNumWorkersLabel">
+            <property name="text">
+             <string>Workers</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QSpinBox" name="finetuneNumWorkersSpinBox">
+            <property name="minimum">
+             <number>0</number>
+            </property>
+            <property name="maximum">
+             <number>32</number>
+            </property>
+            <property name="SlicerParameterName" stdset="0">
+             <string>finetuneNumWorkers</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QPushButton" name="startFinetuneTrainingButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Run training</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="8" column="0">
+       <widget class="QLabel" name="finetuneEvalLabel">
+        <property name="text">
+         <string>Eval</string>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="1">
+       <layout class="QVBoxLayout" name="finetuneEvalLayout">
+        <item>
+         <layout class="QHBoxLayout" name="finetuneEvalOptionsLayout">
+          <item>
+           <widget class="QLabel" name="finetuneEvalMaxSegmentedVolumesLabel">
+            <property name="text">
+             <string>Max segmented volumes</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="finetuneEvalMaxSegmentedVolumesSpinBox">
+            <property name="minimum">
+             <number>0</number>
+            </property>
+            <property name="maximum">
+             <number>999</number>
+            </property>
+            <property name="SlicerParameterName" stdset="0">
+             <string>finetuneEvalMaxSegmentedVolumes</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QPushButton" name="startFinetuneEvalButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Run eval</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="9" column="0">
+       <widget class="QLabel" name="finetuneJobLabel">
+        <property name="text">
+         <string>Job</string>
+        </property>
+       </widget>
+      </item>
+      <item row="9" column="1">
+       <layout class="QVBoxLayout" name="finetuneJobLayout">
+        <item>
+         <widget class="QLabel" name="finetuneJobStatusLabel">
+          <property name="text">
+           <string>No finetuning job</string>
+          </property>
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QProgressBar" name="finetuneJobProgressBar">
+          <property name="value">
+           <number>0</number>
+          </property>
+          <property name="format">
+           <string>No job</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="cancelFinetuneJobButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Cancel job</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="ctkCollapsibleButton" name="serviceCollapsibleButton">
+     <property name="text">
+      <string>Service</string>
+     </property>
+     <layout class="QFormLayout" name="serviceFormLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="modelLabel">
+        <property name="text">
+         <string>Model</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="modelFamilyComboBox">
+        <item>
+         <property name="text">
+          <string>SAM 1</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>MobileSAM</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>MedSAM</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="weightLabel">
+        <property name="text">
+         <string>Weights</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QComboBox" name="weightComboBox">
+        <item>
+         <property name="text">
+          <string>ViT-B</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>ViT-L</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>ViT-H</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="modelAvailabilityTitleLabel">
+        <property name="text">
+         <string>Availability</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLabel" name="modelAvailabilityLabel">
+        <property name="text">
+         <string>Not checked</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="modelActionLabel">
+        <property name="text">
+         <string>Action</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <layout class="QHBoxLayout" name="modelActionLayout">
+        <item>
+         <widget class="QPushButton" name="prepareModelButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Prepare model</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="offloadModelButton">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Offload model</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="statusTitleLabel">
+        <property name="text">
+         <string>Status</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QLabel" name="statusLabel">
+        <property name="text">
+         <string>Disconnected</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>qMRMLNodeComboBox</class>
+   <extends>QWidget</extends>
+   <header>qMRMLNodeComboBox.h</header>
+  </customwidget>
+  <customwidget>
+   <class>qMRMLWidget</class>
+   <extends>QWidget</extends>
+   <header>qMRMLWidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ctkCollapsibleButton</class>
+   <extends>QWidget</extends>
+   <header>ctkCollapsibleButton.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>SegmentAnyMedicalModel</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>inputVolumeSelector</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+  </connection>
+  <connection>
+   <sender>SegmentAnyMedicalModel</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>segmentationSelector</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+  </connection>
+  <connection>
+   <sender>SegmentAnyMedicalModel</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>finetuneVolumeSelector</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+  </connection>
+  <connection>
+   <sender>SegmentAnyMedicalModel</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>finetuneSegmentationSelector</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+  </connection>
+  <connection>
+   <sender>SegmentAnyMedicalModel</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>maskSegmentationSelector</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+  </connection>
+ </connections>
+</ui>

@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "samm-server"
+version = "1.2.0"
+description = "Inference service for Segment Any Medical Model"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+samm-server = "samm_server.app:main"
+samm-gateway = "samm_server.app:main"
+samm-worker = "samm_server.worker:main"
+
+[tool.setuptools.packages.find]
+include = ["samm_server*"]

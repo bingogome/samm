@@ -24,7 +24,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Check out source
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -48,7 +48,7 @@ jobs:
         slicer-version: [5.12.2]
     steps:
       - name: Check out source
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -71,7 +71,7 @@ jobs:
           frozen: true
 
       - name: Restore Slicer archive
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: .ci/slicer-cache
           key: slicer-linux-amd64-${{ matrix.slicer-version }}-${{ env.SLICER_REVISION }}

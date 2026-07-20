@@ -1,15 +1,14 @@
-cmake_minimum_required(VERSION 3.16.3...3.19.7 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.28.0...3.28.0 FATAL_ERROR)
 
 project(samm)
 
 #-----------------------------------------------------------------------------
 # Extension meta-information
-set(EXTENSION_HOMEPAGE "https://www.slicer.org/wiki/Documentation/Nightly/Extensions/samm")
-set(EXTENSION_CATEGORY "samm")
-set(EXTENSION_CONTRIBUTORS "Yihao Liu (Johns Hopkins University), Jiaming Zhang (Johns Hopkins University), Zhangcong She (Johns Hopkins University)")
-set(EXTENSION_DESCRIPTION "This is an 3D Slicer extension to use Meta SAM for medical image segmentation.")
-set(EXTENSION_ICONURL "https://www.example.com/Slicer/Extensions/samm.png")
-set(EXTENSION_SCREENSHOTURLS "https://www.example.com/Slicer/Extensions/samm/Screenshots/1.png")
+set(EXTENSION_HOMEPAGE "https://github.com/bingogome/samm")
+set(EXTENSION_CONTRIBUTORS "SAMM contributors")
+set(EXTENSION_DESCRIPTION "Interactive medical image segmentation with SAM-family models")
+set(EXTENSION_ICONURL "https://raw.githubusercontent.com/bingogome/samm/main/samm/samm.png")
+set(EXTENSION_SCREENSHOTURLS "NA")
 set(EXTENSION_DEPENDS "NA") # Specified as a list or "NA" if no dependencies
 
 #-----------------------------------------------------------------------------
@@ -19,7 +18,7 @@ include(${Slicer_USE_FILE})
 
 #-----------------------------------------------------------------------------
 # Extension modules
-add_subdirectory(SammBase)
+add_subdirectory(SegmentAnyMedicalModel)
 ## NEXT_MODULE
 
 #-----------------------------------------------------------------------------

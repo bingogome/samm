@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PIXI_VERSION: v0.71.3
+  SLICER_REVISION: "34625"
+
+jobs:
+  core-tests:
+    name: Core tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Pixi
+        uses: prefix-dev/setup-pixi@v0.10.0
+        with:
+          pixi-version: ${{ env.PIXI_VERSION }}
+          cache: true
+          frozen: true
+
+      - name: Run service and finetuning tests
+        run: pixi run check
+
+  slicer-tests:
+    name: Slicer ${{ matrix.slicer-version }} integration
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        slicer-version: [5.12.2]
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Install Slicer runtime dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            libasound2t64 \
+            libglu1-mesa \
+            libnss3 \
+            libpulse-mainloop-glib0 \
+            qt5dxcb-plugin \
+            xvfb
+
+      - name: Set up Pixi
+        uses: prefix-dev/setup-pixi@v0.10.0
+        with:
+          pixi-version: ${{ env.PIXI_VERSION }}
+          cache: true
+          frozen: true
+
+      - name: Restore Slicer archive
+        uses: actions/cache@v5
+        with:
+          path: .ci/slicer-cache
+          key: slicer-linux-amd64-${{ matrix.slicer-version }}-${{ env.SLICER_REVISION }}
+
+      - name: Download and verify Slicer
+        id: slicer
+        shell: bash
+        run: |
+          executable="$(pixi run python tools/download_slicer.py \
+            --version "${{ matrix.slicer-version }}" \
+            --destination "${RUNNER_TEMP}/slicer" \
+            --cache-directory .ci/slicer-cache)"
+          echo "executable=${executable}" >> "${GITHUB_OUTPUT}"
+
+      - name: Verify Slicer version
+        run: xvfb-run --auto-servernum "${{ steps.slicer.outputs.executable }}" --version
+
+      - name: Run native Slicer tests
+        env:
+          LIBGL_ALWAYS_SOFTWARE: "1"
+        run: >-
+          xvfb-run --auto-servernum
+          pixi run test-slicer
+          --slicer "${{ steps.slicer.outputs.executable }}"
